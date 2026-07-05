@@ -5,3 +5,9 @@ theme = 'hugo-trainsh'
 [caches]
   [caches.images]
     dir = ':cacheDir/images'
+[outputs]
+home = ["HTML", "RSS", "JSON"]
+
+[params]
+mainSections = ["posts"]
+nav = "[Home](/) [posts](/posts/)"
