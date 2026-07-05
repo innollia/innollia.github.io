@@ -1,6 +1,6 @@
 baseURL = 'https://example.org/'
 locale = 'en-us'
-title = 'My New Hugo Project'
+title = 'belladonna sherum, innollia, 결망아안, 이충호, 혹은하나의일'
 theme = 'hugo-trainsh'
 [caches]
   [caches.images]
