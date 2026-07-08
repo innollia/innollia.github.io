@@ -89,16 +89,20 @@
     </div>
     <div style="margin-top: 20px; display: flex; gap: 10px;">
       {{- if $isSecretPost -}}
+      <input type="text" placeholder="이름"
+        style="width: 100px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
       <input type="text" placeholder="{{ default `...` (or .Params.commentPlaceholder .Params.comment_placeholder) }}"
         style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
       <button onclick="alert('[경고] 비인가 접속 상태이므로 댓글 작성 권한이 없습니다.')"
         style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">등록</button>
       {{- else -}}
+      <input id="normal-comment-author" type="text" placeholder="이름"
+        style="width: 100px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
       <input id="normal-comment-input" type="text"
         placeholder="{{ default `-..  .-  -  --.  .-..` (or .Params.commentPlaceholder .Params.comment_placeholder) }}"
         style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
       <button
-        onclick="if(!this.previousElementSibling.value.trim()){alert('댓글 내용을 입력해주세요.');}else{alert('댓글이 접수되었습니다. (시스템/관리자 동기화 후 md 파일에 저장되어 반영됩니다.)');this.previousElementSibling.value='';}"
+        onclick="let author = document.getElementById('normal-comment-author'); if(!author.value.trim()){author.value='이름';} if(!document.getElementById('normal-comment-input').value.trim()){alert('댓글 내용을 입력해주세요.');}else{alert('댓글이 접수되었습니다. (시스템/관리자 동기화 후 md 파일에 저장되어 반영됩니다.)');author.value='';document.getElementById('normal-comment-input').value='';}"
         style="padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">등록</button>
       {{- end -}}
     </div>

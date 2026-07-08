@@ -342,9 +342,10 @@
     // 뽁뽁이 재생력 강화(업그레이드 6): 1초마다 기포 최대 수량까지 자동 보충
     setInterval(() => {
       if (localStorage.getItem('hide_clicker') === 'true') return;
-      const container = document.getElementById('bubble-container');
       const lv6 = clickerState.upgrades[6] ? clickerState.upgrades[6].count : 0;
+      if (lv6 <= 0) return; // 업그레이드 6을 구매하지 않았으면 자동 보충 안 함
       const maxBubbles = 30 + (lv6 * 5);
+      const container = document.getElementById('bubble-container');
       if (container && container.children.length < maxBubbles) {
         const newBubble = document.createElement('div');
         newBubble.className = 'bubble';
