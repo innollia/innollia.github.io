@@ -1,0 +1,260 @@
+<style>
+/* 기본 텍스트 트릭 */
+.anomaly-text {
+    position: relative;
+    display: inline-block;
+    color: inherit;
+    transition: color 0.1s;
+    cursor: default;
+}
+.anomaly-text:hover {
+    color: #ff0000;
+    font-weight: bold;
+    text-shadow: 0 0 5px #ff0000;
+}
+.anomaly-text:hover span.normal {
+    display: none;
+}
+.anomaly-text span.hidden {
+    display: none;
+}
+.anomaly-text:hover span.hidden {
+    display: inline;
+}
+
+/* 스크롤에 따른 그늘 효과 */
+#shadow-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    box-shadow: inset 0 0 0px 0px rgba(0,0,0,0);
+    transition: box-shadow 0.1s;
+    z-index: 9000;
+}
+
+/* 빨려들어가는 연출 */
+@keyframes suck-into-darkness {
+    0% { transform: scale(1) rotate(0deg); filter: blur(0px) brightness(1); }
+    40% { transform: scale(1.2) rotate(5deg); filter: blur(2px) brightness(0.8); }
+    100% { transform: scale(0) rotate(180deg); filter: blur(20px) brightness(0); }
+}
+.suck-animation {
+    animation: suck-into-darkness 3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+.blog-container {
+    padding: 20px;
+    line-height: 1.8;
+    position: relative;
+    z-index: 10;
+}
+
+#trigger-bottom {
+    margin-top: 250vh; /* 공간을 띄워서 스크롤을 유도 */
+    text-align: center;
+    color: transparent; /* 평소엔 안보이게 */
+    user-select: none;
+}
+</style>
+
+<div id="shadow-overlay"></div>
+
+<div class="blog-container" id="post-body">
+    {{ .Inner | markdownify }}
+    
+    <div id="trigger-bottom">
+        <p id="trigger-text">이미 늦었어</p>
+    </div>
+</div>
+
+<script>
+    // 스크롤 시 그늘이 점점 짙어지는 효과 (해제 전까지)
+    window.addEventListener('scroll', function() {
+        if (window.isShadowAnomalyResolved) return;
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        let scrollPercent = scrollTop / docHeight;
+        
+        if (scrollPercent < 0) scrollPercent = 0;
+        if (scrollPercent > 1) scrollPercent = 1;
+
+        const overlay = document.getElementById('shadow-overlay');
+        if (overlay) {
+            const shadowSize = scrollPercent * 400;
+            const shadowOpacity = scrollPercent * 0.95; 
+            overlay.style.boxShadow = `inset 0 0 ${shadowSize}px ${shadowSize / 2}px rgba(0,0,0,${shadowOpacity})`;
+        }
+
+        // 바닥에 도달하면 이벤트 트리거
+        if (scrollPercent >= 0.98 && !window.hasTriggeredAnomaly && !window.isShadowAnomalyResolved) {
+            window.hasTriggeredAnomaly = true;
+            triggerAnomaly();
+        }
+    });
+
+    function loadScript(url, callback) {
+        const existing = document.querySelector(`script[src="${url}"]`);
+        if (existing) {
+            if (callback) callback();
+            return;
+        }
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = url;
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    function triggerAnomaly() {
+        if (window.isShadowAnomalyResolved) return;
+
+        const container = document.getElementById('post-body');
+        const triggerText = document.getElementById('trigger-text');
+        if (triggerText) {
+            triggerText.style.color = '#ff0000';
+            triggerText.style.textShadow = '0 0 10px #ff0000';
+            triggerText.style.fontWeight = 'bold';
+        }
+        
+        setTimeout(() => {
+            if (container) container.classList.add('suck-animation');
+            const shadowOverlay = document.getElementById('shadow-overlay');
+            if (shadowOverlay) shadowOverlay.style.backgroundColor = 'black';
+            
+            setTimeout(() => {
+                // 전체화면(100vw, 100vh) 3D 오버레이 생성
+                let overlay3D = document.getElementById('fullscreen-3d-overlay');
+                if (!overlay3D) {
+                    overlay3D = document.createElement('div');
+                    overlay3D.id = 'fullscreen-3d-overlay';
+                    overlay3D.style.position = 'fixed';
+                    overlay3D.style.top = '0';
+                    overlay3D.style.left = '0';
+                    overlay3D.style.width = '100vw';
+                    overlay3D.style.height = '100vh';
+                    overlay3D.style.zIndex = '999999';
+                    overlay3D.style.background = 'black';
+                    overlay3D.style.opacity = '1';
+                    
+                    overlay3D.innerHTML = `
+                      <div id="blocker" style="position: absolute; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; color: #888; font-family: 'Courier New', Courier, monospace; cursor: pointer; z-index: 10; text-align: center;">
+                        <div style="font-size: 0.95rem; letter-spacing: 2px; color: #aaa;">
+                          [ W, A, S, D ] 이동 &nbsp;&nbsp;|&nbsp;&nbsp; [ 마우스 ] 시선 &nbsp;&nbsp;|&nbsp;&nbsp; [ 클릭 ] 상호작용
+                        </div>
+                      </div>
+                      <div id="crosshair" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border: 2px solid rgba(255,51,51,0.8); border-radius: 50%; pointer-events: none; z-index: 5; display: none;"></div>
+                      <div id="threejs-canvas-container" style="width: 100%; height: 100%;"></div>
+                    `;
+                    document.body.appendChild(overlay3D);
+                }
+                
+                if (container) container.classList.remove('suck-animation');
+                if (shadowOverlay) shadowOverlay.style.display = 'none';
+                
+                // Three.js 및 공통 어둠 탐사 공간 스크립트 로드
+                loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js", () => {
+                    loadScript("https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js", () => {
+                        loadScript("/js/daydream-office.js", () => {
+                            if (typeof initDaydreamOffice === 'function') {
+                                initDaydreamOffice('threejs-canvas-container', 'blocker');
+                            }
+                        });
+                    });
+                });
+                
+            }, 3000);
+        }, 1500);
+    }
+
+    // 종이를 찢은 후 블로그 글로 복귀할 때 호출
+    window.returnFromAnomaly = function() {
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
+        }
+        
+        const overlay3D = document.getElementById('fullscreen-3d-overlay');
+        if (overlay3D) {
+            overlay3D.style.transition = 'opacity 1.2s ease';
+            overlay3D.style.opacity = '0';
+            setTimeout(() => {
+                overlay3D.remove();
+            }, 1200);
+        }
+        
+        // 블로그 글 상태를 '평범한 괴담 글'로 변경
+        window.isShadowAnomalyResolved = true;
+        
+        const shadowOverlay = document.getElementById('shadow-overlay');
+        if (shadowOverlay) {
+            shadowOverlay.style.display = 'none';
+        }
+        
+        // 긴 길이의 공백(50vh)을 완전 제거
+        const triggerBottom = document.getElementById('trigger-bottom');
+        if (triggerBottom) {
+            triggerBottom.style.display = 'none';
+        }
+        
+        const postBody = document.getElementById('post-body');
+        if (postBody) {
+            postBody.style.opacity = '1';
+            postBody.style.filter = 'none';
+            postBody.style.transform = 'none';
+        }
+
+        // 글의 하단 숨겨진 내용 자연스럽게 표시
+        const afterAnomaly = document.getElementById('post-after-anomaly');
+        if (afterAnomaly) {
+            afterAnomaly.style.display = 'block';
+            afterAnomaly.style.opacity = '0';
+            afterAnomaly.style.transition = 'opacity 1.5s ease';
+            setTimeout(() => { 
+                afterAnomaly.style.opacity = '1'; 
+                const illustration = document.getElementById('anomaly-illustration');
+                if (illustration) {
+                    illustration.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+
+        // 작가 코멘트 창 자연스럽게 표시
+        const authorCommentSec = document.getElementById('author-comment-section');
+        if (authorCommentSec) {
+            authorCommentSec.style.display = 'block';
+            authorCommentSec.style.opacity = '0';
+            authorCommentSec.style.transition = 'opacity 1.5s ease';
+            setTimeout(() => { authorCommentSec.style.opacity = '1'; }, 200);
+        }
+
+        // 댓글 창 자연스럽게 표시
+        const commentsSec = document.getElementById('comments-section');
+        if (commentsSec) {
+            commentsSec.style.display = 'block';
+            commentsSec.style.opacity = '0';
+            commentsSec.style.transition = 'opacity 1.5s ease';
+            setTimeout(() => { commentsSec.style.opacity = '1'; }, 300);
+        }
+    };
+
+    // 초기 로드 시: 아직 어둠 차원 해결 전이라면 댓글 창과 후반부 내용 숨기기
+    function hideElementsInitially() {
+        if (!window.isShadowAnomalyResolved) {
+            const authorCommentSec = document.getElementById('author-comment-section');
+            if (authorCommentSec) authorCommentSec.style.display = 'none';
+            const commentsSec = document.getElementById('comments-section');
+            if (commentsSec) commentsSec.style.display = 'none';
+            const afterAnomaly = document.getElementById('post-after-anomaly');
+            if (afterAnomaly) afterAnomaly.style.display = 'none';
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideElementsInitially);
+    } else {
+        hideElementsInitially();
+    }
+    setTimeout(hideElementsInitially, 50);
+</script>

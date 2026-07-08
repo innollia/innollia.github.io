@@ -1,6 +1,6 @@
 baseURL = 'https://example.org/'
 locale = 'en-us'
-title = 'belladonna sherum, innollia, 결망아안, 이충호, 혹은하나의일'
+title = 'belladonna sherum, counter23, innollia, 결망아안, 이충호, 혹은하나의일'
 theme = 'hugo-trainsh'
 [caches]
   [caches.images]
@@ -9,5 +9,11 @@ theme = 'hugo-trainsh'
 home = ["HTML", "RSS", "JSON"]
 
 [params]
-mainSections = ["posts"]
+mainSections = ["posts","blog"]
 nav = "[Home](/) [posts](/posts/)"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+

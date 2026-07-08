@@ -1,0 +1,92 @@
+<div class="site-header">
+  {{- $tagsPage := .Site.GetPage "/tags" -}}
+  {{- $tagsLabel := i18n "tags" -}}
+  {{- if hasPrefix .Site.Language.Lang "zh" -}}
+    {{- $tagsLabel = i18n "tag_archive" -}}
+  {{- end -}}
+  <div class="site-brand">
+    <a class="title" href="{{ "/" | relLangURL }}">
+      <h1>{{ .Site.Title }}</h1>
+    </a>
+    <div class="bubble-wrap-container" id="bubble-container">
+      <div class="bubble" onclick="popBubble(this)"></div>
+    </div>
+
+    <!-- 화면 좌측 텍스트 클리커 UI (20회 이상 클릭 시 등장, 박스/패널 UI 없이 순수 텍스트만) -->
+    <div id="left-text-clicker" class="left-text-clicker" style="display: none;">
+      <div class="txt-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>[ 뽁뽁이 리모콘 ]</span>
+        <span onclick="if(confirm('강화 수치와 누적 압축 공기를 초기화하시겠습니까?')){resetClickerState();}" 
+              style="font-size: 0.7rem; color: #ff3333; cursor: pointer; text-decoration: underline; font-weight: normal; margin-left: 10px;">[초기화]</span>
+      </div>
+      <div class="txt-line">누적 파열: <span id="txt-clicks">0</span> 회</div>
+      <div class="txt-line">압축 공기: <span id="txt-air">0</span> ml</div>
+      <div class="txt-line">파열 출력: <span id="txt-per-click">1</span> ml/회</div>
+      <div class="txt-line">자동 충전: <span id="txt-per-sec">0</span> ml/초</div>
+      <br>
+      <div class="txt-subheader">[ 메뉴판 ]</div>
+      <div class="txt-upgrade" id="upg-1" onclick="buyUpgrade(1)">
+        > 01. 기포 부피 확장 [Lv.<span id="lvl-1">0</span>] (<span id="cost-1">15</span> ml)
+        <div class="txt-desc">+1 ml/회</div>
+      </div>
+      <div class="txt-upgrade" id="upg-2" onclick="buyUpgrade(2)">
+        > 02. 표면 장력 강화 [Lv.<span id="lvl-2">0</span>] (<span id="cost-2">50</span> ml)
+        <div class="txt-desc">15% 확률 5배 크리티컬</div>
+      </div>
+      <div class="txt-upgrade" id="upg-3" onclick="buyUpgrade(3)">
+        > 03. 공기 자동 주입기 [Lv.<span id="lvl-3">0</span>] (<span id="cost-3">200</span> ml)
+        <div class="txt-desc">+4 ml/s</div>
+      </div>
+      <div class="txt-upgrade" id="upg-4" onclick="buyUpgrade(4)">
+        > 04. 연쇄 뽁 공명장 [Lv.<span id="lvl-4">0</span>] (<span id="cost-4">1000</span> ml)
+        <div class="txt-desc">2초마다 연쇄 뽁 자동 파열</div>
+      </div>
+      <div class="txt-upgrade" id="upg-5" onclick="buyUpgrade(5)">
+        > 05. 압력 전파 충격파 [Lv.<span id="lvl-5">0</span>] (<span id="cost-5">40000</span> ml)
+        <div class="txt-desc">클릭 시 주변 기포도 함께 파열 (레벨당 반경 확장)</div>
+      </div>
+      <div class="txt-upgrade" id="upg-6" onclick="buyUpgrade(6)">
+        > 06. 뽁뽁이 재생력 강화 [Lv.<span id="lvl-6">0</span>] (<span id="cost-6">200000</span> ml)
+        <div class="txt-desc">터진 뽁뽁이 재생 속도 단축 & 화면 내 최대 기포 수 증가</div>
+      </div>
+    </div>
+
+    <link rel="stylesheet" href="/css/bubble-clicker.css?v=9">
+    <script src="/js/bubble-clicker.js?v=9" defer></script>
+    <script src="/js/ambient-audio.js?v=9" defer></script>
+  </div>
+
+  <nav class="site-nav">
+    {{- with site.Params.nav -}}
+    {{- $html := . | markdownify -}}
+    {{- $html = replaceRE `(?s)^<p>(.*)</p>$` `$1` $html -}}
+    {{- $html | safeHTML -}}
+    {{- else -}}
+    {{ with site.Menus.main }}
+    {{- $hasTagsLink := false -}}
+    {{ range $i, $item := . }}
+    {{- if and $tagsPage (eq $item.URL $tagsPage.RelPermalink) -}}
+      {{- $hasTagsLink = true -}}
+    {{- end -}}
+    {{- with $item.Page -}}
+      {{- if and $tagsPage (eq .RelPermalink $tagsPage.RelPermalink) -}}
+        {{- $hasTagsLink = true -}}
+      {{- end -}}
+    {{- end -}}
+    {{ if $i }} {{ end }}<a href="{{ $item.URL }}">{{ $item.Name }}</a>
+    {{ end }}
+    {{- if and $tagsPage (not $hasTagsLink) -}}
+    <a href="{{ $tagsPage.RelPermalink }}">{{ $tagsLabel }}</a>
+    {{- end -}}
+    {{ else }}
+    <a href="{{ "/" | relLangURL }}">{{ i18n "home" }}</a>
+    {{ with site.GetPage "/blog" }}
+    <a href="{{ .RelPermalink }}">{{ i18n "blog" }}</a>
+    {{ end }}
+    {{ with $tagsPage }}
+    <a href="{{ .RelPermalink }}">{{ $tagsLabel }}</a>
+    {{ end }}
+    {{ end }}
+    {{- end -}}
+  </nav>
+</div>

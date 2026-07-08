@@ -1,0 +1,540 @@
+/* Retro 90s Korean Web Style - Custom CSS Override */
+
+/* Fonts & Themes Import */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
+@import url('/css/secret-theme.css');
+
+:root {
+    --width: 800px;
+    --background-color: #1b322c; /* 어두운 청록색 */
+    --text-color: #ffffff; /* 기본 흰색 글씨 */
+    --link-color: #0088ff; /* 쨍한 파란색 링크 */
+    --visited-color: #ff00ff; /* 방문한 링크 자주색/보라색 */
+    --hover-color: #ff0000; /* 호버 시 빨간색 */
+    
+    /* 90년대 윈도우/한글 기본 글꼴 순위 */
+    --font-main: "Gulim", "굴림", "MS Sans Serif", "Noto Serif KR", sans-serif;
+    --font-heading: "Gungsuh", "궁서", "Gulim", "굴림", serif;
+}
+
+/* Base Body Styling */
+body {
+    background-color: var(--background-color) !important;
+    color: var(--text-color) !important;
+    font-family: var(--font-main) !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+    max-width: var(--width) !important;
+    text-align: center !important; /* 전체 중앙 정렬 */
+    background-image: radial-gradient(rgba(0, 0, 0, 0.15) 15%, transparent 15%) !important;
+    background-size: 4px 4px !important; /* 미세한 도트 패턴 */
+}
+
+.post-content img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* Header & Navigation Styling */
+header {
+    margin-bottom: 40px !important;
+    border-bottom: 3px double #00ff66 !important;
+    padding-bottom: 20px !important;
+}
+
+.site-header {
+    display: block !important; /* Flex 해제 */
+    text-align: center !important;
+}
+
+.site-brand {
+    display: inline-block !important;
+    margin-bottom: 15px !important;
+}
+
+.site-brand .title h1 {
+    font-family: var(--font-heading) !important;
+    font-size: 2.2rem !important;
+    color: #ffcc00 !important;
+    text-shadow: 2px 2px 0px #000000, -1px -1px 0px #ff00ff !important;
+    margin: 0 !important;
+}
+
+/* Navigation Links */
+.site-nav {
+    display: block !important;
+    margin: 10px 0 !important;
+    font-family: var(--font-main) !important;
+}
+
+.site-nav a, .site-nav a:visited {
+    color: #00ffff !important;
+    text-decoration: underline !important;
+    margin: 0 10px !important;
+    font-weight: bold !important;
+    font-size: 1.1rem !important;
+}
+
+.site-nav a:hover {
+    color: var(--hover-color) !important;
+}
+
+/* Theme Toggle Button (테마 전환 버튼 90년대 식 복고풍 디자인) */
+.theme-toggle {
+    background: #c0c0c0 !important;
+    color: #000000 !important;
+    border: 3px outset #ffffff !important;
+    padding: 3px 10px !important;
+    font-family: var(--font-main) !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    margin-left: 10px !important;
+    vertical-align: middle !important;
+}
+
+.theme-toggle:active {
+    border: 3px inset #ffffff !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading) !important;
+    text-align: center !important;
+    font-weight: bold !important;
+}
+
+h1 {
+    font-size: 2rem !important;
+    margin-bottom: 20px !important;
+}
+
+h2 {
+    font-size: 1.6rem !important;
+    color: #00ff66 !important;
+    border-top: 1px dashed #00ff66 !important;
+    border-bottom: 1px dashed #00ff66 !important;
+    padding: 10px 0 !important;
+    margin-top: 30px !important;
+}
+
+/* Hyperlinks */
+a, a:visited {
+    color: var(--link-color) !important;
+    text-decoration: underline !important;
+}
+
+a:hover {
+    color: var(--hover-color) !important;
+    text-decoration: underline !important;
+    background-color: #ffff00 !important; /* 노란색 하이라이트 호버 */
+}
+
+/* Retro Container layout */
+.retro-container {
+    margin: 30px auto !important;
+    padding: 20px !important;
+    border: 4px ridge #00ff66 !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    max-width: 650px !important;
+}
+
+/* WordArt Styles */
+.wordart-magenta-green {
+    font-family: var(--font-heading) !important;
+    color: #00ff66 !important;
+    font-size: 2.5rem !important;
+    font-style: italic !important;
+    text-shadow: 
+        -2px -2px 0 #ff00ff, 
+         2px -2px 0 #ff00ff, 
+        -2px  2px 0 #ff00ff, 
+         2px  2px 0 #ff00ff, 
+         4px  4px 0 #000000 !important;
+    margin: 15px 0 !important;
+    letter-spacing: 2px !important;
+}
+
+.wordart-3d-yellow {
+    font-family: var(--font-main) !important;
+    color: #ffcc00 !important;
+    font-size: 1.8rem !important;
+    font-weight: bold !important;
+    text-shadow: 
+        1px 1px 0px #ffffff,
+        2px 2px 0px #ff9900,
+        3px 3px 0px #cc6600,
+        4px 4px 5px #000000 !important;
+    margin: 15px 0 !important;
+}
+
+/* Blink Animation */
+.blink {
+    animation: retro-blink 1s steps(2, start) infinite !important;
+}
+
+@keyframes retro-blink {
+    to { visibility: hidden; }
+}
+
+/* Main Content & Articles */
+main {
+    text-align: center !important;
+}
+
+.post {
+    text-align: left !important; /* 게시글 본문은 가독성을 위해 왼쪽 정렬 */
+    background: #0f1f1b !important;
+    border: 3px double #00ff66 !important;
+    padding: 25px 25px 15px 25px !important;
+    margin-top: 20px !important;
+    margin-bottom: 15px !important;
+    box-shadow: 5px 5px 0px #000000 !important;
+}
+
+/* Post Footer (태그 등) 하단 여백 최적화 */
+.post-footer {
+    margin-top: 15px !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.post-footer-row {
+    margin: 0 !important;
+}
+
+.post-title {
+    font-family: var(--font-heading) !important;
+    color: #ffcc00 !important;
+    font-size: 2.2rem !important;
+    text-shadow: 2px 2px 0px #000000 !important;
+    text-align: left !important;
+    border-bottom: 2px solid #00ff66 !important;
+    padding-bottom: 10px !important;
+}
+
+.post-meta {
+    color: #88ffaa !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 20px !important;
+}
+
+.post-content {
+    color: #e0e0e0 !important;
+    font-family: var(--font-main) !important;
+}
+
+/* Code block styles */
+pre {
+    background-color: #000000 !important;
+    border: 2px inset #00ff66 !important;
+    padding: 15px !important;
+    overflow-x: auto !important;
+    text-align: left !important;
+    box-shadow: inset 3px 3px 5px rgba(0,0,0,0.8) !important;
+}
+
+code {
+    font-family: "Courier New", Courier, monospace !important;
+    color: #00ff00 !important;
+}
+
+/* Lists styling */
+ul, ol {
+    display: inline-block !important;
+    text-align: left !important;
+    margin: 20px auto !important;
+    padding-left: 20px !important;
+}
+
+li {
+    margin: 8px 0 !important;
+    font-size: 1.1rem !important;
+}
+
+/* Footer Styling */
+footer:not(.post-footer) {
+    margin-top: 20px !important;
+    border-top: 3px double #00ff66 !important;
+    padding-top: 15px !important;
+    font-size: 0.85rem !important;
+    color: #88ffaa !important;
+}
+
+footer:not(.post-footer)::after {
+    content: "\A\A [ 본 의식-망은 메일러 의식 동조 프로토콜 v0.98b 및 3차원 감각 투영 규격(4096x4096x256)에 최적화 되어 있읍니다. ]" !important;
+    white-space: pre-wrap !important;
+    display: block !important;
+    color: #ff00ff !important;
+    font-weight: bold !important;
+    margin-top: 10px !important;
+    font-family: "Gulim", "굴림", sans-serif !important;
+}
+
+/* Disabling other unnecessary styles of theme to keep 90s aesthetic clean */
+.theme-toggle-container {
+    display: inline-block !important;
+}
+
+/* Custom retro horizontal rule */
+hr {
+    border: none !important;
+    height: 6px !important;
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet) !important;
+    margin: 30px 0 !important;
+}
+
+/* --- CHIRASHI BANNER STYLING --- */
+.chirashi-banner-container {
+    position: fixed !important;
+    right: 20px !important;
+    top: 150px !important;
+    width: 450px !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    transform: scale(0.35) !important;
+    transform-origin: top right !important;
+    text-align: center !important;
+}
+
+@media (max-width: 1100px) {
+    .chirashi-banner-container {
+        position: relative !important;
+        right: auto !important;
+        top: auto !important;
+        margin: 35px auto !important;
+        transform: scale(0.8) !important;
+        transform-origin: center !important;
+        max-width: 450px !important;
+        width: 100% !important;
+        z-index: 1000 !important;
+    }
+}
+
+
+.chirashi-banner {
+    background-color: #ffd800 !important; /* 쨍한 노란색 */
+    border: 5px dashed #ff0000 !important; /* 두꺼운 빨간색 대시 테두리 */
+    padding: 0 !important; /* Changed to 0 to fit edge-to-edge sub container */
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    box-shadow: 6px 6px 0px #000000 !important;
+    text-decoration: none !important;
+    transition: transform 0.1s ease !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+}
+
+.chirashi-banner:hover {
+    transform: scale(1.03) rotate(-1deg) !important;
+    background-color: #ffe600 !important;
+    border-style: dotted !important;
+}
+
+.chirashi-title {
+    font-family: "Gulim", "굴림", sans-serif !important;
+    font-size: 3rem !important;
+    font-weight: 900 !important;
+    color: #000000 !important;
+    margin: 10px 0 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -3px !important;
+    text-align: center !important;
+}
+
+/* 급구 폭발 데코레이션 */
+.chirashi-urgent {
+    background-color: #ff0000 !important;
+    color: #ffffff !important;
+    font-size: 4.5rem !important;
+    font-weight: 900 !important;
+    display: inline-block !important;
+    padding: 40px 60px !important; /* Make room for the starburst */
+    margin: 20px auto 10px auto !important;
+    clip-path: polygon(50% 0%, 61% 22%, 85% 5%, 75% 32%, 100% 39%, 80% 55%, 95% 85%, 68% 75%, 60% 100%, 50% 80%, 40% 100%, 32% 75%, 5% 85%, 20% 55%, 0% 39%, 25% 32%, 15% 5%, 39% 22%) !important;
+    font-family: "Gungsuh", "궁서", serif !important;
+    text-shadow: 2px 2px 0px #000000 !important;
+    animation: urgent-pulse 0.6s infinite alternate !important;
+}
+
+@keyframes urgent-pulse {
+    from { transform: rotate(-3deg) scale(1); }
+    to { transform: rotate(-3deg) scale(1.1); }
+}
+
+.chirashi-sub-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #000000 !important;
+    width: 100% !important;
+    padding: 15px 0 !important;
+    margin-top: 10px !important;
+    position: relative !important;
+}
+
+.chirashi-welfare {
+    position: absolute !important;
+    left: 10px !important;
+    bottom: -10px !important;
+    background-color: #ff0000 !important;
+    color: #ffffff !important;
+    font-size: 1.2rem !important;
+    font-weight: 900 !important;
+    padding: 20px 25px !important;
+    font-family: "Gungsuh", "궁서", serif !important;
+    text-align: center !important;
+    text-shadow: 1px 1px 0px #000 !important;
+    clip-path: polygon(50% 0%, 65% 20%, 95% 10%, 80% 35%, 100% 55%, 80% 70%, 90% 95%, 65% 85%, 50% 100%, 35% 85%, 10% 95%, 20% 70%, 0% 55%, 20% 35%, 5% 10%, 35% 20%) !important;
+    line-height: 1.1 !important;
+    animation: welfare-spin 4s linear infinite !important;
+}
+
+@keyframes welfare-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.chirashi-sub {
+    font-family: "Gulim", "굴림", sans-serif !important;
+    font-size: 2.5rem !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
+    letter-spacing: -2px !important;
+    padding-left: 80px !important; /* Make room for welfare starburst */
+    animation: retro-blink 0.8s steps(2, start) infinite !important;
+}
+
+/* ==========================================================================
+   [2. 바벨의 도서관] 사이버펑크 기밀 육각 터미널 배너 스타일
+   ========================================================================== */
+/* ==========================================================================
+   [2. 바벨의 도서관] 깔끔하고 단순한 빈티지 초대장/채용카드 스타일 (사진 1 완벽 재현)
+   ========================================================================== */
+.babel-simple-card {
+    background-color: #f6f4ed !important; /* 미색/크림색 편지 및 카드 종이색 */
+    border: 1px solid #d8d2c4 !important;
+    box-shadow: 4px 5px 12px rgba(0, 0, 0, 0.25) !important;
+    padding: 28px 18px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-decoration: none !important;
+    font-family: "Gungsuh", "궁서", "명조", serif !important;
+    color: #002655 !important; /* 사진 속 정갈한 파란색 도장/타자 잉크색 */
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    cursor: pointer !important;
+}
+.babel-simple-card:hover {
+    transform: scale(1.02) translateY(-2px) !important;
+    box-shadow: 6px 8px 16px rgba(0, 0, 0, 0.3) !important;
+}
+.babel-card-title {
+    font-size: 2.3rem !important;
+    font-weight: bold !important;
+    color: #002655 !important;
+    margin-bottom: 15px !important;
+    letter-spacing: -1px !important;
+}
+.babel-card-body {
+    font-size: 1.6rem !important;
+    line-height: 1.45 !important;
+    color: #002655 !important;
+    margin: 10px 0 16px 0 !important;
+    text-align: center !important;
+}
+.babel-card-hiring {
+    font-size: 1.9rem !important;
+    font-weight: bold !important;
+    text-decoration: underline !important;
+    text-underline-offset: 5px !important;
+    color: #001a40 !important;
+    margin: 12px 0 8px 0 !important;
+}
+.babel-card-desc {
+    font-size: 1.55rem !important;
+    line-height: 1.45 !important;
+    color: #002655 !important;
+    margin: 6px 0 18px 0 !important;
+    text-align: center !important;
+}
+.babel-card-phone {
+    font-family: "Courier New", Courier, monospace !important;
+    font-size: 1.65rem !important;
+    font-weight: bold !important;
+    color: #002655 !important;
+    margin-top: 4px !important;
+    letter-spacing: 1px !important;
+}
+
+/* ==========================================================================
+   [3. 비둘기 치킨] 첨부 전단지 이미지 그대로 노출 배너
+   ========================================================================== */
+.pigeon-img-banner {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    text-decoration: none !important;
+    transition: transform 0.15s ease !important;
+    cursor: pointer !important;
+}
+.pigeon-img-banner:hover {
+    transform: scale(1.02) rotate(0.5deg) !important;
+}
+.pigeon-real-img {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    border: 2px solid #8b7d6b !important;
+    border-radius: 4px !important;
+    box-shadow: 6px 8px 16px rgba(0, 0, 0, 0.5) !important;
+}
+/* 4모퉁이 누런 반투명 마스킹 테이프 */
+.flyer-corner-tape {
+    position: absolute !important;
+    width: 60px !important;
+    height: 22px !important;
+    background: rgba(195, 160, 95, 0.85) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+    z-index: 10 !important;
+}
+.tape-tl {
+    top: -6px !important;
+    left: -12px !important;
+    transform: rotate(-35deg) !important;
+}
+.tape-tr {
+    top: -6px !important;
+    right: -12px !important;
+    transform: rotate(35deg) !important;
+}
+.tape-bl {
+    bottom: -6px !important;
+    left: -12px !important;
+    transform: rotate(35deg) !important;
+}
+.tape-br {
+    bottom: -6px !important;
+    right: -12px !important;
+    transform: rotate(-35deg) !important;
+}
+
+/* --- 전역 볼드(굵은 글씨) 스타일 보강 --- */
+strong, b {
+    font-weight: 900 !important;
+    color: #ffcc00 !important;
+    text-shadow: 1px 1px 0px #000000 !important;
+}
+
+/* Footer link icons */
+.footer-links a svg { width: 32px !important; height: 32px !important; display: inline-block !important; margin: 0 10px !important; }
+.footer-links { text-align: center !important; margin: 10px 0 5px 0 !important; }
+footer:not(.post-footer) p { margin: 8px 0 !important; }

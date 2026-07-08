@@ -1,0 +1,111 @@
+{{ define "main" }}
+{{- $sections := default (slice "posts") .Site.Params.mainSections -}}
+{{- $isPost := in $sections .Section -}}
+
+<article class="post">
+  {{- if $isPost -}}
+  <header class="post-header">
+    <h1 class="post-title">{{ .Title }}</h1>
+    <p class="post-meta">
+      <time datetime="{{ .Date | time.Format " 2006-01-02" }}">
+        {{ partial "date/format.html" (dict "page" . "date" .Date "context" "single") }}
+      </time>
+    </p>
+  </header>
+  {{- else -}}
+  <header class="page-header">
+    <h1 class="page-title">{{ .Title }}</h1>
+  </header>
+  {{- end -}}
+
+  {{- $hasAuthorComment := or .Params.authorComment .Params.author_comment -}}
+  {{- $hasComments := or .Params.enableComments .Params.comments .Params.showComments .Params.commentList -}}
+
+
+
+  <div class="post-content">
+    {{ .Content | replaceRE `\*\*([^*]+?)\*\*` `<strong>$1</strong>` | safeHTML }}
+  </div>
+
+  <style>
+    .author-comment-box img,
+    .post-comments-box img {
+      max-height: 250px !important;
+      width: auto !important;
+      object-fit: contain;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+  </style>
+
+  {{- if $hasAuthorComment -}}
+  <!-- 작가 코멘트 영역 (Author Comment) -->
+  <div id="author-comment-section" class="author-comment-box"
+    style="margin: 40px 0 20px; padding: 20px; background: rgba(255, 204, 0, 0.08); border-left: 4px solid #ffcc00; border-radius: 4px; transition: opacity 0.3s;">
+    <div
+      style="font-weight: bold; margin-bottom: 10px; color: #d4a017; display: flex; align-items: center; gap: 5px; font-size: 1rem;">
+      <span>{{ default "📝 작가 코멘트" (or .Params.authorCommentTitle .Params.author_comment_title) }}</span>
+    </div>
+    <div style="line-height: 1.6; font-size: 0.95rem;">
+      {{ default .Params.authorComment .Params.author_comment | markdownify }}
+    </div>
+  </div>
+  {{- end -}}
+
+  {{- if $hasComments -}}
+  {{- $isSecretPost := or (eq .Section "secret") (in .Params.tags "기밀") (in .Params.tags "매뉴얼") (in .Params.tags "괴담")
+  (in .Params.tags "가이드") (in .Params.tags "유출") .Params.isSecret (in .RawContent "secret-terminal") (in .RawContent
+  "black-shadow") -}}
+
+  <!-- 댓글 영역 (Comments) -->
+  <div id="comments-section" class="post-comments-box"
+    style="margin: 30px 0; padding: 20px; background: rgba(128, 128, 128, 0.06); border: 1px solid rgba(128, 128, 128, 0.25); border-radius: 4px; transition: opacity 0.3s;">
+    <div
+      style="font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; border-bottom: 2px solid rgba(128, 128, 128, 0.3); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+      {{- if $isSecretPost -}}
+      <span>{{ default "댓글" (or .Params.commentTitle .Params.commentsTitle .Params.comment_title) }} <span
+          style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">(댓글이다.)</span></span>
+      <span style="font-size: 0.75rem; color: #ff3333; font-weight: bold;">[ 지금은 공산당원이 보이지 않는다. ]</span>
+      {{- else -}}
+      <span>{{ default "댓글" (or .Params.commentTitle .Params.commentsTitle .Params.comment_title) }} <span
+          id="comment-count-badge" style="font-size: 0.85rem; font-weight: normal; opacity: 0.7;">({{ if
+          .Params.commentList }}{{ len .Params.commentList }}{{ else }}0{{ end }})</span></span>
+      {{- end -}}
+    </div>
+    <div id="comment-list-container" class="comment-list" style="display: flex; flex-direction: column; gap: 15px;">
+      {{- if .Params.commentList -}}
+      {{- range .Params.commentList -}}
+      <div class="comment-item"
+        style="padding: 12px; background: rgba(255, 255, 255, 0.85); color: #111; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 3px solid {{ default `#666` .color }};">
+        <div
+          style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #555; margin-bottom: 5px;">
+          <strong style="color: #222;">{{ .author }}</strong>
+          <span>{{ .date }}</span>
+        </div>
+        <div style="font-size: 0.9rem;">{{ .text | markdownify }}</div>
+      </div>
+      {{- end -}}
+      {{- end -}}
+    </div>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      {{- if $isSecretPost -}}
+      <input type="text" placeholder="{{ default `...` (or .Params.commentPlaceholder .Params.comment_placeholder) }}"
+        style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
+      <button onclick="alert('[경고] 비인가 접속 상태이므로 댓글 작성 권한이 없습니다.')"
+        style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">등록</button>
+      {{- else -}}
+      <input id="normal-comment-input" type="text"
+        placeholder="{{ default `-..  .-  -  --.  .-..` (or .Params.commentPlaceholder .Params.comment_placeholder) }}"
+        style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
+      <button
+        onclick="if(!this.previousElementSibling.value.trim()){alert('댓글 내용을 입력해주세요.');}else{alert('댓글이 접수되었습니다. (시스템/관리자 동기화 후 md 파일에 저장되어 반영됩니다.)');this.previousElementSibling.value='';}"
+        style="padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">등록</button>
+      {{- end -}}
+    </div>
+  </div>
+  {{- end -}}
+
+  {{ partial "post/footer-meta.html" . }}
+</article>
+
+{{ end }}
