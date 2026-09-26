@@ -229,6 +229,40 @@
     clickerState.lifetimeAir += amount;
   }
 
+  // === 콤보 시스템 (세션 내 메모리, 저장 안 함) ===
+  // 1.2초 안에 연속으로 수동 파열하면 콤보가 쌓이고, 콤보 구간마다 획득 배율이 붙는다.
+  let comboCount = 0;
+  let comboTimer = null;
+
+  function getComboMult() {
+    if (comboCount < 5) return 1;       // 5콤보 미만: 배율 없음
+    if (comboCount < 15) return 1.5;    // 5~14콤보: 1.5배
+    if (comboCount < 30) return 2;      // 15~29콤보: 2배
+    if (comboCount < 50) return 3;      // 30~49콤보: 3배
+    return 4;                           // 50콤보 이상: 4배
+  }
+
+  function registerCombo() {
+    comboCount++;
+    if (comboTimer) clearTimeout(comboTimer);
+    comboTimer = setTimeout(() => {
+      comboCount = 0;
+      const el = document.getElementById('txt-combo');
+      if (el) el.style.display = 'none';
+    }, 1200);
+
+    const el = document.getElementById('txt-combo');
+    if (el) {
+      const mult = getComboMult();
+      if (comboCount >= 5) {
+        el.style.display = '';
+        el.innerHTML = '🔥 ' + comboCount + ' COMBO <span style="color:#ff6600;">×' + mult + '</span>';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+  }
+
   function getUpgradeCost(id) {
     const upg = clickerState.upgrades[id];
     return Math.floor(upg.baseCost * Math.pow(upg.costMult, upg.count));
@@ -439,6 +473,7 @@
 
     if (!isAuto) {
       clickerState.clicks++;
+      registerCombo();
       let gained = getAirPerClick();
       let isCrit = false;
 
@@ -450,6 +485,10 @@
           isCrit = true;
         }
       }
+
+      // 콤보 배율 적용(수동 파열에만)
+      const comboMult = getComboMult();
+      gained = Math.round(gained * comboMult);
 
       playPop(isCrit);
 
