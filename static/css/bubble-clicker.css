@@ -27,6 +27,19 @@
   transform: scale(0.9);
 }
 
+/* 황금 뽁뽁이: 반짝이는 특별 기포 */
+.bubble.golden {
+  background: radial-gradient(circle at 30% 30%, #fff8dc, #ffd700 45%, #b8860b 90%);
+  box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.7), inset 0 -3px 6px rgba(255, 255, 255, 0.8);
+  border: 1px solid #fff3b0;
+  animation: golden-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes golden-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.6); }
+  50% { transform: scale(1.15); box-shadow: 0 0 14px #ffd700, 0 0 28px rgba(255, 215, 0, 0.9); }
+}
+
 .bubble.popped {
   background: radial-gradient(circle at 50% 50%, rgba(200, 200, 200, 0.1), rgba(150, 150, 150, 0.2));
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
@@ -117,4 +130,12 @@
 @keyframes float-up-fade {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-35px) scale(1.2); }
+}
+
+/* 업적 목록 */
+.txt-achievement {
+  font-size: 0.72rem;
+  color: #66cc88;
+  padding-left: 6px;
+  line-height: 1.5;
 }
