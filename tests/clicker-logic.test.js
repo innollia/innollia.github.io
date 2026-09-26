@@ -128,5 +128,31 @@ assert('효율 90% 상한(Lv6+ 동일)', (() => {
   return Math.abs(a - b) <= 1;            // 부동소수 반올림 허용(±1)
 })());
 
+// 최고 콤보 갱신 규칙(현재 콤보가 기존 기록보다 클 때만 갱신)
+function updateBestCombo(best, current) {
+  return current > best ? current : best;
+}
+
+// 플레이 일수 계산(시작 시각 → 경과 일수, 미시작이면 0)
+function playDays(startedAt, now) {
+  if (!startedAt) return 0;
+  return Math.max(0, Math.floor((now - startedAt) / (1000 * 60 * 60 * 24)));
+}
+
+console.log('[최고 콤보 기록]');
+assert('더 큰 콤보면 갱신', updateBestCombo(10, 25) === 25);
+assert('작은 콤보면 유지', updateBestCombo(30, 12) === 30);
+assert('동일하면 유지', updateBestCombo(15, 15) === 15);
+
+console.log('[플레이 일수]');
+assert('미시작(0)이면 0일', playDays(0, Date.now()) === 0);
+assert('방금 시작 → 0일', playDays(Date.now(), Date.now()) === 0);
+assert('3일 경과 → 3일', (() => {
+  const now = 1000000000000;
+  const start = now - 3 * 24 * 60 * 60 * 1000;
+  return playDays(start, now) === 3;
+})());
+assert('미래 시작(음수)도 0으로 클램프', playDays(Date.now() + 100000, Date.now()) === 0);
+
 console.log('\n결과: ' + passed + ' 통과, ' + failed + ' 실패');
 if (failed > 0) process.exit(1);
