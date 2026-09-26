@@ -135,6 +135,19 @@
     return r;
   }
 
+  // 다음 직급까지의 진행도(0~100). 최고 직급이면 null 반환.
+  function getRankProgress() {
+    let idx = 0;
+    for (let i = 0; i < RANKS.length; i++) {
+      if (clickerState.lifetimeAir >= RANKS[i].min) idx = i;
+    }
+    if (idx >= RANKS.length - 1) return null; // 최고 직급
+    const cur = RANKS[idx].min;
+    const next = RANKS[idx + 1].min;
+    const pct = Math.max(0, Math.min(100, ((clickerState.lifetimeAir - cur) / (next - cur)) * 100));
+    return { pct: Math.floor(pct), next: RANKS[idx + 1].name, remain: Math.max(0, Math.ceil(next - clickerState.lifetimeAir)) };
+  }
+
   // === 업적 정의 ===
   const ACHIEVEMENTS = [
     { id: 'first_pop',   name: '첫 뽁',            check: (s) => s.clicks >= 1 },
@@ -264,6 +277,21 @@
     // 직급(랭크) 표시
     const rankEl = document.getElementById('txt-rank');
     if (rankEl) rankEl.innerText = getRank().name;
+
+    // 다음 직급까지 진행도 바
+    const rankBarEl = document.getElementById('txt-rank-progress');
+    if (rankBarEl) {
+      const prog = getRankProgress();
+      if (prog) {
+        const filled = Math.round(prog.pct / 10);
+        const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+        rankBarEl.style.display = '';
+        rankBarEl.innerHTML = '<span style="color:#66ccff;">' + bar + '</span> ' + prog.pct + '% → ' + prog.next;
+      } else {
+        rankBarEl.style.display = '';
+        rankBarEl.innerHTML = '<span style="color:#ffd700;">최고 직급 달성!</span>';
+      }
+    }
 
     // 황금 뽁뽁이 누적 표시(1회 이상 잡았을 때만 노출)
     const goldenLine = document.getElementById('line-golden');
