@@ -23,6 +23,8 @@
       <div class="txt-line">압축 공기: <span id="txt-air">0</span> ml</div>
       <div class="txt-line">파열 출력: <span id="txt-per-click">1</span> ml/회</div>
       <div class="txt-line">자동 충전: <span id="txt-per-sec">0</span> ml/초</div>
+      <div class="txt-line" style="margin-top:4px;">직급: <span id="txt-rank" style="color:#66ccff;">수습 뽁뽁 견습생</span></div>
+      <div class="txt-line" id="line-golden" style="display:none;">황금 뽁: <span id="txt-golden" style="color:#ffd700;">0</span> 회</div>
       <br>
       <div class="txt-subheader">[ 메뉴판 ]</div>
       <div class="txt-upgrade" id="upg-1" onclick="buyUpgrade(1)">
@@ -49,11 +51,25 @@
         > 06. 뽁뽁이 재생력 강화 [Lv.<span id="lvl-6">0</span>] (<span id="cost-6">200000</span> ml)
         <div class="txt-desc">터진 뽁뽁이 재생 속도 단축 & 화면 내 최대 기포 수 증가</div>
       </div>
+      <div class="txt-upgrade" id="upg-7" onclick="buyUpgrade(7)">
+        > 07. 황금 압착기 [Lv.<span id="lvl-7">0</span>] (<span id="cost-7">5000</span> ml)
+        <div class="txt-desc">가끔 나타나는 황금 뽁뽁이 출현 확률↑ (터뜨리면 대량 보상)</div>
+      </div>
+      <div class="txt-upgrade" id="upg-8" onclick="buyUpgrade(8)">
+        > 08. 심야 컴프레서 [Lv.<span id="lvl-8">0</span>] (<span id="cost-8">800000</span> ml)
+        <div class="txt-desc">자리를 비운 동안에도 압축 공기 자동 충전 (오프라인 수익)</div>
+      </div>
+      <div class="txt-upgrade" id="upg-9" onclick="buyUpgrade(9)">
+        > 09. 공명 증폭기 [Lv.<span id="lvl-9">0</span>] (<span id="cost-9">5000000</span> ml)
+        <div class="txt-desc">모든 압축 공기 획득량 +25%/레벨</div>
+      </div>
+
+      <div id="achievement-list" style="display:none; margin-top:10px;"></div>
     </div>
 
-    <link rel="stylesheet" href="/css/bubble-clicker.css?v=9">
-    <script src="/js/bubble-clicker.js?v=9" defer></script>
-    <script src="/js/ambient-audio.js?v=9" defer></script>
+    <link rel="stylesheet" href="/css/bubble-clicker.css?v=10">
+    <script src="/js/bubble-clicker.js?v=10" defer></script>
+    <script src="/js/ambient-audio.js?v=10" defer></script>
   </div>
 
   <nav class="site-nav">
