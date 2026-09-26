@@ -100,6 +100,8 @@
     lifetimeAir: 0,   // 누적 획득 압축 공기(직급 판정용, 소비해도 안 줄어듦)
     lastSeen: 0,      // 마지막 접속 시각(오프라인 수익 계산용)
     achievements: {}, // 달성한 업적 id 모음
+    bestCombo: 0,     // 최고 콤보 기록
+    startedAt: 0,     // 최초 플레이 시작 시각
     upgrades: {
       1: { count: 0, baseCost: 15, costMult: 1.5, clickBonus: 1, secBonus: 0 },
       2: { count: 0, baseCost: 50, costMult: 1.6, critChance: 0.15 },
@@ -173,6 +175,8 @@
           clickerState.golden = parsed.golden || 0;
           clickerState.lastSeen = parsed.lastSeen || 0;
           clickerState.achievements = parsed.achievements || {};
+          clickerState.bestCombo = parsed.bestCombo || 0;
+          clickerState.startedAt = parsed.startedAt || 0;
           // 누적 공기(직급용): 기존 세이브엔 없으니 현재 보유 공기로 최소 보정
           clickerState.lifetimeAir = (typeof parsed.lifetimeAir === 'number')
             ? parsed.lifetimeAir
@@ -244,6 +248,7 @@
 
   function registerCombo() {
     comboCount++;
+    if (comboCount > clickerState.bestCombo) clickerState.bestCombo = comboCount;
     if (comboTimer) clearTimeout(comboTimer);
     comboTimer = setTimeout(() => {
       comboCount = 0;
@@ -335,6 +340,7 @@
 
     // 업적 목록 렌더링
     renderAchievements();
+    renderStats();
 
     for (let id = 1; id <= 9; id++) {
       const cost = getUpgradeCost(id);
@@ -396,6 +402,30 @@
       unlocked.map((a) => '<div class="txt-achievement">✔ ' + a.name + '</div>').join('');
   }
 
+  // === 통계 패널 ===
+  function renderStats() {
+    const box = document.getElementById('clicker-stats');
+    if (!box || box.style.display === 'none') return;
+    let daysStr = '오늘 시작';
+    if (clickerState.startedAt) {
+      const days = Math.floor((Date.now() - clickerState.startedAt) / (1000 * 60 * 60 * 24));
+      daysStr = days > 0 ? (days + '일째') : '오늘 시작';
+    }
+    box.innerHTML =
+      '<div class="txt-stat">총 획득 공기: ' + Math.floor(clickerState.lifetimeAir).toLocaleString() + ' ml</div>' +
+      '<div class="txt-stat">누적 파열: ' + clickerState.clicks.toLocaleString() + ' 회</div>' +
+      '<div class="txt-stat">황금 뽁: ' + clickerState.golden + ' 회</div>' +
+      '<div class="txt-stat">최고 콤보: ' + clickerState.bestCombo + '</div>' +
+      '<div class="txt-stat">플레이: ' + daysStr + '</div>';
+  }
+
+  window.toggleClickerStats = function () {
+    const box = document.getElementById('clicker-stats');
+    if (!box) return;
+    box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    renderStats();
+  };
+
   // === 황금 뽁뽁이 ===
   function trySpawnGolden(el) {
     const chance = getGoldenChance();
@@ -446,6 +476,8 @@
     clickerState.lifetimeAir = 0;
     clickerState.lastSeen = 0;
     clickerState.achievements = {};
+    clickerState.bestCombo = 0;
+    clickerState.startedAt = Date.now();
     for (let k in clickerState.upgrades) {
       clickerState.upgrades[k].count = 0;
     }
@@ -672,6 +704,7 @@
   // 7. 초기화
   function init() {
     loadState();
+    if (!clickerState.startedAt) clickerState.startedAt = Date.now();
     grantOfflineEarnings();
     clickerState.lastSeen = Date.now();
     checkAchievements();
