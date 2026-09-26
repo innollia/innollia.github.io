@@ -139,3 +139,10 @@
   padding-left: 6px;
   line-height: 1.5;
 }
+
+/* 통계 패널 */
+.txt-stat {
+  font-size: 0.75rem;
+  color: #bbbbbb;
+  line-height: 1.6;
+}
