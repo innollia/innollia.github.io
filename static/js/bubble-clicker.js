@@ -376,6 +376,25 @@
     setTimeout(() => el.remove(), 1000);
   }
 
+  // 황금 파열 시 반짝이 파티클 분출
+  function spawnSparkles(cx, cy) {
+    const count = 10;
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('div');
+      s.className = 'gold-sparkle';
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+      const dist = 30 + Math.random() * 30;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      s.style.left = cx + 'px';
+      s.style.top = cy + 'px';
+      s.style.setProperty('--dx', dx + 'px');
+      s.style.setProperty('--dy', dy + 'px');
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 700);
+    }
+  }
+
   // === 업적 처리 ===
   function checkAchievements() {
     let newlyUnlocked = null;
@@ -456,6 +475,7 @@
     playUpgradeSound();
     const rect = el.getBoundingClientRect();
     showFloatingText('✨ GOLDEN! +' + roundedReward + ' ml', rect.left + window.scrollX + 10, rect.top + window.scrollY - 10, '#ffd700');
+    spawnSparkles(rect.left + rect.width / 2 + window.scrollX, rect.top + rect.height / 2 + window.scrollY);
   }
 
   // 5. 상호작용 액션 (전역 노출 필요)
