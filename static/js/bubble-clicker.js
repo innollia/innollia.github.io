@@ -102,6 +102,8 @@
     achievements: {}, // 달성한 업적 id 모음
     bestCombo: 0,     // 최고 콤보 기록
     startedAt: 0,     // 최초 플레이 시작 시각
+    lastBonusDate: '',// 마지막 일일 보너스 수령 날짜(YYYY-MM-DD)
+    streak: 0,        // 연속 접속 일수
     upgrades: {
       1: { count: 0, baseCost: 15, costMult: 1.5, clickBonus: 1, secBonus: 0 },
       2: { count: 0, baseCost: 50, costMult: 1.6, critChance: 0.15 },
@@ -177,6 +179,8 @@
           clickerState.achievements = parsed.achievements || {};
           clickerState.bestCombo = parsed.bestCombo || 0;
           clickerState.startedAt = parsed.startedAt || 0;
+          clickerState.lastBonusDate = parsed.lastBonusDate || '';
+          clickerState.streak = parsed.streak || 0;
           // 누적 공기(직급용): 기존 세이브엔 없으니 현재 보유 공기로 최소 보정
           clickerState.lifetimeAir = (typeof parsed.lifetimeAir === 'number')
             ? parsed.lifetimeAir
@@ -478,6 +482,8 @@
     clickerState.achievements = {};
     clickerState.bestCombo = 0;
     clickerState.startedAt = Date.now();
+    clickerState.lastBonusDate = '';
+    clickerState.streak = 0;
     for (let k in clickerState.upgrades) {
       clickerState.upgrades[k].count = 0;
     }
@@ -701,10 +707,38 @@
       window.innerWidth / 2 - 80 + window.scrollX, 120 + window.scrollY, '#88ccff');
   }
 
+  // 일일 접속 보너스: 하루 1회, 연속 접속일수에 따라 보너스 증가
+  function grantDailyBonus() {
+    const now = new Date();
+    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    if (clickerState.lastBonusDate === today) return; // 오늘 이미 받음
+
+    // 어제 받았으면 연속(streak) 유지, 아니면 리셋
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth() + 1) + '-' + yesterday.getDate();
+    if (clickerState.lastBonusDate === yStr) {
+      clickerState.streak = (clickerState.streak || 0) + 1;
+    } else {
+      clickerState.streak = 1;
+    }
+    clickerState.lastBonusDate = today;
+
+    // 보너스 = 기본 100ml × 연속일수(최대 7배), 최초 방문(startedAt 직후)엔 지급 안 함
+    if (!clickerState.startedAt) return;
+    const streakMult = Math.min(7, clickerState.streak);
+    const bonus = 100 * streakMult;
+    gainAir(bonus);
+    saveState();
+    showFloatingText('🎁 ' + clickerState.streak + '일 연속 접속 보너스: +' + bonus + ' ml',
+      window.innerWidth / 2 - 90 + window.scrollX, 80 + window.scrollY, '#ff99cc');
+  }
+
   // 7. 초기화
   function init() {
     loadState();
-    if (!clickerState.startedAt) clickerState.startedAt = Date.now();
+    const isFirstPlay = !clickerState.startedAt;
+    if (isFirstPlay) clickerState.startedAt = Date.now();
+    if (!isFirstPlay) grantDailyBonus(); // 최초 방문 당일은 보너스 제외
     grantOfflineEarnings();
     clickerState.lastSeen = Date.now();
     checkAchievements();
