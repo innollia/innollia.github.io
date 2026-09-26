@@ -154,5 +154,34 @@ assert('3일 경과 → 3일', (() => {
 })());
 assert('미래 시작(음수)도 0으로 클램프', playDays(Date.now() + 100000, Date.now()) === 0);
 
+// === 방명록 로직 (guestbook.html과 동일 규칙 복제) ===
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function addEntry(list, name, msg) {
+  const n = (name || '').trim();
+  const m = (msg || '').trim();
+  if (!n || !m) return list;               // 이름·내용 필수
+  const next = list.concat([{ name: n.slice(0, 20), msg: m.slice(0, 300), ts: 1 }]);
+  return next.length > 200 ? next.slice(-200) : next;  // 최대 200개
+}
+
+console.log('[방명록]');
+assert('HTML 태그 이스케이프', esc('<script>x</script>') === '&lt;script&gt;x&lt;/script&gt;');
+assert('따옴표 이스케이프', esc('"a\'b"') === '&quot;a&#39;b&quot;');
+assert('앰퍼샌드 먼저 처리', esc('a & <b>') === 'a &amp; &lt;b&gt;');
+assert('이름 없으면 미추가', addEntry([], '', '안녕').length === 0);
+assert('내용 없으면 미추가', addEntry([], '누구', '   ').length === 0);
+assert('정상 입력은 추가', addEntry([], '방문자', '반가워요').length === 1);
+assert('이름 20자 초과 절삭', addEntry([], 'x'.repeat(50), 'hi')[0].name.length === 20);
+assert('내용 300자 초과 절삭', addEntry([], 'n', 'y'.repeat(500))[0].msg.length === 300);
+assert('201번째부터 오래된 것 제거', (() => {
+  let list = [];
+  for (let i = 0; i < 205; i++) list = addEntry(list, 'u' + i, 'm' + i);
+  return list.length === 200 && list[0].name === 'u5'; // 앞 5개 밀림
+})());
+
 console.log('\n결과: ' + passed + ' 통과, ' + failed + ' 실패');
 if (failed > 0) process.exit(1);
