@@ -1,3 +1,38 @@
-baseURL = 'https://example.org/'
-locale = 'en-us'
-title = 'My New Hugo Project'
+baseURL = 'https://innollia.github.io/'
+languageCode = 'ko-KR'
+title = '< belladonna sherum 의 홈-페-지 >'
+theme = 'hugo-trainsh'
+
+defaultContentLanguage = 'ko'
+defaultContentLanguageInSubdir = false
+
+[languages]
+  [languages.ko]
+    languageCode = 'ko-KR'
+    languageName = '한국어'
+    weight = 1
+    title = '< belladonna sherum 의 홈-페-지 >'
+
+# URL 정규화
+disablePathToLower = false
+removePathAccents = true
+
+[outputs]
+  home = ['HTML', 'RSS', 'JSON']
+
+[params]
+  mainSections = ['posts']
+
+  [params.home]
+    [params.home.recent]
+      limit = 5
+
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = true  # 콘텐츠 내 인라인 HTML 허용 (레트로 위젯/배너용)
+  [markup.goldmark.parser.attribute]
+    block = true
+  [markup.highlight]
+    lineNos = false
+    codeFences = true
+    noClasses = true
