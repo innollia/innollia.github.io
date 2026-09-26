@@ -146,3 +146,21 @@
   color: #bbbbbb;
   line-height: 1.6;
 }
+
+/* 황금 파열 반짝이 파티클 */
+.gold-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff8dc, #ffd700 60%, transparent);
+  box-shadow: 0 0 6px #ffd700;
+  pointer-events: none;
+  z-index: 9998;
+  animation: sparkle-fly 0.7s ease-out forwards;
+}
+
+@keyframes sparkle-fly {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
