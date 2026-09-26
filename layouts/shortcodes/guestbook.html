@@ -1,0 +1,124 @@
+<!-- 레트로 방명록 (클라이언트 localStorage 기반, 백엔드 없음) -->
+<style>
+  .gb-wrap {
+    max-width: 640px;
+    margin: 20px auto;
+    font-family: 'Gulim', 'Courier New', monospace;
+  }
+  .gb-title {
+    text-align: center;
+    color: #ff33cc;
+    font-weight: bold;
+    text-shadow: 0 0 4px #000;
+    margin-bottom: 12px;
+  }
+  .gb-form {
+    border: 2px dashed #aa8833;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: rgba(0, 0, 0, 0.25);
+  }
+  .gb-form input, .gb-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+    background: #111;
+    color: #eee;
+    border: 1px solid #555;
+    padding: 6px;
+    font-family: inherit;
+  }
+  .gb-form button {
+    background: #ff33cc;
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+  }
+  .gb-form button:hover { background: #ff66dd; }
+  .gb-entry {
+    border-bottom: 1px dotted #666;
+    padding: 8px 4px;
+    color: #ddd;
+  }
+  .gb-entry .gb-name { color: #ffcc00; font-weight: bold; }
+  .gb-entry .gb-date { color: #888; font-size: 0.75rem; float: right; }
+  .gb-entry .gb-msg { display: block; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
+  .gb-empty { color: #777; text-align: center; padding: 12px; }
+  .gb-note { color: #888; font-size: 0.72rem; text-align: center; margin-top: 10px; }
+</style>
+
+<div class="gb-wrap">
+  <div class="gb-title">✦ 방 명 록 ✦</div>
+
+  <div class="gb-form">
+    <input type="text" id="gb-name" maxlength="20" placeholder="이름 (최대 20자)">
+    <textarea id="gb-msg" rows="3" maxlength="300" placeholder="한마디 남기고 가세요 (최대 300자)"></textarea>
+    <button type="button" onclick="gbSubmit()">남기기</button>
+  </div>
+
+  <div id="gb-list"></div>
+  <div class="gb-note">※ 방명록은 이 브라우저에만 저장됩니다 (내 컴퓨터에만 보임).</div>
+</div>
+
+<script>
+(function () {
+  var KEY = 'innollia_guestbook_v1';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+    catch (e) { return []; }
+  }
+  function save(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function fmtDate(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() + ' ' +
+           ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function render() {
+    var list = load();
+    var box = document.getElementById('gb-list');
+    if (!box) return;
+    if (list.length === 0) {
+      box.innerHTML = '<div class="gb-empty">아직 아무도 다녀가지 않았어요. 첫 방문자가 되어보세요!</div>';
+      return;
+    }
+    box.innerHTML = list.slice().reverse().map(function (e) {
+      return '<div class="gb-entry">' +
+        '<span class="gb-name">' + esc(e.name) + '</span>' +
+        '<span class="gb-date">' + fmtDate(e.ts) + '</span>' +
+        '<span class="gb-msg">' + esc(e.msg) + '</span>' +
+        '</div>';
+    }).join('');
+  }
+  window.gbSubmit = function () {
+    var nameEl = document.getElementById('gb-name');
+    var msgEl = document.getElementById('gb-msg');
+    var name = (nameEl.value || '').trim();
+    var msg = (msgEl.value || '').trim();
+    if (!name) { alert('이름을 입력해주세요.'); return; }
+    if (!msg) { alert('한마디 남겨주세요.'); return; }
+    var list = load();
+    list.push({ name: name.slice(0, 20), msg: msg.slice(0, 300), ts: Date.now() });
+    if (list.length > 200) list = list.slice(-200); // 최대 200개 보관
+    save(list);
+    msgEl.value = '';
+    render();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', render);
+  } else {
+    render();
+  }
+})();
+</script>
