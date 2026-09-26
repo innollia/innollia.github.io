@@ -2,6 +2,7 @@
 title = "백일몽 주식회사 사보 — 이달의 압착왕 & 황금 뽁뽁이 목격담"
 date = 2026-09-27T01:20:00+09:00
 authorComment = "사보, 압착왕, 황금뽁, 야근, 공명장"
+tags = ["사보", "백일몽주식회사"]
 +++
 
 <div class="retro-container">
