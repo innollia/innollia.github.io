@@ -96,75 +96,15 @@
   let clickerState = {
     clicks: 0,
     air: 0,
-    golden: 0,        // 골든 뽁뽁이 누적 파열 횟수
-    lifetimeAir: 0,   // 누적 획득 압축 공기(직급 판정용, 소비해도 안 줄어듦)
-    lastSeen: 0,      // 마지막 접속 시각(오프라인 수익 계산용)
-    achievements: {}, // 달성한 업적 id 모음
-    bestCombo: 0,     // 최고 콤보 기록
-    startedAt: 0,     // 최초 플레이 시작 시각
-    lastBonusDate: '',// 마지막 일일 보너스 수령 날짜(YYYY-MM-DD)
-    streak: 0,        // 연속 접속 일수
     upgrades: {
       1: { count: 0, baseCost: 15, costMult: 1.5, clickBonus: 1, secBonus: 0 },
       2: { count: 0, baseCost: 50, costMult: 1.6, critChance: 0.15 },
       3: { count: 0, baseCost: 200, costMult: 1.6, clickBonus: 0, secBonus: 4 },
       4: { count: 0, baseCost: 1000, costMult: 1.7, clickBonus: 0, secBonus: 0 },
       5: { count: 0, baseCost: 40000, costMult: 1.8, clickBonus: 0, secBonus: 0 },
-      6: { count: 0, baseCost: 200000, costMult: 1.9, clickBonus: 0, secBonus: 0 },
-      7: { count: 0, baseCost: 5000, costMult: 1.7, clickBonus: 0, secBonus: 0 },     // 황금 압착기: 골든 뽁뽁이 출현 확률↑
-      8: { count: 0, baseCost: 800000, costMult: 2.0, clickBonus: 0, secBonus: 0 },   // 심야 컴프레서: 오프라인 자동 충전 효율↑
-      9: { count: 0, baseCost: 5000000, costMult: 2.2, clickBonus: 0, secBonus: 0 }   // 공명 증폭기: 모든 획득량 배율↑
+      6: { count: 0, baseCost: 200000, costMult: 1.9, clickBonus: 0, secBonus: 0 }
     }
   };
-
-  // === 직급(랭크) 테이블: 누적 공기량 기준 백일몽 주식회사 사원증 ===
-  const RANKS = [
-    { min: 0,           name: '수습 뽁뽁 견습생' },
-    { min: 100,         name: '뽁뽁 사원' },
-    { min: 1000,        name: '뽁뽁 주임' },
-    { min: 10000,       name: '뽁뽁 대리' },
-    { min: 100000,      name: '뽁뽁 과장' },
-    { min: 1000000,     name: '뽁뽁 차장' },
-    { min: 10000000,    name: '뽁뽁 부장' },
-    { min: 100000000,   name: '뽁뽁 이사' },
-    { min: 1000000000,  name: '뽁뽁 대표이사' },
-    { min: 10000000000, name: '전설의 압축 공기 마스터' }
-  ];
-
-  function getRank() {
-    let r = RANKS[0];
-    for (let i = 0; i < RANKS.length; i++) {
-      if (clickerState.lifetimeAir >= RANKS[i].min) r = RANKS[i];
-    }
-    return r;
-  }
-
-  // 다음 직급까지의 진행도(0~100). 최고 직급이면 null 반환.
-  function getRankProgress() {
-    let idx = 0;
-    for (let i = 0; i < RANKS.length; i++) {
-      if (clickerState.lifetimeAir >= RANKS[i].min) idx = i;
-    }
-    if (idx >= RANKS.length - 1) return null; // 최고 직급
-    const cur = RANKS[idx].min;
-    const next = RANKS[idx + 1].min;
-    const pct = Math.max(0, Math.min(100, ((clickerState.lifetimeAir - cur) / (next - cur)) * 100));
-    return { pct: Math.floor(pct), next: RANKS[idx + 1].name, remain: Math.max(0, Math.ceil(next - clickerState.lifetimeAir)) };
-  }
-
-  // === 업적 정의 ===
-  const ACHIEVEMENTS = [
-    { id: 'first_pop',   name: '첫 뽁',            check: (s) => s.clicks >= 1 },
-    { id: 'pop_100',     name: '뽁 100회',         check: (s) => s.clicks >= 100 },
-    { id: 'pop_1000',    name: '뽁 1,000회',       check: (s) => s.clicks >= 1000 },
-    { id: 'pop_10000',   name: '뽁 10,000회',      check: (s) => s.clicks >= 10000 },
-    { id: 'air_1k',      name: '공기 1,000ml 돌파', check: (s) => s.lifetimeAir >= 1000 },
-    { id: 'air_1m',      name: '공기 100만ml 돌파', check: (s) => s.lifetimeAir >= 1000000 },
-    { id: 'golden_1',    name: '첫 황금 뽁',        check: (s) => s.golden >= 1 },
-    { id: 'golden_50',   name: '황금 뽁 50회',      check: (s) => s.golden >= 50 },
-    { id: 'auto_on',     name: '자동화 도입',       check: (s) => s.upgrades[4].count > 0 },
-    { id: 'max_upg',     name: '9종 강화 완비',     check: (s) => Object.keys(s.upgrades).every((k) => s.upgrades[k].count > 0) }
-  ];
 
   function loadState() {
     try {
@@ -174,17 +114,6 @@
         if (parsed && typeof parsed.clicks === 'number') {
           clickerState.clicks = parsed.clicks;
           clickerState.air = parsed.air || 0;
-          clickerState.golden = parsed.golden || 0;
-          clickerState.lastSeen = parsed.lastSeen || 0;
-          clickerState.achievements = parsed.achievements || {};
-          clickerState.bestCombo = parsed.bestCombo || 0;
-          clickerState.startedAt = parsed.startedAt || 0;
-          clickerState.lastBonusDate = parsed.lastBonusDate || '';
-          clickerState.streak = parsed.streak || 0;
-          // 누적 공기(직급용): 기존 세이브엔 없으니 현재 보유 공기로 최소 보정
-          clickerState.lifetimeAir = (typeof parsed.lifetimeAir === 'number')
-            ? parsed.lifetimeAir
-            : (parsed.air || 0);
           if (parsed.upgrades) {
             for (let k in clickerState.upgrades) {
               if (parsed.upgrades[k]) {
@@ -208,68 +137,13 @@
   }
 
   // 3. 자원 및 가격 연산 로직
-  function getGlobalMult() {
-    // 공명 증폭기(업그레이드 9): 레벨당 획득량 +25%
-    return 1 + (clickerState.upgrades[9] ? clickerState.upgrades[9].count * 0.25 : 0);
-  }
-
   function getAirPerClick() {
-    const base = 1 + (clickerState.upgrades[1].count * clickerState.upgrades[1].clickBonus);
-    return Math.round(base * getGlobalMult());
+    return 1 + (clickerState.upgrades[1].count * clickerState.upgrades[1].clickBonus);
   }
 
   function getAirPerSec() {
-    const base = (clickerState.upgrades[3].count * clickerState.upgrades[3].secBonus) +
-                 (clickerState.upgrades[4].count * clickerState.upgrades[4].secBonus);
-    return Math.round(base * getGlobalMult() * 10) / 10;
-  }
-
-  // 골든 뽁뽁이 출현 확률(황금 압착기 업그레이드 7)
-  function getGoldenChance() {
-    const lv = clickerState.upgrades[7] ? clickerState.upgrades[7].count : 0;
-    if (lv <= 0) return 0;
-    return Math.min(0.12, 0.01 + lv * 0.012); // 최대 12%
-  }
-
-  // 공기 획득 공통 처리(누적 공기 추적 + 업적 체크)
-  function gainAir(amount) {
-    clickerState.air += amount;
-    clickerState.lifetimeAir += amount;
-  }
-
-  // === 콤보 시스템 (세션 내 메모리, 저장 안 함) ===
-  // 1.2초 안에 연속으로 수동 파열하면 콤보가 쌓이고, 콤보 구간마다 획득 배율이 붙는다.
-  let comboCount = 0;
-  let comboTimer = null;
-
-  function getComboMult() {
-    if (comboCount < 5) return 1;       // 5콤보 미만: 배율 없음
-    if (comboCount < 15) return 1.5;    // 5~14콤보: 1.5배
-    if (comboCount < 30) return 2;      // 15~29콤보: 2배
-    if (comboCount < 50) return 3;      // 30~49콤보: 3배
-    return 4;                           // 50콤보 이상: 4배
-  }
-
-  function registerCombo() {
-    comboCount++;
-    if (comboCount > clickerState.bestCombo) clickerState.bestCombo = comboCount;
-    if (comboTimer) clearTimeout(comboTimer);
-    comboTimer = setTimeout(() => {
-      comboCount = 0;
-      const el = document.getElementById('txt-combo');
-      if (el) el.style.display = 'none';
-    }, 1200);
-
-    const el = document.getElementById('txt-combo');
-    if (el) {
-      const mult = getComboMult();
-      if (comboCount >= 5) {
-        el.style.display = '';
-        el.innerHTML = '🔥 ' + comboCount + ' COMBO <span style="color:#ff6600;">×' + mult + '</span>';
-      } else {
-        el.style.display = 'none';
-      }
-    }
+    return (clickerState.upgrades[3].count * clickerState.upgrades[3].secBonus) +
+           (clickerState.upgrades[4].count * clickerState.upgrades[4].secBonus);
   }
 
   function getUpgradeCost(id) {
@@ -317,36 +191,7 @@
     if (perClickEl) perClickEl.innerText = getAirPerClick();
     if (perSecEl) perSecEl.innerText = getAirPerSec();
 
-    // 직급(랭크) 표시
-    const rankEl = document.getElementById('txt-rank');
-    if (rankEl) rankEl.innerText = getRank().name;
-
-    // 다음 직급까지 진행도 바
-    const rankBarEl = document.getElementById('txt-rank-progress');
-    if (rankBarEl) {
-      const prog = getRankProgress();
-      if (prog) {
-        const filled = Math.round(prog.pct / 10);
-        const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
-        rankBarEl.style.display = '';
-        rankBarEl.innerHTML = '<span style="color:#66ccff;">' + bar + '</span> ' + prog.pct + '% → ' + prog.next;
-      } else {
-        rankBarEl.style.display = '';
-        rankBarEl.innerHTML = '<span style="color:#ffd700;">최고 직급 달성!</span>';
-      }
-    }
-
-    // 황금 뽁뽁이 누적 표시(1회 이상 잡았을 때만 노출)
-    const goldenLine = document.getElementById('line-golden');
-    const goldenEl = document.getElementById('txt-golden');
-    if (goldenLine) goldenLine.style.display = clickerState.golden > 0 ? '' : 'none';
-    if (goldenEl) goldenEl.innerText = clickerState.golden;
-
-    // 업적 목록 렌더링
-    renderAchievements();
-    renderStats();
-
-    for (let id = 1; id <= 9; id++) {
+    for (let id = 1; id <= 6; id++) {
       const cost = getUpgradeCost(id);
       const el = document.getElementById('upg-' + id);
       const costEl = document.getElementById('cost-' + id);
@@ -376,108 +221,6 @@
     setTimeout(() => el.remove(), 1000);
   }
 
-  // 황금 파열 시 반짝이 파티클 분출
-  function spawnSparkles(cx, cy) {
-    const count = 10;
-    for (let i = 0; i < count; i++) {
-      const s = document.createElement('div');
-      s.className = 'gold-sparkle';
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-      const dist = 30 + Math.random() * 30;
-      const dx = Math.cos(angle) * dist;
-      const dy = Math.sin(angle) * dist;
-      s.style.left = cx + 'px';
-      s.style.top = cy + 'px';
-      s.style.setProperty('--dx', dx + 'px');
-      s.style.setProperty('--dy', dy + 'px');
-      document.body.appendChild(s);
-      setTimeout(() => s.remove(), 700);
-    }
-  }
-
-  // === 업적 처리 ===
-  function checkAchievements() {
-    let newlyUnlocked = null;
-    ACHIEVEMENTS.forEach((a) => {
-      if (!clickerState.achievements[a.id] && a.check(clickerState)) {
-        clickerState.achievements[a.id] = true;
-        newlyUnlocked = a;
-      }
-    });
-    if (newlyUnlocked) {
-      playUpgradeSound();
-      const x = (lastMouseX !== null ? lastMouseX : window.innerWidth / 2);
-      const y = (lastMouseY !== null ? lastMouseY : window.innerHeight / 2);
-      showFloatingText('★ 업적 달성: ' + newlyUnlocked.name, x + window.scrollX, y + window.scrollY, '#ffd700');
-    }
-  }
-
-  function renderAchievements() {
-    const box = document.getElementById('achievement-list');
-    if (!box) return;
-    const unlocked = ACHIEVEMENTS.filter((a) => clickerState.achievements[a.id]);
-    if (unlocked.length === 0) {
-      box.style.display = 'none';
-      return;
-    }
-    box.style.display = '';
-    box.innerHTML = '<div class="txt-subheader">[ 업적 ' + unlocked.length + '/' + ACHIEVEMENTS.length + ' ]</div>' +
-      unlocked.map((a) => '<div class="txt-achievement">✔ ' + a.name + '</div>').join('');
-  }
-
-  // === 통계 패널 ===
-  function renderStats() {
-    const box = document.getElementById('clicker-stats');
-    if (!box || box.style.display === 'none') return;
-    let daysStr = '오늘 시작';
-    if (clickerState.startedAt) {
-      const days = Math.floor((Date.now() - clickerState.startedAt) / (1000 * 60 * 60 * 24));
-      daysStr = days > 0 ? (days + '일째') : '오늘 시작';
-    }
-    box.innerHTML =
-      '<div class="txt-stat">총 획득 공기: ' + Math.floor(clickerState.lifetimeAir).toLocaleString() + ' ml</div>' +
-      '<div class="txt-stat">누적 파열: ' + clickerState.clicks.toLocaleString() + ' 회</div>' +
-      '<div class="txt-stat">황금 뽁: ' + clickerState.golden + ' 회</div>' +
-      '<div class="txt-stat">최고 콤보: ' + clickerState.bestCombo + '</div>' +
-      '<div class="txt-stat">플레이: ' + daysStr + '</div>';
-  }
-
-  window.toggleClickerStats = function () {
-    const box = document.getElementById('clicker-stats');
-    if (!box) return;
-    box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
-    renderStats();
-  };
-
-  // === 황금 뽁뽁이 ===
-  function trySpawnGolden(el) {
-    const chance = getGoldenChance();
-    if (chance <= 0) return false;
-    if (Math.random() < chance) {
-      el.classList.add('golden');
-      // 골든은 8초 뒤 자동 소멸(안 터뜨리면 사라짐)
-      setTimeout(() => {
-        if (el && el.classList.contains('golden')) el.classList.remove('golden');
-      }, 8000);
-      return true;
-    }
-    return false;
-  }
-
-  function popGolden(el) {
-    el.classList.remove('golden');
-    clickerState.golden++;
-    // 골든 보상: 현재 초당 생산 30초분 또는 최소 대량 지급 중 큰 값
-    const perSec = getAirPerSec();
-    const reward = Math.max(250, Math.floor(perSec * 30)) * Math.max(1, getGlobalMult());
-    const roundedReward = Math.floor(reward);
-    gainAir(roundedReward);
-    playUpgradeSound();
-    const rect = el.getBoundingClientRect();
-    showFloatingText('✨ GOLDEN! +' + roundedReward + ' ml', rect.left + window.scrollX + 10, rect.top + window.scrollY - 10, '#ffd700');
-    spawnSparkles(rect.left + rect.width / 2 + window.scrollX, rect.top + rect.height / 2 + window.scrollY);
-  }
-
   // 5. 상호작용 액션 (전역 노출 필요)
   window.refreshClickerUI = updateUI;
 
@@ -496,14 +239,6 @@
     localStorage.removeItem(STORAGE_KEY);
     clickerState.clicks = 0;
     clickerState.air = 0;
-    clickerState.golden = 0;
-    clickerState.lifetimeAir = 0;
-    clickerState.lastSeen = 0;
-    clickerState.achievements = {};
-    clickerState.bestCombo = 0;
-    clickerState.startedAt = Date.now();
-    clickerState.lastBonusDate = '';
-    clickerState.streak = 0;
     for (let k in clickerState.upgrades) {
       clickerState.upgrades[k].count = 0;
     }
@@ -514,24 +249,10 @@
   window.popBubble = function (el, isAuto = false) {
     if (localStorage.getItem('hide_clicker') === 'true') return;
     if (!el || el.classList.contains('popped')) return;
-
-    // === 황금 뽁뽁이를 클릭한 경우: 대량 보상 후 종료 ===
-    if (!isAuto && el.classList.contains('golden')) {
-      el.classList.add('popped');
-      popGolden(el);
-      checkAchievements();
-      saveState();
-      updateUI();
-      const regenDelayG = 3000;
-      setTimeout(() => { if (el) { el.classList.remove('popped'); } }, regenDelayG);
-      return;
-    }
-
     el.classList.add('popped');
 
     if (!isAuto) {
       clickerState.clicks++;
-      registerCombo();
       let gained = getAirPerClick();
       let isCrit = false;
 
@@ -544,22 +265,16 @@
         }
       }
 
-      // 콤보 배율 적용(수동 파열에만)
-      const comboMult = getComboMult();
-      gained = Math.round(gained * comboMult);
-
       playPop(isCrit);
 
       // 20번째 클릭 이후부터만 자원 누적 및 플로팅 텍스트 출력
       if (clickerState.clicks >= 20) {
-        gainAir(gained);
+        clickerState.air += gained;
         const rect = el.getBoundingClientRect();
         const txt = isCrit ? 'CRITICAL! +' + gained + ' ml' : '+' + gained + ' ml';
         const color = isCrit ? '#ff3333' : '#ffcc00';
         showFloatingText(txt, rect.left + window.scrollX + 10, rect.top + window.scrollY - 10, color);
       }
-
-      checkAchievements();
 
       // === 압력 전파 충격파(업그레이드 5) 효과 처리 ===
       const lv5 = clickerState.upgrades[5] ? clickerState.upgrades[5].count : 0;
@@ -585,7 +300,7 @@
       playSoftPop();
       if (clickerState.clicks >= 20 || clickerState.upgrades[4].count > 0) {
         const gained = getAirPerClick();
-        gainAir(gained);
+        clickerState.air += gained;
         const rect = el.getBoundingClientRect();
         showFloatingText('+' + gained + ' ml', rect.left + window.scrollX + 10, rect.top + window.scrollY - 10, '#00ffff');
       }
@@ -608,7 +323,6 @@
       const newBubble = document.createElement('div');
       newBubble.className = 'bubble';
       newBubble.onclick = function () { window.popBubble(this); };
-      trySpawnGolden(newBubble);
       container.appendChild(newBubble);
     }
   };
@@ -620,17 +334,10 @@
       if (localStorage.getItem('hide_clicker') === 'true') return;
       const pps = getAirPerSec();
       if (pps > 0) {
-        gainAir(pps / 10);
-        checkAchievements();
+        clickerState.air += pps / 10;
         updateUI();
       }
     }, 100);
-
-    // 접속 시각 저장(오프라인 수익 계산용) — 5초마다 갱신
-    setInterval(() => {
-      clickerState.lastSeen = Date.now();
-      saveState();
-    }, 5000);
 
     // 뽁뽁이 재생력 강화(업그레이드 6): 1초마다 기포 최대 수량까지 자동 보충
     setInterval(() => {
@@ -643,7 +350,6 @@
         const newBubble = document.createElement('div');
         newBubble.className = 'bubble';
         newBubble.onclick = function () { window.popBubble(this); };
-        trySpawnGolden(newBubble);
         container.appendChild(newBubble);
       }
     }, 1000);
@@ -701,67 +407,9 @@
     }, 2000);
   }
 
-  // 오프라인 수익: 마지막 접속 이후 흐른 시간만큼 자동 충전량을 지급
-  function grantOfflineEarnings() {
-    const lv8 = clickerState.upgrades[8] ? clickerState.upgrades[8].count : 0;
-    if (lv8 <= 0) return;             // 심야 컴프레서(업그레이드 8) 없으면 오프라인 수익 없음
-    if (!clickerState.lastSeen) return;
-
-    const now = Date.now();
-    const elapsedSec = Math.floor((now - clickerState.lastSeen) / 1000);
-    if (elapsedSec < 30) return;      // 최소 30초 이상 비웠을 때만
-
-    const cappedSec = Math.min(elapsedSec, 8 * 3600); // 최대 8시간분까지만 인정
-    const efficiency = Math.min(0.9, lv8 * 0.15);     // 레벨당 15%, 최대 90% 효율
-    const pps = getAirPerSec();
-    const earned = Math.floor(pps * cappedSec * efficiency);
-    if (earned <= 0) return;
-
-    gainAir(earned);
-    saveState();
-
-    const hours = Math.floor(cappedSec / 3600);
-    const mins = Math.floor((cappedSec % 3600) / 60);
-    const timeStr = hours > 0 ? (hours + '시간 ' + mins + '분') : (mins + '분');
-    showFloatingText('🌙 오프라인 수익 (' + timeStr + '): +' + earned + ' ml',
-      window.innerWidth / 2 - 80 + window.scrollX, 120 + window.scrollY, '#88ccff');
-  }
-
-  // 일일 접속 보너스: 하루 1회, 연속 접속일수에 따라 보너스 증가
-  function grantDailyBonus() {
-    const now = new Date();
-    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-    if (clickerState.lastBonusDate === today) return; // 오늘 이미 받음
-
-    // 어제 받았으면 연속(streak) 유지, 아니면 리셋
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth() + 1) + '-' + yesterday.getDate();
-    if (clickerState.lastBonusDate === yStr) {
-      clickerState.streak = (clickerState.streak || 0) + 1;
-    } else {
-      clickerState.streak = 1;
-    }
-    clickerState.lastBonusDate = today;
-
-    // 보너스 = 기본 100ml × 연속일수(최대 7배), 최초 방문(startedAt 직후)엔 지급 안 함
-    if (!clickerState.startedAt) return;
-    const streakMult = Math.min(7, clickerState.streak);
-    const bonus = 100 * streakMult;
-    gainAir(bonus);
-    saveState();
-    showFloatingText('🎁 ' + clickerState.streak + '일 연속 접속 보너스: +' + bonus + ' ml',
-      window.innerWidth / 2 - 90 + window.scrollX, 80 + window.scrollY, '#ff99cc');
-  }
-
   // 7. 초기화
   function init() {
     loadState();
-    const isFirstPlay = !clickerState.startedAt;
-    if (isFirstPlay) clickerState.startedAt = Date.now();
-    if (!isFirstPlay) grantDailyBonus(); // 최초 방문 당일은 보너스 제외
-    grantOfflineEarnings();
-    clickerState.lastSeen = Date.now();
-    checkAchievements();
     updateUI();
     startLoops();
   }
