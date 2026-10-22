@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>모스 압축</title>
+<style>
+:root{color-scheme:light;--ink:#222;--muted:#666;--line:#ddd;--paper:#fff;--input:#fafafa}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 Arial,"Malgun Gothic",sans-serif}main{max-width:800px;margin:64px auto;padding:0 24px}h1{font-size:22px;margin:0 0 28px;font-weight:600}label{display:block}textarea{display:block;width:100%;min-height:160px;resize:vertical;margin:8px 0 0;padding:12px;background:var(--input);border:1px solid var(--line);border-radius:3px;color:var(--ink);font:24px/1.8 "Segoe UI Symbol","Cambria Math",monospace;overflow-wrap:anywhere}textarea[readonly]{background:var(--paper)}button{min-height:40px;background:white;border:1px solid #bbb;border-radius:3px;padding:7px 14px;color:var(--ink);font:inherit;cursor:pointer}button:hover{background:#f3f3f3}button:active{background:#e8e8e8}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:2px solid #555;outline-offset:3px}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.controls{margin:24px 0}.range{flex:1;min-width:180px}input[type=range]{display:block;width:100%;margin:8px 0;accent-color:#444;min-height:28px}.meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px}details{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}summary{cursor:pointer;color:var(--muted);min-height:32px}.pool{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px}.pool label{display:flex;align-items:center;gap:5px;min-height:40px;font:21px "Segoe UI Symbol","Cambria Math",monospace}.pool input{accent-color:#444;width:16px;height:16px}.pool small{font:12px monospace;color:var(--muted)}fieldset{border:0;margin:16px 0;padding:0}legend{font-size:13px;color:var(--muted)}#status{min-height:24px;margin:8px 0;color:var(--muted);font-size:13px}#status.error{color:#a12626}.bottom{margin-top:12px;justify-content:space-between}.smallbutton{font-size:13px;padding:4px 10px;min-height:36px}@media(max-width:520px){main{margin:28px auto;padding:0 16px}textarea{font-size:22px}.controls button{flex:1}.range{flex-basis:100%}}
+</style>
+<main>
+<h1>모스 압축</h1>
+<div class="row"><label><input type="radio" name="input-type" value="text" checked> 평문</label><label><input type="radio" name="input-type" value="morse"> 모스·압축문</label></div>
+<textarea id="source" aria-label="입력" spellcheck="false" placeholder="한글, English, 123"></textarea>
+<div class="row bottom"><span></span><button id="example" class="smallbutton">예시</button></div>
+<div class="row controls">
+  <label class="range" for="strength">압축 강도 <output id="level">100%</output><input id="strength" type="range" min="0" max="100" value="100"></label>
+  <button id="shuffle">다시 섞기</button>
+</div>
+<div class="heading"><label for="morse">모스부호</label><button id="copy-morse" disabled>복사</button></div>
+<textarea id="morse" readonly spellcheck="false"></textarea>
+<div class="heading"><label for="result">압축부호</label><span id="stats" class="meta" aria-live="polite"></span></div>
+<textarea id="result" readonly spellcheck="false" aria-label="변환 결과"></textarea>
+<div class="row bottom"><span></span><button id="copy" disabled>복사</button></div>
+<p id="status" role="status"></p>
+<details><summary>사용할 문자</summary><div id="pools"></div></details>
+</main>
+<script type="module" src="app.mjs"></script>
+</html>

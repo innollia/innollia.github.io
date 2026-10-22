@@ -1,0 +1,1076 @@
+<!-- 메모 연대기 (Chronicle) 뷰어 -->
+<div id="chronicle-app" class="chronicle-container">
+  <div class="chronicle-header">
+    <div class="chronicle-badge">ARCHIVE // CLASSIFIED &amp; PERSONAL LOGS</div>
+    <h2 class="chronicle-title">📜 메모 연대기 (2020 ~ 2026)</h2>
+    <div class="chronicle-subtitle">삼성노트 · 스크리브너 · 디스코드 총 739편의 디지털 기억 보관소</div>
+  </div>
+
+  <!-- 로딩 인디케이터 -->
+  <div id="chronicle-loading" class="chronicle-loading-box">
+    <div class="terminal-spinner"></div>
+    <div class="loading-text">기록 데이터베이스 수신 중... (data.json)</div>
+  </div>
+
+  <!-- 통계 대시보드 -->
+  <div id="chronicle-stats-bar" class="chronicle-stats-grid" style="display:none;">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-total">739</div>
+      <div class="stat-lbl">총 기록 수</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-chars">56만+</div>
+      <div class="stat-lbl">총 글자 수</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-sources">3개 소스</div>
+      <div class="stat-lbl">디스코드 · 노트 · 스크랩</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-imgs">160장</div>
+      <div class="stat-lbl">첨부 이미지</div>
+    </div>
+  </div>
+
+  <!-- 검색 및 필터 패널 -->
+  <div id="chronicle-controls" class="chronicle-controls-box" style="display:none;">
+    <!-- 검색창 -->
+    <div class="search-row">
+      <input type="text" id="chronicle-search" placeholder="🔍 검색어 입력 (제목, 본문, 대화 내용, 태그...)" autocomplete="off">
+      <button type="button" id="btn-clear-search" class="retro-btn" title="검색어 초기화">지우기</button>
+      <button type="button" id="btn-random-memo" class="retro-btn btn-highlight" title="무작위 메모">🎲 랜덤 메모</button>
+    </div>
+
+    <!-- 출처 필터 -->
+    <div class="filter-row">
+      <span class="filter-label">출처:</span>
+      <div class="button-group" id="source-filters">
+        <button type="button" class="filter-btn active" data-src="all">전체 (<span id="cnt-all">0</span>)</button>
+        <button type="button" class="filter-btn" data-src="dc">디스코드 (<span id="cnt-dc">0</span>)</button>
+        <button type="button" class="filter-btn" data-src="sn">삼성노트 (<span id="cnt-sn">0</span>)</button>
+        <button type="button" class="filter-btn" data-src="sc">스크리브너 (<span id="cnt-sc">0</span>)</button>
+      </div>
+    </div>
+
+    <!-- 연도 필터 -->
+    <div class="filter-row">
+      <span class="filter-label">연도:</span>
+      <div class="button-group" id="year-filters">
+        <button type="button" class="filter-btn active" data-year="all">전체</button>
+        <button type="button" class="filter-btn" data-year="2026">2026</button>
+        <button type="button" class="filter-btn" data-year="2025">2025</button>
+        <button type="button" class="filter-btn" data-year="2024">2024</button>
+        <button type="button" class="filter-btn" data-year="2023">2023</button>
+        <button type="button" class="filter-btn" data-year="2022">2022</button>
+        <button type="button" class="filter-btn" data-year="2021">2021</button>
+        <button type="button" class="filter-btn" data-year="2020">2020</button>
+      </div>
+    </div>
+
+    <!-- 주제 필터 -->
+    <div class="filter-row">
+      <span class="filter-label">주제:</span>
+      <div class="topic-tags-group" id="topic-filters">
+        <!-- 동적으로 추가됨 -->
+      </div>
+    </div>
+
+    <!-- 정렬 및 결과 수 안내 -->
+    <div class="status-row">
+      <div class="matched-count">
+        선택된 메모: <strong id="matched-count-num" style="color:#00ffcc;">0</strong>개
+      </div>
+      <div class="sort-select-box">
+        <label for="sort-order">정렬:</label>
+        <select id="sort-order">
+          <option value="desc">최신순 (2026 → 2020)</option>
+          <option value="asc">과거순 (2020 → 2026)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결과 카드 목록 -->
+  <div id="chronicle-list" class="chronicle-entries-list"></div>
+
+  <!-- 페이지네이션 컨트롤 -->
+  <div id="chronicle-pagination" class="chronicle-pagination-box" style="display:none;">
+    <button type="button" id="pg-prev" class="retro-btn">&lt; 이전</button>
+    <span id="pg-info" class="pg-info">1 / 1</span>
+    <button type="button" id="pg-next" class="retro-btn">다음 &gt;</button>
+  </div>
+</div>
+
+<!-- 이미지 확대 라이트박스 모달 -->
+<div id="chronicle-lightbox" class="chronicle-lightbox" style="display:none;" onclick="closeLightbox()">
+  <div class="lightbox-content" onclick="event.stopPropagation()">
+    <button type="button" class="lightbox-close" onclick="closeLightbox()">✕ 닫기</button>
+    <img id="lightbox-img" src="" alt="확대 이미지">
+  </div>
+</div>
+
+<style>
+/* === 레트로 연대기 스타일 === */
+.chronicle-container {
+  max-width: 780px;
+  margin: 10px auto 40px;
+  font-family: 'Gulim', '굴림', 'Courier New', monospace;
+  text-align: left;
+  color: #e0f2fe;
+}
+
+.chronicle-header {
+  border: 2px dashed #00ffaa;
+  padding: 16px 20px;
+  background: rgba(0, 30, 20, 0.7);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.chronicle-badge {
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  color: #ffcc00;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.chronicle-title {
+  margin: 4px 0 8px;
+  font-size: 1.6rem;
+  color: #ffff00;
+  text-shadow: 2px 2px 0 #000, 0 0 8px rgba(255, 255, 0, 0.4);
+  font-family: 'Gungsuh', '궁서', 'Gulim', serif;
+}
+
+.chronicle-subtitle {
+  font-size: 0.88rem;
+  color: #88ffcc;
+  opacity: 0.9;
+}
+
+/* 로딩 */
+.chronicle-loading-box {
+  border: 1px solid #336655;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 30px;
+  text-align: center;
+  color: #00ffaa;
+  font-family: monospace;
+}
+
+.terminal-spinner {
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 12px;
+  border: 3px solid rgba(0, 255, 170, 0.2);
+  border-top-color: #00ffaa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 통계 카드 */
+.chronicle-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: rgba(10, 35, 30, 0.85);
+  border: 1px solid #1a5944;
+  padding: 10px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #00ffaa;
+  font-family: 'Courier New', monospace;
+}
+
+.stat-lbl {
+  font-size: 0.75rem;
+  color: #88b0a0;
+  margin-top: 2px;
+}
+
+/* 컨트롤 박스 */
+.chronicle-controls-box {
+  background: rgba(5, 25, 20, 0.9);
+  border: 1px solid #00bb77;
+  padding: 14px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.search-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.search-row input {
+  flex: 1;
+  background: #051410;
+  border: 1px solid #00aa66;
+  color: #ffffff;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.search-row input:focus {
+  border-color: #00ffaa;
+  box-shadow: 0 0 6px rgba(0, 255, 170, 0.5);
+}
+
+.retro-btn {
+  background: #0d382b;
+  border: 1px solid #00aa66;
+  color: #c8f0e0;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+
+.retro-btn:hover {
+  background: #145440;
+  color: #ffffff;
+  border-color: #00ffaa;
+}
+
+.btn-highlight {
+  background: #442a00;
+  border-color: #ffaa00;
+  color: #ffea70;
+}
+
+.btn-highlight:hover {
+  background: #664000;
+  border-color: #ffcc00;
+  color: #ffffff;
+}
+
+.filter-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.filter-label {
+  color: #88cca0;
+  font-weight: bold;
+  min-width: 42px;
+  padding-top: 3px;
+}
+
+.button-group, .topic-tags-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+.filter-btn {
+  background: #08221b;
+  border: 1px solid #1f5945;
+  color: #9cd4be;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 2px;
+}
+
+.filter-btn:hover {
+  background: #0e3b2e;
+  color: #ffffff;
+}
+
+.filter-btn.active {
+  background: #00ffaa;
+  color: #002214;
+  border-color: #00ffaa;
+  font-weight: bold;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed #1a5944;
+  padding-top: 10px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.sort-select-box select {
+  background: #051410;
+  border: 1px solid #00aa66;
+  color: #c8f0e0;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+/* 카드 목록 */
+.chronicle-entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.memo-card {
+  background: rgba(10, 30, 24, 0.88);
+  border: 1px solid #1a5944;
+  border-left: 4px solid #00ffaa;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s, border-color 0.2s;
+}
+
+.memo-card:hover {
+  border-color: #00ffaa;
+  background: rgba(12, 36, 29, 0.95);
+}
+
+.memo-card.src-dc { border-left-color: #5865f2; }
+.memo-card.src-sn { border-left-color: #ff9900; }
+.memo-card.src-sc { border-left-color: #00ccff; }
+.memo-card.is-sealed { border-left-color: #ff3366; background: rgba(30, 10, 20, 0.85); }
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  color: #88c0a8;
+  border-bottom: 1px dotted rgba(26, 89, 68, 0.6);
+  padding-bottom: 6px;
+}
+
+.meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge {
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
+.badge-dc { background: #5865f2; color: #fff; }
+.badge-sn { background: #d97706; color: #fff; }
+.badge-sc { background: #0284c7; color: #fff; }
+.badge-topic { background: #1f4035; color: #7ef0be; border: 1px solid #2e6654; }
+.badge-sealed { background: #b91c1c; color: #fee2e2; }
+
+.meta-path {
+  font-size: 0.74rem;
+  color: #72a392;
+  font-family: monospace;
+}
+
+.meta-time {
+  font-family: 'Courier New', monospace;
+  color: #a0d8c2;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #ffff66;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* 본문 영역 */
+.card-body-text {
+  font-size: 0.93rem;
+  line-height: 1.65;
+  color: #e5f5ec;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.card-body-text pre {
+  background: #020b08;
+  border: 1px solid #1a4f3b;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #66ffaa;
+  margin: 8px 0;
+  white-space: pre-wrap;
+}
+
+.card-body-text code {
+  background: #0d2e22;
+  color: #88ffcc;
+  padding: 1px 4px;
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+/* 디스코드 채팅 스타일 */
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.chat-msg {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.chat-msg.is-me {
+  background: rgba(0, 50, 40, 0.35);
+  border-left: 2px solid #00ffaa;
+}
+
+.chat-msg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+}
+
+.chat-author {
+  font-weight: bold;
+  color: #66ccff;
+}
+
+.chat-author.is-me-author {
+  color: #00ffaa;
+}
+
+.chat-time {
+  color: #6a9584;
+  font-size: 0.72rem;
+  font-family: monospace;
+}
+
+.chat-reply {
+  font-size: 0.75rem;
+  color: #a3c2b4;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 2px solid #5865f2;
+  padding: 2px 6px;
+  margin-bottom: 4px;
+  font-style: italic;
+}
+
+.chat-text {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #e5f5ec;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 이미지 첨부 갤러리 */
+.card-images-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.memo-img-thumb {
+  max-width: 220px;
+  max-height: 180px;
+  object-fit: cover;
+  border: 1px solid #1a5944;
+  cursor: pointer;
+  background: #000;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.memo-img-thumb:hover {
+  transform: scale(1.03);
+  border-color: #00ffaa;
+  box-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+}
+
+/* 주석 박스 */
+.card-notes-box {
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: rgba(100, 80, 0, 0.25);
+  border-left: 3px solid #ffcc00;
+  font-size: 0.82rem;
+  color: #ffe680;
+}
+
+/* 봉인 메모 안내 */
+.sealed-box {
+  background: rgba(60, 10, 20, 0.4);
+  border: 1px dashed #ff3366;
+  padding: 14px;
+  text-align: center;
+  color: #ff99aa;
+  margin-top: 6px;
+}
+
+.sealed-title {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #ff4d6d;
+  margin-bottom: 6px;
+}
+
+.sealed-desc {
+  font-size: 0.82rem;
+  color: #fca5a5;
+  line-height: 1.5;
+}
+
+/* 페이지네이션 */
+.chronicle-pagination-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 12px;
+  border-top: 1px dashed #1a5944;
+}
+
+.pg-info {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #88ffcc;
+}
+
+/* 라이트박스 */
+.chronicle-lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  backdrop-filter: blur(4px);
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  text-align: center;
+}
+
+.lightbox-content img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border: 2px solid #00ffaa;
+  box-shadow: 0 0 20px rgba(0, 255, 170, 0.3);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -36px;
+  right: 0;
+  background: #ff3333;
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: inherit;
+}
+
+@media (max-width: 640px) {
+  .chronicle-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .search-row {
+    flex-wrap: wrap;
+  }
+  .search-row input {
+    width: 100%;
+    flex: auto;
+  }
+}
+</style>
+
+<script>
+(function() {
+  'use strict';
+
+  let rawData = null;
+  let allEntries = [];
+  let filteredEntries = [];
+
+  // 필터 상태
+  let state = {
+    search: '',
+    source: 'all',
+    year: 'all',
+    topic: 'all',
+    sort: 'desc',
+    page: 1,
+    pageSize: 30
+  };
+
+  // 소스 명칭 맵
+  const SOURCE_NAMES = {
+    dc: { name: '디스코드', badge: 'badge-dc', prefix: '🎨 ' },
+    sn: { name: '삼성노트', badge: 'badge-sn', prefix: '📝 ' },
+    sc: { name: '스크리브너', badge: 'badge-sc', prefix: '📚 ' }
+  };
+
+  // 1. 초기 데이터 로드
+  fetch('/chronicle/data.json')
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      rawData = data;
+      allEntries = data.entries || [];
+      initUI();
+    })
+    .catch(err => {
+      console.error('[Chronicle] Failed to load data.json:', err);
+      const loading = document.getElementById('chronicle-loading');
+      if (loading) {
+        loading.innerHTML = '<div style="color:#ff4444; font-weight:bold;">⚠️ 데이터 로드 실패: /chronicle/data.json 을 불러올 수 없습니다.</div>';
+      }
+    });
+
+  function initUI() {
+    // 로딩 숨기고 컨트롤 표시
+    document.getElementById('chronicle-loading').style.display = 'none';
+    document.getElementById('chronicle-stats-bar').style.display = 'grid';
+    document.getElementById('chronicle-controls').style.display = 'block';
+    document.getElementById('chronicle-pagination').style.display = 'flex';
+
+    // 통계 표시
+    if (rawData.stats) {
+      document.getElementById('stat-total').innerText = rawData.stats.n.toLocaleString();
+      document.getElementById('stat-chars').innerText = (Math.round(rawData.stats.chars / 10000)) + '만 자';
+      document.getElementById('stat-imgs').innerText = rawData.stats.imgs + '장';
+    }
+
+    // 소스 카운트 표시
+    let cntDc = 0, cntSn = 0, cntSc = 0;
+    allEntries.forEach(e => {
+      if (e.s === 'dc') cntDc++;
+      else if (e.s === 'sn') cntSn++;
+      else if (e.s === 'sc') cntSc++;
+    });
+    document.getElementById('cnt-all').innerText = allEntries.length;
+    document.getElementById('cnt-dc').innerText = cntDc;
+    document.getElementById('cnt-sn').innerText = cntSn;
+    document.getElementById('cnt-sc').innerText = cntSc;
+
+    // 주제(Topics) 버튼 생성
+    const topicContainer = document.getElementById('topic-filters');
+    topicContainer.innerHTML = '';
+    const allTopicBtn = document.createElement('button');
+    allTopicBtn.type = 'button';
+    allTopicBtn.className = 'filter-btn active';
+    allTopicBtn.dataset.topic = 'all';
+    allTopicBtn.innerText = '전체';
+    topicContainer.appendChild(allTopicBtn);
+
+    const topics = rawData.topics || [];
+    topics.forEach(tp => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'filter-btn';
+      btn.dataset.topic = tp;
+      btn.innerText = tp;
+      topicContainer.appendChild(btn);
+    });
+
+    // 이벤트 리스너 바인딩
+    bindEvents();
+
+    // 초기 필터 적용 및 렌더
+    applyFilters();
+  }
+
+  function bindEvents() {
+    // 검색창 디바운스
+    const searchInput = document.getElementById('chronicle-search');
+    let debounceTimer = null;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        state.search = e.target.value.trim().toLowerCase();
+        state.page = 1;
+        applyFilters();
+      }, 200);
+    });
+
+    // 검색어 지우기
+    document.getElementById('btn-clear-search').addEventListener('click', () => {
+      searchInput.value = '';
+      state.search = '';
+      state.page = 1;
+      applyFilters();
+    });
+
+    // 랜덤 메모
+    document.getElementById('btn-random-memo').addEventListener('click', () => {
+      if (filteredEntries.length === 0) return;
+      const randIdx = Math.floor(Math.random() * filteredEntries.length);
+      const chosen = filteredEntries[randIdx];
+      // 해당 메모만 보이도록 검색창에 ID 또는 제목 채우기
+      state.search = chosen.ti || chosen.id;
+      searchInput.value = state.search;
+      state.page = 1;
+      applyFilters();
+      window.scrollTo({ top: document.getElementById('chronicle-controls').offsetTop - 20, behavior: 'smooth' });
+    });
+
+    // 출처 필터 버튼들
+    document.querySelectorAll('#source-filters .filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#source-filters .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.source = btn.dataset.src;
+        state.page = 1;
+        applyFilters();
+      });
+    });
+
+    // 연도 필터 버튼들
+    document.querySelectorAll('#year-filters .filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#year-filters .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.year = btn.dataset.year;
+        state.page = 1;
+        applyFilters();
+      });
+    });
+
+    // 주제 필터 버튼들
+    document.getElementById('topic-filters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('#topic-filters .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.topic = btn.dataset.topic;
+      state.page = 1;
+      applyFilters();
+    });
+
+    // 정렬 변경
+    document.getElementById('sort-order').addEventListener('change', (e) => {
+      state.sort = e.target.value;
+      state.page = 1;
+      applyFilters();
+    });
+
+    // 페이지네이션
+    document.getElementById('pg-prev').addEventListener('click', () => {
+      if (state.page > 1) {
+        state.page--;
+        renderList();
+        scrollToTop();
+      }
+    });
+
+    document.getElementById('pg-next').addEventListener('click', () => {
+      const maxPage = Math.ceil(filteredEntries.length / state.pageSize) || 1;
+      if (state.page < maxPage) {
+        state.page++;
+        renderList();
+        scrollToTop();
+      }
+    });
+  }
+
+  function scrollToTop() {
+    const listEl = document.getElementById('chronicle-list');
+    if (listEl) {
+      window.scrollTo({ top: listEl.offsetTop - 60, behavior: 'smooth' });
+    }
+  }
+
+  function applyFilters() {
+    filteredEntries = allEntries.filter(entry => {
+      // 1. 소스 필터
+      if (state.source !== 'all' && entry.s !== state.source) {
+        return false;
+      }
+
+      // 2. 연도 필터
+      if (state.year !== 'all') {
+        const entryYear = entry.t ? entry.t.substring(0, 4) : '';
+        if (entryYear !== state.year) return false;
+      }
+
+      // 3. 주제 필터
+      if (state.topic !== 'all' && entry.tp !== state.topic) {
+        return false;
+      }
+
+      // 4. 검색어 필터
+      if (state.search) {
+        const q = state.search;
+        let matched = false;
+        if (entry.ti && entry.ti.toLowerCase().includes(q)) matched = true;
+        if (!matched && entry.bd && entry.bd.toLowerCase().includes(q)) matched = true;
+        if (!matched && entry.p && entry.p.toLowerCase().includes(q)) matched = true;
+        if (!matched && entry.tg && entry.tg.some(t => t.toLowerCase().includes(q))) matched = true;
+        if (!matched && entry.id && entry.id.toLowerCase().includes(q)) matched = true;
+        if (!matched && entry.ms && entry.ms.some(m => (m.x && m.x.toLowerCase().includes(q)) || (m.a && m.a.toLowerCase().includes(q)))) {
+          matched = true;
+        }
+        if (!matched) return false;
+      }
+
+      return true;
+    });
+
+    // 정렬
+    filteredEntries.sort((a, b) => {
+      const ta = a.t || '';
+      const tb = b.t || '';
+      return state.sort === 'asc' ? ta.localeCompare(tb) : tb.localeCompare(ta);
+    });
+
+    document.getElementById('matched-count-num').innerText = filteredEntries.length.toLocaleString();
+
+    renderList();
+  }
+
+  function renderList() {
+    const listEl = document.getElementById('chronicle-list');
+    const total = filteredEntries.length;
+
+    if (total === 0) {
+      listEl.innerHTML = '<div style="text-align:center; padding:40px; color:#88b0a0; border:1px dashed #1a5944; background:rgba(0,0,0,0.3);">' +
+        '조건에 맞는 메모가 없습니다. 검색어나 필터를 변경해 보세요.</div>';
+      document.getElementById('pg-info').innerText = '0 / 0';
+      document.getElementById('pg-prev').disabled = true;
+      document.getElementById('pg-next').disabled = true;
+      return;
+    }
+
+    const maxPage = Math.ceil(total / state.pageSize) || 1;
+    if (state.page > maxPage) state.page = maxPage;
+
+    const startIdx = (state.page - 1) * state.pageSize;
+    const endIdx = Math.min(startIdx + state.pageSize, total);
+    const paged = filteredEntries.slice(startIdx, endIdx);
+
+    document.getElementById('pg-info').innerText = state.page + ' / ' + maxPage;
+    document.getElementById('pg-prev').disabled = state.page <= 1;
+    document.getElementById('pg-next').disabled = state.page >= maxPage;
+
+    let html = '';
+    paged.forEach(entry => {
+      html += renderMemoCard(entry);
+    });
+    listEl.innerHTML = html;
+  }
+
+  function renderMemoCard(entry) {
+    const srcInfo = SOURCE_NAMES[entry.s] || { name: entry.s, badge: 'badge-sn', prefix: '' };
+    const isSealed = Boolean(entry.z);
+    const cardClass = 'memo-card src-' + (entry.s || 'unknown') + (isSealed ? ' is-sealed' : '');
+
+    // 날짜 포맷
+    let timeStr = entry.t ? entry.t.replace('T', ' ') : '';
+
+    // 배지
+    let badgesHtml = '<span class="badge ' + srcInfo.badge + '">' + srcInfo.prefix + srcInfo.name + '</span>';
+    if (entry.tp) {
+      badgesHtml += '<span class="badge badge-topic">#' + escapeHtml(entry.tp) + '</span>';
+    }
+    if (entry.tg && Array.isArray(entry.tg)) {
+      entry.tg.forEach(t => {
+        if (t && t !== '.') {
+          badgesHtml += '<span class="badge badge-topic">#' + escapeHtml(t) + '</span>';
+        }
+      });
+    }
+    if (isSealed) {
+      badgesHtml += '<span class="badge badge-sealed">🔒 봉인됨</span>';
+    }
+
+    // 경로
+    let pathHtml = entry.p ? '<div class="meta-path">' + escapeHtml(entry.p) + '</div>' : '';
+
+    // 제목
+    let title = entry.ti ? escapeHtml(entry.ti) : (timeStr + ' 기록');
+
+    // 본문 / 내용 구성
+    let bodyHtml = '';
+
+    if (isSealed) {
+      bodyHtml = '<div class="sealed-box">' +
+        '<div class="sealed-title">🔒 백일몽 보안관리부 기밀 봉인 문서</div>' +
+        '<div class="sealed-desc">이 메모는 백일몽 내부 규정에 의해 암호화된 상태입니다.<br>(' + (entry.n || 0) + '자 분량)</div>' +
+        '</div>';
+    } else if (entry.ms && Array.isArray(entry.ms) && entry.ms.length > 0) {
+      // 디스코드 메시지 스레드 렌더링
+      bodyHtml += '<div class="chat-thread">';
+      entry.ms.forEach(m => {
+        const isMe = m.me === 1;
+        bodyHtml += '<div class="chat-msg' + (isMe ? ' is-me' : '') + '">';
+        bodyHtml += '<div class="chat-msg-header">';
+        bodyHtml += '<span class="chat-author' + (isMe ? ' is-me-author' : '') + '">[' + escapeHtml(m.a || '익명') + ']</span>';
+        if (m.t) {
+          bodyHtml += '<span class="chat-time">' + escapeHtml(m.t.replace('T', ' ')) + '</span>';
+        }
+        bodyHtml += '</div>';
+
+        if (m.re) {
+          bodyHtml += '<div class="chat-reply">↳ ' + escapeHtml(m.re) + '</div>';
+        }
+
+        if (m.x) {
+          bodyHtml += '<div class="chat-text">' + formatContent(m.x) + '</div>';
+        }
+
+        if (m.im && Array.isArray(m.im)) {
+          bodyHtml += renderImagesGrid(m.im);
+        }
+        bodyHtml += '</div>';
+      });
+      bodyHtml += '</div>';
+    } else if (entry.bd) {
+      // 일반 노트 본문
+      bodyHtml += '<div class="card-body-text">' + formatContent(entry.bd) + '</div>';
+    }
+
+    // 직접 첨부된 이미지 (entry.im)
+    if (entry.im && Array.isArray(entry.im) && entry.im.length > 0) {
+      bodyHtml += renderImagesGrid(entry.im);
+    }
+
+    // 주석/안내문 (entry.nt)
+    if (entry.nt && Array.isArray(entry.nt) && entry.nt.length > 0) {
+      bodyHtml += '<div class="card-notes-box">';
+      entry.nt.forEach(note => {
+        bodyHtml += '<div>💡 ' + escapeHtml(note) + '</div>';
+      });
+      bodyHtml += '</div>';
+    }
+
+    return '<div class="memo-card-wrapper">' +
+      '<div class="' + cardClass + '">' +
+        '<div class="card-meta">' +
+          '<div class="meta-badges">' + badgesHtml + '</div>' +
+          '<div class="meta-time">' + timeStr + '</div>' +
+        '</div>' +
+        pathHtml +
+        '<h3 class="card-title">' + title + '</h3>' +
+        bodyHtml +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderImagesGrid(imgs) {
+    let out = '<div class="card-images-grid">';
+    imgs.forEach(item => {
+      const srcPath = item[0] ? ('/chronicle/' + item[0]) : '';
+      if (srcPath) {
+        out += '<img src="' + srcPath + '" loading="lazy" class="memo-img-thumb" alt="메모 첨부" onclick="openLightbox(\'' + srcPath + '\')">';
+      }
+    });
+    out += '</div>';
+    return out;
+  }
+
+  // 텍스트 포맷 (코드블록, 이스케이프)
+  function formatContent(text) {
+    if (!text) return '';
+    
+    // 코드 블록 처리 (```code```)
+    const codeBlockRegex = /```([\s\S]*?)```/g;
+    let parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(escapeHtml(text.substring(lastIndex, match.index)).replace(/\n/g, '<br>'));
+      }
+      parts.push('<pre><code>' + escapeHtml(match[1].trim()) + '</code></pre>');
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(escapeHtml(text.substring(lastIndex)).replace(/\n/g, '<br>'));
+    }
+
+    return parts.join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // 전역 라이트박스 제어
+  window.openLightbox = function(src) {
+    const lb = document.getElementById('chronicle-lightbox');
+    const img = document.getElementById('lightbox-img');
+    if (lb && img) {
+      img.src = src;
+      lb.style.display = 'flex';
+    }
+  };
+
+  window.closeLightbox = function() {
+    const lb = document.getElementById('chronicle-lightbox');
+    if (lb) {
+      lb.style.display = 'none';
+      document.getElementById('lightbox-img').src = '';
+    }
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeLightbox();
+    }
+  });
+
+})();
+</script>
