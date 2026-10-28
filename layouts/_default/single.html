@@ -19,13 +19,32 @@
   {{- end -}}
 
   {{- $hasAuthorComment := or .Params.authorComment .Params.author_comment -}}
-  {{- $hasComments := or .Params.enableComments .Params.comments .Params.showComments .Params.commentList -}}
+  {{- $hasComments := or (and $isPost (ne .Params.comments false)) .Params.enableComments .Params.showComments .Params.commentList -}}
 
 
 
   <div class="post-content">
     {{ .Content | replaceRE `\*\*([^*]+?)\*\*` `<strong>$1</strong>` | safeHTML }}
   </div>
+
+  <style>
+    /* 댓글 = 본문의 이어쓰기. 박스 없이 본문과 같은 글꼴로 이어지고, 점선+닉네임으로만 구분 */
+    #comments-section:has(#cm-root) { background: none !important; border: 0 !important; padding: 0 !important; margin: 10px 0 30px !important; }
+    #comments-section:has(#cm-root) > div:first-child { border-bottom: 0 !important; font-size: 0.8rem !important; opacity: 0.6; }
+    #cm-root .cm-list { display: flex; flex-direction: column; gap: 0.9em; }
+    #cm-root .cm-item { border-left: 2px dashed rgba(128,128,128,0.55); padding-left: 12px; font: inherit; color: inherit; }
+    #cm-root .cm-nick { font-weight: bold; margin-right: 8px; }
+    #cm-root .cm-nick::before { content: "┃ "; opacity: 0.5; }
+    #cm-root .cm-date { font-size: 0.75rem; opacity: 0.55; }
+    #cm-root .cm-text { white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
+    #cm-root .cm-del, #cm-root .cm-link { background: none; border: 0; color: inherit; opacity: 0.55; cursor: pointer; font-size: 0.75rem; text-decoration: underline; margin-left: 8px; }
+    #cm-root .cm-bar { margin-top: 1.2em; font-size: 0.9rem; }
+    #cm-root .cm-btn { padding: 4px 12px; cursor: pointer; margin: 0 6px; }
+    #cm-root .cm-input { padding: 4px 8px; width: 220px; max-width: 100%; }
+    #cm-root .cm-textarea { display: block; width: 100%; box-sizing: border-box; padding: 8px; margin: 6px 0; font: inherit; }
+    #cm-root .cm-who { opacity: 0.7; font-size: 0.8rem; }
+    #cm-root .cm-hint { opacity: 0.75; }
+  </style>
 
   <style>
     .author-comment-box img,
@@ -67,9 +86,7 @@
           style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">(댓글이다.)</span></span>
       <span style="font-size: 0.75rem; color: #ff3333; font-weight: bold;">[ 지금은 공산당원이 보이지 않는다. ]</span>
       {{- else -}}
-      <span>{{ default "댓글" (or .Params.commentTitle .Params.commentsTitle .Params.comment_title) }} <span
-          id="comment-count-badge" style="font-size: 0.85rem; font-weight: normal; opacity: 0.7;">({{ if
-          .Params.commentList }}{{ len .Params.commentList }}{{ else }}0{{ end }})</span></span>
+      <span>{{ default "댓글" (or .Params.commentTitle .Params.commentsTitle .Params.comment_title) }} <span class="cm-count" style="font-size: 0.85rem; font-weight: normal; opacity: 0.7;"></span></span>
       {{- end -}}
     </div>
     <div id="comment-list-container" class="comment-list" style="display: flex; flex-direction: column; gap: 15px;">
@@ -96,14 +113,13 @@
       <button onclick="alert('[경고] 비인가 접속 상태이므로 댓글 작성 권한이 없습니다.')"
         style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">등록</button>
       {{- else -}}
-      <input id="normal-comment-author" type="text" placeholder="이름"
-        style="width: 100px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
-      <input id="normal-comment-input" type="text"
-        placeholder="{{ default `-..  .-  -  --.  .-..` (or .Params.commentPlaceholder .Params.comment_placeholder) }}"
-        style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; color: #111;">
-      <button
-        onclick="let author = document.getElementById('normal-comment-author'); if(!author.value.trim()){author.value='이름';} if(!document.getElementById('normal-comment-input').value.trim()){alert('댓글 내용을 입력해주세요.');}else{alert('댓글이 접수되었습니다. (시스템/관리자 동기화 후 md 파일에 저장되어 반영됩니다.)');author.value='';document.getElementById('normal-comment-input').value='';}"
-        style="padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">등록</button>
+      <div id="cm-root" style="width:100%" data-post="{{ .RelPermalink }}"
+        data-api-key="{{ site.Params.firebase.apiKey }}" data-auth-domain="{{ site.Params.firebase.authDomain }}"
+        data-project-id="{{ site.Params.firebase.projectId }}" data-app-id="{{ site.Params.firebase.appId }}">
+        <div class="cm-list"></div>
+        <div class="cm-bar">댓글 불러오는 중…</div>
+      </div>
+      <script type="module" src="/js/comments.js?v=2"></script>
       {{- end -}}
     </div>
   </div>

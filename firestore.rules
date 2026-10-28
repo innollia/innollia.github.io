@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 닉네임 예약(중복 방지): 없을 때만 만들 수 있고 수정/삭제 불가
+    match /nicks/{key} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && key.size() >= 2 && key.size() <= 16;
+    }
+    // 사용자 닉네임: 본인 문서를 한 번만 만들 수 있음
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.nick is string
+        && request.resource.data.nick.size() >= 2
+        && request.resource.data.nick.size() <= 16;
+    }
+    // 댓글: 닉네임이 있는 로그인 사용자만 작성, 본인 것만 삭제
+    match /comments/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.nick == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.nick
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1000
+        && request.resource.data.postId is string
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+  }
+}
