@@ -236,3 +236,46 @@ textarea{min-height:120px;resize:vertical}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+/* 주문서: 담은 것 고치기·빼기, 닫기는 스크롤해도 위에 붙어 있음 */
+.checkout-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;background:var(--paper);margin:-22px -22px 0;padding:12px 22px 8px}
+.checkout-top .x{position:static}
+.order-items{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:8px}
+.order-items li{background:#fff;border:2px solid var(--line);border-radius:8px;padding:8px}
+.oi-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.oi-head span{color:#6b6290}
+.oi-head .oi-price{margin-left:auto;color:var(--line);font-weight:700}
+.oi-del{border:2px solid var(--line);background:var(--paper);border-radius:6px;padding:2px 8px;color:var(--line)}
+.order-items textarea{width:100%;margin-top:6px;box-sizing:border-box;font:inherit;font-size:15px}
+.order-total{font-weight:700;margin:4px 0}
+.order-preview{margin-top:14px}
+.order-preview pre{margin-top:8px}
+#send-order:disabled{opacity:.45;cursor:not-allowed}
+.detail-panel>.x{position:sticky;top:0;float:right;z-index:3}
+.cart-open{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline dotted}
+.detail-say{margin:0 0 12px;padding-left:28px;min-height:1.4em;color:var(--gold)}
+.uses-list{margin:0;padding-left:20px}
+.oi-del{min-height:32px}
+.cart-list li button{min-width:32px;min-height:32px}
+.timebar{touch-action:pan-y}
+
+.toast.on{pointer-events:auto}
+.toast button{margin-left:8px;border:2px solid var(--gold);background:transparent;color:var(--gold);border-radius:6px;padding:2px 8px;font:inherit}
+.cart-list li small{margin-left:4px}
+.cart-list li .cart-open{width:auto;height:auto;min-width:0;background:none;color:inherit;font-size:14px;border-radius:0;white-space:nowrap}
+
+/* 시간 막대(이미지 A): 동그라미 칸, 동그란 손잡이, 손잡이 위에 붙어 다니는 카드 */
+.timebar{padding-top:150px}
+.tb-mark{border-radius:50%;transform:none;width:16px;height:16px;margin:-8px 0 0 -8px}
+.tb-knob{border-radius:50%}
+.tb-knob::after{content:none}
+.tb-card{position:absolute;top:0;width:min(300px,100%);display:flex;gap:10px;align-items:center;background:var(--paper);color:var(--line);border:3px solid var(--line);border-radius:12px;padding:8px;min-height:110px;box-sizing:border-box}
+.tc-shot{flex:none;width:120px;aspect-ratio:16/10;border-radius:6px;background:#000 center/cover}
+.tc-head{display:block;font-size:20px}
+.tc-title{font-size:14px;font-weight:700}
+.tc-desc{margin:2px 0 0;font-size:12px;color:#4a4270}
+.detail-foot{z-index:5}
+.extras{max-width:1240px;margin:24px auto 140px;padding:0 24px;display:grid;gap:24px}
+.extra .grid{margin-top:10px}
+@media (max-width:820px){.extras{padding:0 16px}}
+.tb-lbl.low{top:52px}

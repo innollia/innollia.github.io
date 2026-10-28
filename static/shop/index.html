@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dokdo&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shop.css?v=1">
+<link rel="stylesheet" href="shop.css?v=8">
 </head>
 <body>
 <div class="bg-stripes" aria-hidden="true"></div>
@@ -20,20 +20,18 @@
     <h1 class="sign-title">봉<span>봉</span>봉</h1>
     <span class="sign-bulbs" aria-hidden="true"></span>
   </div>
-  <div class="wallet" title="장바구니 합계">
-    <span class="coin" aria-hidden="true"></span><b id="wallet-total">0</b><small>원</small>
-  </div>
 </header>
 
 <section class="counter" aria-label="상점 주인">
   <div id="keeper" aria-hidden="true"></div>
-  <div class="bubble" role="status" aria-live="polite"><p id="keeper-line"></p><span class="bubble-next" aria-hidden="true">▼</span></div>
+  <div class="bubble" role="status" aria-live="polite"><p id="keeper-line"></p></div>
 </section>
 
 <div class="shop">
   <nav class="rail" id="rail" aria-label="진열대"></nav>
   <main class="shelf" id="shelf" aria-live="polite"></main>
 </div>
+<div class="extras" id="extras"></div>
 
 <aside class="detail" id="detail" aria-hidden="true" aria-labelledby="detail-title" role="dialog">
   <div class="detail-slash" aria-hidden="true"></div>
@@ -44,6 +42,7 @@
       <div><p class="detail-cat" id="detail-cat"></p><h2 id="detail-title"></h2></div>
     </div>
     <p class="detail-desc" id="detail-desc"></p>
+    <p class="detail-say" id="detail-say" role="status" aria-live="polite"></p>
     <div class="detail-body" id="detail-body"></div>
     <div class="detail-foot">
       <div class="detail-price"><small id="detail-price-label">가격</small><b id="detail-price">0</b></div>
@@ -53,23 +52,28 @@
 </aside>
 
 <footer class="cartbar" id="cartbar">
-  <button class="cart-toggle" id="cart-toggle" aria-expanded="false">
-    <span class="cart-ico" aria-hidden="true"></span>장바구니 <b id="cart-count">0</b>
-  </button>
   <ul class="cart-list" id="cart-list"></ul>
   <div class="cart-sum"><small>합계</small><b id="cart-total">0원</b></div>
   <button class="btn-order" id="btn-order" disabled>주문하기</button>
 </footer>
 
 <dialog class="checkout" id="checkout">
-  <form method="dialog" class="checkout-inner">
-    <button class="x" value="close" aria-label="닫기">✕</button>
-    <p class="receipt-top">RECEIPT · <span id="order-code"></span></p>
+  <div class="checkout-inner">
+    <div class="checkout-top"><p class="receipt-top">주문번호 <b id="order-code"></b></p><button type="button" class="x" id="checkout-close" aria-label="닫기">✕</button></div>
     <h2>주문서</h2>
-    <pre id="order-text"></pre>
+    <section id="order-review">
+    <div id="order-edit">
+    <ul class="order-items" id="order-items"></ul>
+    <p class="order-total" id="order-total"></p>
+    <p><button type="button" class="btn-sub" id="order-more">← 더 고르기</button></p>
+    </div>
+    <p><button type="button" class="btn-buy" id="order-next">다음: 닉네임 적고 보내기 →</button></p>
+    </section>
+    <section id="order-send" hidden>
+    <p><button type="button" class="btn-sub" id="order-back">← 주문 내역 고치기</button></p>
     <div class="steps">
-      <div class="step"><b>1</b><div><p>디스코드 닉네임을 적고</p><input type="text" id="buyer" maxlength="40" placeholder="예) 비빔" autocomplete="nickname">
-        <div id="dm-user-box" hidden><p>ss0 DM 해금용 디스코드 사용자명 (필수)</p><input type="text" id="dm-user" maxlength="40" placeholder="예) bibim_99" autocomplete="off" autocapitalize="none" spellcheck="false"><p class="tiny">디스코드 설정 &gt; 내 계정에 나오는 사용자명을 적어 주세요. 표시 이름이 아닙니다.</p></div>
+      <div class="step"><b>1</b><div><p><label for="buyer">디스코드 닉네임을 적고 (필수)</label></p><input type="text" id="buyer" maxlength="40" placeholder="예) 비빔" autocomplete="nickname">
+        <div id="dm-user-box" hidden><p><label for="dm-user">ss0 DM 해금용 디스코드 사용자명 (필수)</label></p><input type="text" id="dm-user" maxlength="40" placeholder="예) bibim_99" autocomplete="off" autocapitalize="none" spellcheck="false"><p class="tiny">디스코드 설정 &gt; 내 계정에 나오는 사용자명을 적어 주세요. 표시 이름이 아닙니다.</p></div>
       </div></div>
       <div class="step"><b>2</b><div>
         <p id="send-help">주문을 디스코드로 보내면 이놀아안이 스레드에서 같이 조율해요</p>
@@ -82,15 +86,18 @@
           <div class="bank"><span>카카오뱅크</span><b id="bank-no">3333-34-4447561</b><span>이충호</span><button type="button" class="btn-sub" id="copy-bank">계좌 복사</button></div>
           <a class="bmc" href="https://buymeacoffee.com/innollia" target="_blank" rel="noopener">☕ Buy Me a Coffee로 내기</a>
         </div>
-        <p class="tiny">선불은 없어요. 새 디스코드 봇의 월 유지비만 매달 먼저 내요. 입금자명에 주문번호 끝 4자리를 붙여 주면 바로 찾아요. 견적 상품은 확정 전까지 0원으로 적혀 있어요.</p>
+        <p class="tiny">선불은 없어요. 새 디스코드 봇의 월 유지비만 매달 먼저 내요. 입금할 때 받는 분 통장 표시에 주문번호 앞 다섯 글자를 적어 주면 바로 찾아요. 견적 상품은 확정 전까지 0원으로 적혀 있어요.</p>
       </div></div>
     </div>
-  </form>
+    <details class="order-preview"><summary>보낼 주문서 미리 보기</summary><pre id="order-text"></pre></details>
+    </section>
+  </div>
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="shop.js?v=6"></script>
+<script src="ordername.js?v=2"></script>
+<script src="shop.js?v=16"></script>
 </body>
 </html>
