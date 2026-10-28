@@ -279,3 +279,5 @@ textarea{min-height:120px;resize:vertical}
 .extra .grid{margin-top:10px}
 @media (max-width:820px){.extras{padding:0 16px}}
 .tb-lbl.low{top:52px}
+.send-big{width:100%;font-size:20px;padding:14px}
+.toast{bottom:auto;top:16px}

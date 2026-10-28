@@ -4,7 +4,7 @@
 
 const RATE = 20000, AI_RATE = 5000, HOUR = RATE + AI_RATE;
 /* 주문을 받을 디스코드 포럼 채널의 웹후크 주소. 비어 있으면 "복사 → DM"으로만 받는다. */
-const DISCORD = { webhook: 'https://discord.com/api/webhooks/1564973701697507438/F-r_V9ZolGjywsiOHrfTN3xceXLt4WQWqPn-IjKzQMYLayQOe9R3kWP5OcMqx8qYHpbY', guild: '1107558929652777011' };
+const DISCORD = { webhook: 'https://discord.com/api/webhooks/1564973701697507438/F-r_V9ZolGjywsiOHrfTN3xceXLt4WQWqPn-IjKzQMYLayQOe9R3kWP5OcMqx8qYHpbY', guild: '1533421689558270152' }; // 주문 포럼은 이놀아안 개인 서버. 손님은 못 들어가니 링크를 주지 않는다
 
 /* ── 상품별 용례: "이걸로 뭐 할 건데?" ── */
 const USES = {
@@ -201,7 +201,7 @@ const LINES = {
   soon: '아직 준비 중인 물건들. 먼저 찜하고 싶으면 DM 줘.',
   hall: '여기 이름 올라간 사람들은 평생 단골이야.',
   added: ['담았다! 더 볼래?', '좋은 선택이야.', '장바구니로 슝~', '그거 진짜 잘 골랐다.'],
-  order: '닉네임 적고 "디스코드로 주문 보내기" 누르면 끝! 스레드에서 보자.',
+  order: '확인하고 "디스코드로 주문 보내기" 누르면 끝! 돈은 후불이야.',
 };
 
 /* ── 상태 ── */
@@ -303,8 +303,9 @@ function openDetail(it, prev) {
   if (state.closing) { if (window.gsap) gsap.killTweensOf('.detail-panel'); state.closing = false; detail.style.pointerEvents = ''; }
   lastFocus = document.activeElement;
   state.item = it; state.draft = { note: prev?.note || '', prev }; state.editing = prev || null;
-  $('#detail-buy').textContent = prev ? '고치기 완료' : '담기';
-  $('#detail-buy').disabled = false;
+  const already = it.id === 'dm' && !prev && state.cart.some(c => c.item.id === 'dm');
+  $('#detail-buy').textContent = prev ? '수정 완료' : already ? '이미 담겨 있어요' : '담기';
+  $('#detail-buy').disabled = already;
   $('#detail-say').textContent = '';
   $('#detail-cat').textContent = CATS.find(c => c.id === it.cat).name;
   $('#detail-title').textContent = it.name;
@@ -322,7 +323,7 @@ function openDetail(it, prev) {
       const line = x[0] + (x[1] ? ` — ${x[1]}` : '');
       if (!t.value.split('\n').includes(line)) { t.value = t.value.trim() ? `${t.value.trim()}\n${line}` : line; t.dispatchEvent(new Event('input')); } // 적어 둔 걸 지우지 않고 더한다
       t.focus(); t.setSelectionRange(t.value.length, t.value.length);
-      wiggle(t); say('아래 칸에 적어 뒀어. 고쳐 써도 돼.');
+      wiggle(t); say('아래 칸에 적어 뒀어. 수정해도 돼.');
     };
     // 적을 칸이 없는 상품(DM 해금)은 예시 칸 자체를 두지 않는다
     if (t) { box.append(el('div', { class: 'chips' }, uses.ex.map(x => el('button', { class: 'chip', onclick: () => add(x) }, [x[0], el('small', { text: x[1] })])))); body.prepend(box); }
@@ -331,7 +332,7 @@ function openDetail(it, prev) {
   detail.setAttribute('aria-hidden', 'false');
   BACKDROP.forEach(q => { $(q).inert = true; });
   $('.detail-panel').scrollTop = 0;
-  say(prev ? `담아 둔 걸 고치는 중이야${prev.sum ? ` (지금 ${prev.sum})` : ''}. 바꾸고 "고치기 완료" 눌러.` : it.line);
+  say(prev ? `담아 둔 걸 수정하는 중이야${prev.sum ? ` (지금 ${prev.sum})` : ''}. 바꾸고 "수정 완료" 눌러.` : it.line);
   if (window.gsap && !REDUCED) {
     gsap.fromTo('.detail-slash', { opacity: 0 }, { opacity: 1, duration: .25 });
     gsap.fromTo('.detail-panel', { xPercent: 100, skewX: -8 }, { xPercent: 0, skewX: 0, duration: .5, ease: 'expo.out' });
@@ -345,7 +346,9 @@ function closeDetail() {
   BACKDROP.forEach(q => { $(q).inert = false; });
   detail.style.pointerEvents = 'none';
   const done = () => {
+    const back = state.backToOrder;
     detail.setAttribute('aria-hidden', 'true'); detail.style.pointerEvents = ''; state.item = null; state.draft = null; state.editing = null; state.closing = false; state.backToOrder = false;
+    if (back && state.cart.length) { openOrder(); return; }
     if (lastFocus?.isConnected) lastFocus.focus();
     if (!$('#checkout').open) sayNow(LINES[state.cat] || LINES.hello);
   };
@@ -355,7 +358,7 @@ $('#detail-close').onclick = closeDetail;
 $('.detail-slash').onclick = closeDetail;
 addEventListener('keydown', e => { if (e.key !== 'Escape') return; if ($('#checkout').open) $('#checkout').close(); else closeDetail(); });
 
-function setPrice(value, label = '가격', text) {
+function setPrice(value, label = '가격 (후불)', text) {
   state.draft.price = value;
   const b = $('#detail-price'); $('#detail-price-label').textContent = label;
   b._tw?.kill(); // 앞선 숫자 애니메이션이 늦게 끝나며 옛 가격을 덮어쓰지 않게
@@ -584,7 +587,7 @@ const PRICE = {
   pwyw: (it, d) => setPrice(d.amount, '주고 싶은 만큼'),
   dm: (it, d) => { const free = otherInCart(); const p = $('#dm-free');
     if (p) p.textContent = free ? '장바구니에 다른 상품이 있어서 무료예요!' : '다른 상품을 하나라도 담으면 무료가 돼요.';
-    setPrice(free ? 0 : 5000, free ? '무료 해금' : '가격'); },
+    setPrice(free ? 0 : 5000, free ? '무료 해금' : '가격 (후불)'); },
   quote: () => setPrice(0, '이놀아안 검토 후 가격 책정', '견적 대기'),
   bot: (it, d) => setPrice(d.tier.build, `제작비 (월 ${won(d.tier.month)} 별도)`),
 };
@@ -611,8 +614,7 @@ $('#detail-buy').onclick = e => {
   if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) { say('뭘 원하는지 한 줄이라도 적어 줘!'); wiggle($('#detail-body textarea')); return; }
   const entry = { item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), hours: d.hours, monthly: it.kind === 'bot' ? d.tier.month : 0 };
   if (state.editing && state.cart.includes(state.editing)) {
-    Object.assign(state.editing, entry); say('고쳤어. 주문서에 반영했어.');
-    if (state.backToOrder) setTimeout(openOrder, REDUCED ? 0 : 320);
+    Object.assign(state.editing, entry); say('수정했어. 주문서에 반영했어.');
   }
   else { state.cart.push({ key: ++seq, ...entry }); say(LINES.added[seq % LINES.added.length]); }
   flyCoin(e.currentTarget);
@@ -657,7 +659,7 @@ function renderCart() {
   const list = $('#cart-list'); list.replaceChildren();
   if (!state.cart.length) list.append(el('li', { class: 'cart-empty', style: 'border:0;background:none', text: '비어 있어요. 마음에 드는 걸 골라 봐요!' }));
   for (const c of state.cart) list.append(el('li', {}, [
-    el('button', { class: 'cart-open', title: c.item.kind === 'dm' ? '주문서 보기' : '고치기', onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
+    el('button', { class: 'cart-open', title: c.item.kind === 'dm' ? '주문서 보기' : '수정', onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
       el('small', { text: ` ${c.item.kind === 'quote' ? '견적' : won(priced(c))}` })]),
     el('button', { 'aria-label': `${c.item.name} 빼기`, text: '✕', onclick: () => removeFromCart(c) })]));
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
@@ -667,9 +669,9 @@ function renderCart() {
   saveCart();
 }
 
-/* ── 주문서: 담은 것을 고치거나 빼고, 닉네임을 적어 디스코드로 보낸다 ── */
+/* ── 주문서: 담은 것을 확인·수정하고 그대로 디스코드로 보낸다. 결제는 결과물 받은 뒤라 여기엔 없다 ── */
 // 주문번호는 ordername.js가 만든 한글 10글자. 장바구니 하나에 하나, 보낼 때까지 그대로 둔다.
-const CODE_KEY = 'bongbongbong-code', BUYER_KEY = 'bongbongbong-buyer', DMUSER_KEY = 'bongbongbong-dmuser';
+const CODE_KEY = 'bongbongbong-code', DMUSER_KEY = 'bongbongbong-dmuser';
 function orderCode() {
   let code = '';
   try { code = localStorage.getItem(CODE_KEY) || ''; } catch {}
@@ -677,8 +679,7 @@ function orderCode() {
   return code;
 }
 function newOrderCode() { try { localStorage.removeItem(CODE_KEY); } catch {} }
-const needDmUser = () => state.cart.some(c => c.item.id === 'dm');
-// DM 해금은 Eve가 이 사용자명으로 계정을 찾는다 (소문자, 숫자, _, . 만)
+// 연락받을 디스코드 사용자명. 이놀아안이 이걸로 DM하고, DM 해금이면 Eve가 이걸로 계정을 찾는다 (소문자, 숫자, _, . 만)
 const dmUserValue = () => $('#dm-user').value.trim().replace(/^@/, '').toLowerCase();
 function orderBody(code) {
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
@@ -693,31 +694,31 @@ function orderBody(code) {
   return lines.join('\n');
 }
 function orderReady() {
-  if (!$('#buyer').value.trim()) return '디스코드 닉네임을 적으면 보낼 수 있어요.';
-  if (needDmUser() && !/^[a-z0-9_.]{2,32}$/.test(dmUserValue())) return 'DM 해금용 디스코드 사용자명을 적으면 보낼 수 있어요. 영어 소문자·숫자·_·. 만 써요.';
+  const u = dmUserValue();
+  if (!u) return '디스코드 사용자명을 적으면 보낼 수 있어요.';
+  const bad = [...new Set(u.replace(/[a-z0-9_.]/g, ''))];
+  if (bad.length) return `사용자명에 쓸 수 없는 글자가 있어요: ${bad.map(ch => ch === ' ' ? '띄어쓰기' : `"${ch}"`).join(', ')}. 표시 이름 말고 사용자명(영어 소문자·숫자·_·.)을 적어 주세요.`;
+  if (u.length < 2 || u.length > 32) return '사용자명은 2~32글자예요.';
   return '';
 }
 function refreshOrder() {
-  const code = $('#order-code').textContent, buyer = $('#buyer').value.trim(), dmUser = needDmUser() ? dmUserValue() : '';
-  $('#order-text').textContent = `주문자: ${buyer || '(닉네임을 적어 주세요)'}\n${dmUser ? `디스코드 사용자명: ${dmUser}\n` : ''}\n${orderBody(code)}`;
   const why = orderReady(), btn = $('#send-order');
   if (!btn.dataset.sent) { btn.disabled = !!why; $('#send-result').textContent = why; }
 }
 function renderOrder() {
   const ul = $('#order-items'); ul.replaceChildren();
   for (const c of state.cart) {
-    const note = el('textarea', { rows: 2, placeholder: '요청 사항 (고쳐도 돼요)', oninput: e => { c.note = e.target.value; saveCart(); refreshOrder(); } });
-    note.value = c.note;
+    const note = c.item.kind === 'dm' ? null : el('textarea', { rows: 2, placeholder: '요청 사항 (수정할 수 있어요)', oninput: e => { c.note = e.target.value; saveCart(); } });
+    if (note) note.value = c.note;
     ul.append(el('li', {}, [
       el('div', { class: 'oi-head' }, [el('b', { text: c.item.name }), c.sum ? el('span', { text: c.sum }) : null,
         el('span', { class: 'oi-price', text: c.item.kind === 'quote' ? '견적' : won(priced(c)) }),
-        c.item.kind === 'dm' ? null : el('button', { type: 'button', class: 'oi-del', text: '고치기', onclick: () => { $('#checkout').close(); openDetail(c.item, c); state.backToOrder = true; } }),
+        c.item.kind === 'dm' ? null : el('button', { type: 'button', class: 'oi-del', text: '수정', onclick: () => { $('#checkout').close(); openDetail(c.item, c); state.backToOrder = true; } }),
         el('button', { type: 'button', class: 'oi-del', 'aria-label': `${c.item.name} 빼기`, text: '빼기', onclick: () => removeFromCart(c) })]),
       note]));
   }
   const total = state.cart.reduce((s, c) => s + priced(c), 0), monthly = state.cart.reduce((s, c) => s + c.monthly, 0);
-  $('#order-total').textContent = `합계 ${won(total)}` + (monthly ? ` + 월 ${won(monthly)}` : '') + ' · 결과물 받은 뒤 결제';
-  $('#dm-user-box').hidden = !needDmUser();
+  $('#order-total').textContent = `합계 ${won(total)}` + (monthly ? ` + 월 ${won(monthly)}` : '') + ' (후불)';
   refreshOrder();
 }
 function openOrder() {
@@ -725,14 +726,10 @@ function openOrder() {
   const dlg = $('#checkout');
   if (!dlg.open) {
     $('#order-code').textContent = orderCode();
-    if (!$('#buyer').value) try { $('#buyer').value = localStorage.getItem(BUYER_KEY) || ''; } catch {}
     if (!$('#dm-user').value) try { $('#dm-user').value = localStorage.getItem(DMUSER_KEY) || ''; } catch {}
-    $('#order-edit').inert = false;
-    $('#buyer').disabled = $('#dm-user').disabled = false;
+    $('#order-edit').inert = false; $('#dm-user').disabled = false;
     const btn = $('#send-order'); delete btn.dataset.sent; btn.textContent = '디스코드로 주문 보내기';
-    btn.hidden = !DISCORD.webhook;
-    $('#send-help').textContent = DISCORD.webhook ? '보내면 가게 주인 이놀아안이 디스코드 스레드를 열고 불러요. 거기서 같이 조율해요.' : '주문서를 복사해서 가게 주인 이놀아안에게 DM으로 보내 주세요.';
-    orderStep('review');
+    $('#send-fail').hidden = true;
     dlg.showModal();
     dlg.scrollTop = 0;
     say(LINES.order);
@@ -741,57 +738,42 @@ function openOrder() {
   renderOrder();
 }
 $('#btn-order').onclick = openOrder;
-function orderStep(which) {
-  $('#order-review').hidden = which !== 'review';
-  $('#order-send').hidden = which !== 'send';
-  $('#checkout').scrollTop = 0;
-  if (which === 'send') setTimeout(() => (!$('#buyer').value ? $('#buyer') : $('#send-order')).focus(), 30);
-}
-$('#order-next').onclick = () => orderStep('send');
-$('#order-back').onclick = () => orderStep('review');
 $('#checkout-close').onclick = () => $('#checkout').close();
 // 주문서 바깥(어두운 곳)을 누르면 닫힌다
 $('#checkout').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 $('#order-more').onclick = () => { $('#checkout').close(); say('더 골라 봐. 담은 건 장바구니에 그대로 있어.'); };
-$('#buyer').oninput = () => { try { localStorage.setItem(BUYER_KEY, $('#buyer').value.trim()); } catch {} refreshOrder(); };
 $('#dm-user').oninput = () => { try { localStorage.setItem(DMUSER_KEY, $('#dm-user').value.trim()); } catch {} refreshOrder(); };
-async function copy(text, msg) {
-  try { await navigator.clipboard.writeText(text); toast(msg); } catch { toast('복사가 안 됐어요. 길게 눌러 직접 복사해 주세요.'); }
-}
-$('#copy-order').onclick = () => copy($('#order-text').textContent, '주문서를 복사했어요!');
-// 포럼 채널 웹후크로 주문마다 스레드를 하나 연다. 그 스레드가 구매자와 조율하는 자리다.
+// 포럼 채널 웹후크로 주문마다 스레드를 하나 연다. 그 스레드가 손님과 조율하는 자리다.
 $('#send-order').onclick = async () => {
   const out = $('#send-result'), why = orderReady();
   if (why) { out.textContent = why; return; }
-  const buyer = $('#buyer').value.trim(), dmUser = needDmUser() ? dmUserValue() : '';
+  const dmUser = dmUserValue();
   const code = $('#order-code').textContent;
+  const first = state.cart[0], title = `${code} · ${first.item.name}${state.cart.length > 1 ? ` 외 ${state.cart.length - 1}` : ''}`;
   const btn = $('#send-order'); btn.disabled = true; out.textContent = '보내는 중…';
   try {
     const r = await fetch(DISCORD.webhook + '?wait=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-      username: '봉봉봉', thread_name: `${code} · ${buyer}`.slice(0, 100), allowed_mentions: { parse: [] },
-      content: `주문자: **${buyer}**\n${dmUser ? `디스코드 사용자명: ${dmUser}\n` : ''}\`\`\`\n${orderBody(code)}\n\`\`\``.slice(0, 2000) }) });
+      username: '봉봉봉', thread_name: title.slice(0, 100), allowed_mentions: { parse: [] },
+      content: `디스코드 사용자명: ${dmUser}\n\`\`\`\n${orderBody(code)}\n\`\`\``.slice(0, 2000) }) });
     if (!r.ok) throw new Error(r.status);
-    const msg = await r.json();
     btn.dataset.sent = '1'; btn.textContent = '보냈어요 ✓';
-    $('#order-edit').inert = true;
-    $('#buyer').disabled = $('#dm-user').disabled = true;
-    out.replaceChildren('주문이 들어갔어요! 이놀아안이 이 스레드에서 불러요 → ',
-      el('a', { href: `https://discord.com/channels/${DISCORD.guild}/${msg.channel_id}`, target: '_blank', rel: 'noopener', text: '스레드 열기' }));
-    say('주문 들어왔다! 스레드에서 보자.');
+    $('#order-edit').inert = true; $('#dm-user').disabled = true;
+    out.textContent = `주문이 들어갔어요! 이놀아안이 @${dmUser} 로 DM 줄게요. 거기서 같이 조율해요.`;
+    say('주문 들어왔다! DM으로 연락할게.');
     state.cart = []; renderCart(); newOrderCode();
   } catch {
     btn.disabled = false;
-    out.textContent = '보내기에 실패했어요. 아래 "주문서 복사"로 DM 보내 주세요.';
+    out.textContent = '보내기에 실패했어요.';
+    $('#send-fail').hidden = false;
   }
 };
-$('#copy-bank').onclick = () => copy('카카오뱅크 3333-34-4447561 이충호', '계좌번호를 복사했어요!');
 // 알림. action을 주면 버튼(되돌리기 등)이 붙고 조금 더 오래 떠 있는다.
 function toast(msg, action, onAction) {
   const t = $('#toast'); t.replaceChildren(msg);
   ($('#checkout').open ? $('#checkout') : document.body).append(t); // 주문서가 열려 있으면 그 위에 뜬다
   if (action) t.append(' ', el('button', { type: 'button', text: action, onclick: () => { if (window.gsap) gsap.killTweensOf(t); onAction(); t.style.opacity = 0; t.classList.remove('on'); } }));
   t.classList.toggle('on', !!action);
-  const hold = action ? 6 : 1.6;
+  const hold = action ? 8 : 1.6;
   if (action) { // 누를 버튼이 있으면 움직이지 않는다
     if (window.gsap) { gsap.killTweensOf(t); gsap.set(t, { opacity: 1, y: 0 }); gsap.to(t, { opacity: 0, delay: hold, duration: .2, onComplete: () => t.classList.remove('on') }); }
     else { t.style.opacity = 1; t.style.transform = 'translate(-50%,0)'; clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = 0; t.classList.remove('on'); }, hold * 1000); }
