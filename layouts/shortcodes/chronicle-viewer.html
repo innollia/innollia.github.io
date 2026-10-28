@@ -1,11 +1,5 @@
 <!-- 메모 연대기 (Chronicle) 뷰어 -->
 <div id="chronicle-app" class="chronicle-container">
-  <div class="chronicle-header">
-    <div class="chronicle-badge">ARCHIVE // CLASSIFIED &amp; PERSONAL LOGS</div>
-    <h2 class="chronicle-title">📜 메모 연대기 (2020 ~ 2026)</h2>
-    <div class="chronicle-subtitle">삼성노트 · 스크리브너 · 디스코드 총 739편의 디지털 기억 보관소</div>
-  </div>
-
   <!-- 로딩 인디케이터 -->
   <div id="chronicle-loading" class="chronicle-loading-box">
     <div class="terminal-spinner"></div>
@@ -149,6 +143,13 @@
   color: #88ffcc;
   opacity: 0.9;
 }
+
+/* 카드 액션 */
+.card-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:10px; border-top:1px dotted rgba(26,89,68,0.6); }
+.card-actions .retro-btn { text-decoration:none; display:inline-block; }
+.card-title-link { color:inherit; text-decoration:none; }
+.card-title-link:hover { text-decoration:underline; }
+.single-nav { margin-bottom:12px; }
 
 /* 로딩 */
 .chronicle-loading-box {
@@ -634,6 +635,8 @@
   let rawData = null;
   let allEntries = [];
   let filteredEntries = [];
+  let entryById = {};
+  let singleId = null;
 
   // 필터 상태
   let state = {
@@ -678,6 +681,8 @@
     document.getElementById('chronicle-stats-bar').style.display = 'grid';
     document.getElementById('chronicle-controls').style.display = 'block';
     document.getElementById('chronicle-pagination').style.display = 'flex';
+    entryById = {};
+    allEntries.forEach(e => { entryById[e.id] = e; });
 
     // 통계 표시
     if (rawData.stats) {
@@ -723,7 +728,78 @@
 
     // 초기 필터 적용 및 렌더
     applyFilters();
+    window.addEventListener('hashchange', syncHash);
+    syncHash();
   }
+
+  // #<id> 가 있으면 해당 메모 한 편만 보여준다
+  function syncHash() {
+    const id = decodeURIComponent(location.hash.replace(/^#/, ''));
+    singleId = (id && entryById[id]) ? id : null;
+    const hide = singleId ? 'none' : '';
+    document.getElementById('chronicle-stats-bar').style.display = singleId ? 'none' : 'grid';
+    document.getElementById('chronicle-controls').style.display = singleId ? 'none' : 'block';
+    document.getElementById('chronicle-pagination').style.display = singleId ? 'none' : 'flex';
+    renderList();
+    window.scrollTo({ top: 0 });
+  }
+
+  function memoLink(id) {
+    return location.origin + '/chronicle/#' + id;
+  }
+
+  function memoPlainText(entry) {
+    const NL = String.fromCharCode(10);
+    const head = (entry.ti || entry.t || '') + (entry.t ? NL + entry.t.replace('T', ' ') : '');
+    let body = '';
+    if (entry.ms && entry.ms.length) {
+      body = entry.ms.map(m => '[' + (m.a || '익명') + '] ' + (m.t ? m.t.replace('T', ' ') + NL : '') + (m.x || '')).join(NL + NL);
+    } else {
+      body = entry.bd || '';
+    }
+    return head + NL + NL + body;
+  }
+
+  function copyToClipboard(text, btn, okLabel) {
+    const done = () => {
+      const old = btn.dataset.label || btn.innerText;
+      btn.dataset.label = old;
+      btn.innerText = okLabel;
+      setTimeout(() => { btn.innerText = old; }, 1200);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  // 카드 안의 버튼/제목 클릭 처리 (이벤트 위임)
+  document.addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]');
+    if (!act) return;
+    const id = act.dataset.id;
+    const entry = entryById[id];
+    if (act.dataset.act === 'copy-text' && entry) {
+      copyToClipboard(memoPlainText(entry), act, '✅ 복사됨');
+    } else if (act.dataset.act === 'copy-link') {
+      copyToClipboard(memoLink(id), act, '✅ 복사됨');
+    } else if (act.dataset.act === 'back') {
+      history.pushState('', document.title, location.pathname + location.search);
+      syncHash();
+    }
+  });
 
   function bindEvents() {
     // 검색창 디바운스
@@ -875,6 +951,11 @@
 
   function renderList() {
     const listEl = document.getElementById('chronicle-list');
+    if (singleId) {
+      listEl.innerHTML = '<div class="single-nav"><button type="button" class="retro-btn" data-act="back">← 목록으로</button></div>' +
+        renderMemoCard(entryById[singleId], true);
+      return;
+    }
     const total = filteredEntries.length;
 
     if (total === 0) {
@@ -904,7 +985,7 @@
     listEl.innerHTML = html;
   }
 
-  function renderMemoCard(entry) {
+  function renderMemoCard(entry, isSingle) {
     const srcInfo = SOURCE_NAMES[entry.s] || { name: entry.s, badge: 'badge-sn', prefix: '' };
     const isSealed = Boolean(entry.z);
     const cardClass = 'memo-card src-' + (entry.s || 'unknown') + (isSealed ? ' is-sealed' : '');
@@ -933,6 +1014,15 @@
 
     // 제목
     let title = entry.ti ? escapeHtml(entry.ti) : (timeStr + ' 기록');
+    if (!isSingle) {
+      title = '<a class="card-title-link" href="#' + entry.id + '" title="이 메모만 보기">' + title + '</a>';
+    }
+
+    const actionsHtml = '<div class="card-actions">' +
+      (isSealed ? '' : '<button type="button" class="retro-btn" data-act="copy-text" data-id="' + entry.id + '">📋 텍스트 복사</button>') +
+      '<button type="button" class="retro-btn" data-act="copy-link" data-id="' + entry.id + '">🔗 링크 복사</button>' +
+      (isSingle ? '' : '<a class="retro-btn" href="#' + entry.id + '">↗ 열기</a>') +
+      '</div>';
 
     // 본문 / 내용 구성
     let bodyHtml = '';
@@ -997,6 +1087,7 @@
         pathHtml +
         '<h3 class="card-title">' + title + '</h3>' +
         bodyHtml +
+        actionsHtml +
       '</div>' +
     '</div>';
   }

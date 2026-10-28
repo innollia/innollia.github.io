@@ -1,6 +1,6 @@
 baseURL = 'https://innollia.github.io/'
 languageCode = 'ko-KR'
-title = '< belladonna sherum 의 홈-페-지 >'
+title = 'belladonna sherum, counter23, innollia, 결망아안, 이충호, 혹은하나의일'
 theme = 'hugo-trainsh'
 
 defaultContentLanguage = 'ko'
@@ -11,7 +11,7 @@ defaultContentLanguageInSubdir = false
     languageCode = 'ko-KR'
     languageName = '한국어'
     weight = 1
-    title = '< belladonna sherum 의 홈-페-지 >'
+    title = 'belladonna sherum, counter23, innollia, 결망아안, 이충호, 혹은하나의일'
 
 # URL 정규화
 disablePathToLower = false
@@ -22,6 +22,13 @@ removePathAccents = true
 
 [params]
   mainSections = ['posts']
+
+  # 댓글(Firebase) 설정 - README의 '댓글 설정' 참고. 비어 있으면 "준비 중"으로 표시됨
+  [params.firebase]
+    apiKey = 'AIzaSyCu1xkC5vL_crDyBBujk7UpCK_MtEQ8hh0'
+    authDomain = 'innollia-blog.firebaseapp.com'
+    projectId = 'innollia-blog'
+    appId = '1:435062365847:web:6cf3b416b51d9edc8753d2'
 
   [params.home]
     [params.home.recent]

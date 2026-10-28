@@ -57,3 +57,24 @@ description = "어서오십시요! 방문자 여러분! 본 홈-페-지는 800x6
 
 
 
+
+<div class="retro-container" style="margin-top: 40px;">
+<h2 class="wordart-magenta-green">&lt; 다른 곳에서도 만나요 &gt;</h2>
+<div class="retro-links">
+<a href="https://x.com/chungholee7" target="_blank" rel="noopener">&gt;&gt; X</a>
+<a href="https://www.instagram.com/belladonna.sherum/" target="_blank" rel="noopener" style="margin-left: 15px;">&gt;&gt; Instagram</a>
+<a href="https://innollia.itch.io/" target="_blank" rel="noopener" style="margin-left: 15px;">&gt;&gt; itch.io</a>
+</div>
+
+<div style="display:flex; flex-wrap:wrap; justify-content:center; margin-top:25px;">
+<div style="flex:1 1 320px; max-width:420px; padding:0 20px; box-sizing:border-box;">
+<p class="wordart-3d-yellow">X 에 올린 글</p>
+<a class="twitter-timeline" data-height="600" data-theme="dark" href="https://twitter.com/chungholee7?ref_src=twsrc%5Etfw">Tweets by chungholee7</a>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<div style="flex:1 1 320px; max-width:420px; padding:0 20px; box-sizing:border-box; border-left:2px dashed #ffff00;">
+<p class="wordart-3d-yellow">Instagram 에 올린 글</p>
+<iframe src="https://www.instagram.com/belladonna.sherum/embed" width="100%" height="600" frameborder="0" scrolling="no" allowtransparency="true" loading="lazy" title="Instagram belladonna.sherum"></iframe>
+</div>
+</div>
+</div>

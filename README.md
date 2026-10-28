@@ -51,3 +51,12 @@ hugo server
 2. 결과물을 GitHub Pages에 올립니다.
 
 따로 손댈 필요 없이, 글을 쓰고 `main`에 올리기만 하면 됩니다.
+
+## 댓글 설정 (Firebase, 한 번만)
+
+댓글은 Google 로그인 + 닉네임 + Firestore로 동작합니다. 아래를 한 번 해야 켜집니다.
+
+1. https://console.firebase.google.com 에서 프로젝트 생성 → 웹 앱 추가 → 나오는 `apiKey / authDomain / projectId / appId`를 `hugo.toml`의 `[params.firebase]`에 넣기
+2. Authentication → 로그인 방법 → **Google** 사용 설정, 승인된 도메인에 `innollia.github.io` 추가
+3. Firestore Database 생성 → 규칙 탭에 `firestore.rules` 내용 붙여넣고 게시
+4. 푸시하면 모든 글 아래에 댓글(덧붙이기)이 나타납니다. 특정 글만 끄려면 글 머리에 `comments = false`
