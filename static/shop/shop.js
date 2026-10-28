@@ -78,7 +78,8 @@ const el = (tag, attrs = {}, kids = []) => {
 };
 
 /* ── TINProject 게임별 들인 시간. 사용자가 알려 주면 채운다: { game_id: 시간 } ── */
-const TIN_HOURS = {};
+// 실제로 들인 시간(사용자가 알려 줌). 여기 있는 게임만 시간 막대의 동그라미가 된다.
+const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, physics_puzzle_platformer: 14, guineastar: 20, platformer: 26, pixel_arena: 28, fleshpit: 70 };
 
 /* ── 그림 (SVG) ── */
 const SVG = (inner, vb = 64) => `<svg viewBox="0 0 ${vb} ${vb}" fill="none" stroke="#1b1534" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${inner}</svg>`;
@@ -115,8 +116,6 @@ const CATS = [
   { id: 'voice', name: '목소리', sub: '낭독·노래' },
   { id: 'brain', name: '머리 빌리기', sub: '신탁·조사·대행' },
   { id: 'ss0', name: 'ss0 봇', sub: '해금·기능 추가' },
-  { id: 'soon', name: '입고 예정', sub: '곧 들어와요' },
-  { id: 'hall', name: '명예의 전당', sub: '후원해 주신 분' },
 ];
 const ITEMS = [
   { id: 'game', cat: 'make', icon: 'game', c: '#7a5cff', name: '게임 제작', sub: '시간을 끌어서 퀄리티를 골라요', badge: ['간판', 'hot'],
@@ -125,7 +124,7 @@ const ITEMS = [
     line: '시간 막대를 오른쪽으로 끌어 봐! 단계 넘을 때마다 잠깐 멈출 거야.' },
   { id: 'web', cat: 'make', icon: 'web', c: '#4ab8ff', name: '웹사이트', sub: '최대 6시간 · 1만~10만', priceText: '10,000원~', kind: 'web',
     desc: '기념일 페이지, 소개 페이지, 작은 도구 사이트.\n6시간 안에 끝나는 크기만 받아요.',
-    line: '웹사이트는 6시간까지만! 그 이상은 게임 제작처럼 시간으로 계산해.' },
+    line: '웹사이트는 6시간까지만!' },
   { id: 'bot', cat: 'make', icon: 'bot', c: '#2fe0b0', name: '새 디스코드 봇', sub: '제작 + 서버비 포함 월 유지', priceText: '30,000원~', kind: 'bot',
     desc: '처음부터 우리 서버 전용 봇을 만들어요.\n제작비는 완성 후에 한 번, 서버비를 포함한 월 유지비는 매달 먼저.',
     line: '봇은 만들고 끝이 아니야. 서버비랑 고장 수리까지 월 유지비에 들어 있어.' },
@@ -144,9 +143,9 @@ const ITEMS = [
     desc: '하고 싶은 말을 제 X 계정에 대신 올려 드려요.\n(올리기 전에 제가 한 번 읽어요.)', field: '올릴 내용',
     line: '내 X에 네 말을 올려 줄게. 이상한 건 안 올려 줌.' },
   { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', name: 'ss0 DM 해금', sub: '다른 상품 사면 공짜', priceText: '5,000원', kind: 'dm',
-    desc: 'ss0 봇과 1:1 DM으로 대화할 수 있게 열어 드려요.\n장바구니에 다른 상품이 하나라도 있으면 무료.\n입금이 확인되면 이놀아안이 직접 열어 줘서, 열릴 때까지 시간이 걸릴 수 있어요.',
+    desc: 'ss0 봇과 1:1 DM으로 대화할 수 있게 열어 드려요.\n장바구니에 다른 상품이 하나라도 있으면 무료.\n주문이 들어오면 이놀아안이 확인하고 직접 열어 줘요(조금 걸릴 수 있어요). 혼자 살 때 5,000원도 열린 뒤에 내요.',
     line: '다른 거 하나만 사도 DM은 공짜로 열어 줘.' },
-  { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', name: 'ss0 기능 추가', sub: '이놀아안이 검토 후 가격 책정', priceText: '견적', kind: 'quote',
+  { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', name: 'ss0 기능 추가', sub: '이놀아안이 검토 후 가격 책정', priceText: '검토 후 가격', kind: 'quote',
     desc: 'ss0에 갖고 싶은 기능을 주문하세요.\n종류를 고르고 설명을 적으면, 제가 검토해서 가격을 정해 답장해요.',
     line: '기능마다 품이 달라서 내가 보고 값을 매겨. 일단 적어서 줘!' },
   { id: 'partner', cat: 'make', icon: 'game', c: '#ff7ac0', name: '동업자 되기', sub: 'PICO-8로 뭐라도 만들어 와', priceText: '0원 · 도전', kind: 'partner', badge: ['모집'],
@@ -159,15 +158,6 @@ const ITEMS = [
   { id: 'trpg', cat: 'soon', icon: 'dice', c: '#ffc93c', name: 'TRPG 캐릭터 패키지', sub: '과거사·능력·시트', soon: true },
   { id: 'theme', cat: 'soon', icon: 'song', c: '#2fe0b0', name: '개인 등장 테마', sub: '8비트 BGM 루프', soon: true },
 ];
-const GAME_TIERS = [
-  { h: 1, rank: 'TIER 1', title: '한 화면 장난감', desc: '조작 하나, 반응 하나. "오 움직인다"까지.', stats: [1, 1, 0, 1] },
-  { h: 3, rank: 'TIER 2', title: '규칙 하나 도는 미니게임', desc: '이기고 지는 조건이 있고, 점수가 올라가요.', stats: [2, 2, 1, 1] },
-  { h: 8, rank: 'TIER 3', title: '시작부터 끝까지 한 판', desc: '타이틀 → 플레이 → 결과 화면. 친구한테 보내 볼 만해요.', stats: [3, 2, 2, 2] },
-  { h: 20, rank: 'TIER 4', title: '다듬은 데모', desc: '소리·연출·손맛을 넣어요. 만지면 기분 좋은 단계.', stats: [3, 4, 3, 3] },
-  { h: 40, rank: 'TIER 5', title: '여러 스테이지 데모', desc: '콘텐츠가 쌓이고, 저장·설정·튜토리얼이 붙어요.', stats: [4, 4, 4, 4] },
-  { h: 80, rank: 'TIER 6', title: '공개 가능한 한 조각', desc: '스토어에 올려 볼 만한 수직 슬라이스.', stats: [5, 5, 5, 5] },
-];
-const STAT_NAMES = ['조작감', '연출', '분량', '완성도'];
 const WEB_STEPS = [
   { h: .5, p: 10000, title: '한 장짜리', desc: '사진 몇 장과 글이 들어간 한 페이지.' },
   { h: 1, p: 20000, title: '꾸민 한 장', desc: '움직이는 장식, 음악, 숨은 버튼 하나.' },
@@ -175,7 +165,7 @@ const WEB_STEPS = [
   { h: 3, p: 50000, title: '놀거리 있는 사이트', desc: '퀴즈·방명록 같은 작은 기능 하나.' },
   { h: 4, p: 65000, title: '작은 도구', desc: '입력하면 계산·변환해 주는 사이트.' },
   { h: 5, p: 80000, title: '이벤트 사이트', desc: '기념일·행사용, 연출 듬뿍.' },
-  { h: 6, p: 100000, title: '최대치', desc: '6시간 꽉 채운 사이트. 그 이상은 견적.' },
+  { h: 6, p: 100000, title: '최대치', desc: '6시간 꽉 채운 사이트.' },
 ];
 const READ_TIERS = [
   { id: 'plain', name: '담백', rate: 10, sub: '또박또박' },
@@ -211,7 +201,7 @@ const LINES = {
   soon: '아직 준비 중인 물건들. 먼저 찜하고 싶으면 DM 줘.',
   hall: '여기 이름 올라간 사람들은 평생 단골이야.',
   added: ['담았다! 더 볼래?', '좋은 선택이야.', '장바구니로 슝~', '그거 진짜 잘 골랐다.'],
-  order: '주문서 복사해서 DM으로 보내 줘. 확인하면 바로 답장할게!',
+  order: '닉네임 적고 "디스코드로 주문 보내기" 누르면 끝! 스레드에서 보자.',
 };
 
 /* ── 상태 ── */
@@ -226,7 +216,13 @@ if (window.gsap && !REDUCED) {
   gsap.timeline({ repeat: -1, repeatDelay: 2.6 }).to('.k-eyes', { scaleY: .1, transformOrigin: '50% 80px', duration: .07 }).to('.k-eyes', { scaleY: 1, duration: .1 });
 }
 let typeTimer;
+// 타자 효과 없이 바로 바꾼다(막대를 움직이는 동안)
+function sayNow(text) {
+  clearInterval(typeTimer); $('#keeper-line').textContent = text;
+  if (detail.getAttribute('aria-hidden') === 'false') $('#detail-say').textContent = text;
+}
 function say(text) {
+  if (detail.getAttribute('aria-hidden') === 'false') $('#detail-say').textContent = text;
   const p = $('#keeper-line');
   clearInterval(typeTimer);
   if (REDUCED) { p.textContent = text; return; }
@@ -247,21 +243,28 @@ function iconEl(key) { return el('div', { class: 'icon', html: ICON[key] }); }
 function renderShelf() {
   const shelf = $('#shelf'); const cat = CATS.find(c => c.id === state.cat);
   shelf.replaceChildren(el('div', { class: 'shelf-head' }, [el('h2', { text: cat.name }), el('p', { text: cat.sub })]));
-  if (cat.id === 'hall') return renderHall(shelf);
   const grid = el('div', { class: 'grid' });
-  for (const it of ITEMS.filter(i => i.cat === cat.id)) {
-    const card = el('button', { class: 'card' + (it.soon ? ' soon' : ''), style: `--c:${it.c}`, 'aria-disabled': it.soon ? 'true' : false,
-      onclick: () => it.soon ? (say(`${it.name}은(는) 아직 입고 전이야. 곧 들어와!`), wiggle(card)) : openDetail(it) }, [
-      it.badge ? el('span', { class: 'badge ' + (it.badge[1] || ''), text: it.badge[0] }) : null,
-      it.soon ? el('span', { class: 'stamp', text: '입고 예정' }) : null,
-      el('div', { class: 'card-art' }, iconEl(it.icon)),
-      el('div', { class: 'card-body' }, [el('div', { class: 'card-name', text: it.name }), el('div', { class: 'card-sub', text: it.sub }),
-        it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'coin' }), it.priceText])]),
-    ]);
-    grid.append(card);
-  }
+  for (const it of ITEMS.filter(i => i.cat === cat.id)) grid.append(makeCard(it));
   shelf.append(grid);
   if (window.gsap && !REDUCED) gsap.from(grid.children, { y: 40, opacity: 0, rotate: () => gsap.utils.random(-6, 6), duration: .45, stagger: .06, ease: 'back.out(1.8)' });
+}
+function makeCard(it) {
+  const card = el('button', { class: 'card' + (it.soon ? ' soon' : ''), style: `--c:${it.c}`, 'aria-disabled': it.soon ? 'true' : false,
+    onclick: () => it.soon ? (say(`${it.name}은(는) 아직 입고 전이야. 곧 들어와!`), wiggle(card)) : openDetail(it) }, [
+    it.badge ? el('span', { class: 'badge ' + (it.badge[1] || ''), text: it.badge[0] }) : null,
+    it.soon ? el('span', { class: 'stamp', text: '입고 예정' }) : null,
+    el('div', { class: 'card-art' }, iconEl(it.icon)),
+    el('div', { class: 'card-body' }, [el('div', { class: 'card-name', text: it.name }), el('div', { class: 'card-sub', text: it.sub }),
+      it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'coin' }), it.priceText])]),
+  ]);
+  return card;
+}
+function renderExtras() {
+  const soon = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', { text: '입고 예정' }), el('p', { text: '곧 들어와요' })]),
+    el('div', { class: 'grid' }, ITEMS.filter(i => i.soon).map(makeCard))]);
+  const hall = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', { text: '명예의 전당' }), el('p', { text: '후원해 주신 분' })])]);
+  $('#extras').replaceChildren(soon, hall);
+  renderHall(hall);
 }
 function wiggle(n) { if (window.gsap && !REDUCED) gsap.fromTo(n, { x: -6 }, { x: 0, duration: .4, ease: 'elastic.out(1,.3)' }); }
 
@@ -273,7 +276,7 @@ async function playCart(c, player) {
   const frame = el('div', { class: 'player-frame' }, ok
     ? el('iframe', { src: url, title: c.name, allow: 'autoplay; fullscreen; gamepad', loading: 'lazy' })
     : el('div', { class: 'player-empty', text: `${c.name}\n카트리지 굽는 중...\n곧 여기서 바로 할 수 있어요` }));
-  player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: '방향키 + Z/X' })]));
+  player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: '화면을 한 번 누르면 시작 · 방향키 + Z/X' })]));
   player.classList.add('on');
   say(ok ? `${c.name}! 방향키랑 Z, X로 해 봐.` : `${c.name}은(는) 아직 웹용으로 굽는 중이야.`);
   if (window.gsap && !REDUCED) gsap.fromTo(frame, { scaleY: .02, filter: 'brightness(4)' }, { scaleY: 1, filter: 'brightness(1)', duration: .45, ease: 'expo.out' });
@@ -294,8 +297,15 @@ async function renderHall(shelf) {
 
 /* ── 상세 패널 ── */
 const detail = $('#detail');
-function openDetail(it) {
-  state.item = it; state.draft = { note: '' };
+const BACKDROP = ['.marquee', '.counter', '.shop', '.extras', '.cartbar'];
+let lastFocus = null;
+function openDetail(it, prev) {
+  if (state.closing) { if (window.gsap) gsap.killTweensOf('.detail-panel'); state.closing = false; detail.style.pointerEvents = ''; }
+  lastFocus = document.activeElement;
+  state.item = it; state.draft = { note: prev?.note || '', prev }; state.editing = prev || null;
+  $('#detail-buy').textContent = prev ? '고치기 완료' : '담기';
+  $('#detail-buy').disabled = false;
+  $('#detail-say').textContent = '';
   $('#detail-cat').textContent = CATS.find(c => c.id === it.cat).name;
   $('#detail-title').textContent = it.name;
   $('#detail-desc').textContent = it.desc;
@@ -303,20 +313,25 @@ function openDetail(it) {
   $('#detail-icon').innerHTML = ICON[it.icon];
   const body = $('#detail-body'); body.replaceChildren();
   BUILD[it.kind](body, it);
-  const uses = USES[it.id];
+  const uses = it.kind === 'read' ? null : USES[it.id]; // 낭독은 칸이 '읽을 글'이라 예시를 넣으면 값이 바뀐다
   if (uses) {
+    const t = body.querySelector('textarea');
     const box = el('div', { class: 'box' }, [el('h3', { text: uses.q }),
-      body.querySelector('textarea') ? el('p', { class: 'note', style: 'margin:0 0 8px', text: '누르면 아래 칸에 적혀요' }) : null]);
-    box.append(chips(uses.ex.map((t, i) => ({ id: i, name: t[0], sub: t[1] })), -1, o => {
-      const t = body.querySelector('textarea');
-      if (!t) return;
-      t.value = uses.ex[o.id][0] + (uses.ex[o.id][1] ? ` — ${uses.ex[o.id][1]}` : ''); t.dispatchEvent(new Event('input'));
-    }));
-    body.prepend(box);
+      t ? el('p', { class: 'note', style: 'margin:0 0 8px', text: '누르면 아래 칸에 더해져요' }) : null]);
+    const add = x => {
+      const line = x[0] + (x[1] ? ` — ${x[1]}` : '');
+      if (!t.value.split('\n').includes(line)) { t.value = t.value.trim() ? `${t.value.trim()}\n${line}` : line; t.dispatchEvent(new Event('input')); } // 적어 둔 걸 지우지 않고 더한다
+      t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+      wiggle(t); say('아래 칸에 적어 뒀어. 고쳐 써도 돼.');
+    };
+    // 적을 칸이 없는 상품(DM 해금)은 예시 칸 자체를 두지 않는다
+    if (t) { box.append(el('div', { class: 'chips' }, uses.ex.map(x => el('button', { class: 'chip', onclick: () => add(x) }, [x[0], el('small', { text: x[1] })])))); body.prepend(box); }
   }
   updatePrice();
   detail.setAttribute('aria-hidden', 'false');
-  say(it.line);
+  BACKDROP.forEach(q => { $(q).inert = true; });
+  $('.detail-panel').scrollTop = 0;
+  say(prev ? `담아 둔 걸 고치는 중이야${prev.sum ? ` (지금 ${prev.sum})` : ''}. 바꾸고 "고치기 완료" 눌러.` : it.line);
   if (window.gsap && !REDUCED) {
     gsap.fromTo('.detail-slash', { opacity: 0 }, { opacity: 1, duration: .25 });
     gsap.fromTo('.detail-panel', { xPercent: 100, skewX: -8 }, { xPercent: 0, skewX: 0, duration: .5, ease: 'expo.out' });
@@ -325,34 +340,43 @@ function openDetail(it) {
   setTimeout(() => $('#detail-close').focus(), 50);
 }
 function closeDetail() {
-  if (detail.getAttribute('aria-hidden') === 'true') return;
-  const done = () => { detail.setAttribute('aria-hidden', 'true'); state.item = null; };
-  if (window.gsap && !REDUCED) gsap.to('.detail-panel', { xPercent: 100, duration: .3, ease: 'power3.in', onComplete: done }); else done();
+  if (detail.getAttribute('aria-hidden') === 'true' || state.closing) return;
+  state.closing = true; $('#detail-buy').disabled = true; // 닫히는 동안 두 번 담기지 않게
+  BACKDROP.forEach(q => { $(q).inert = false; });
+  detail.style.pointerEvents = 'none';
+  const done = () => {
+    detail.setAttribute('aria-hidden', 'true'); detail.style.pointerEvents = ''; state.item = null; state.draft = null; state.editing = null; state.closing = false; state.backToOrder = false;
+    if (lastFocus?.isConnected) lastFocus.focus();
+    if (!$('#checkout').open) sayNow(LINES[state.cat] || LINES.hello);
+  };
+  if (window.gsap && !REDUCED) { gsap.killTweensOf('.detail-panel'); gsap.to('.detail-panel', { xPercent: 100, duration: .3, ease: 'power3.in', onComplete: done }); } else done();
 }
 $('#detail-close').onclick = closeDetail;
 $('.detail-slash').onclick = closeDetail;
-addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+addEventListener('keydown', e => { if (e.key !== 'Escape') return; if ($('#checkout').open) $('#checkout').close(); else closeDetail(); });
 
 function setPrice(value, label = '가격', text) {
   state.draft.price = value;
   const b = $('#detail-price'); $('#detail-price-label').textContent = label;
+  b._tw?.kill(); // 앞선 숫자 애니메이션이 늦게 끝나며 옛 가격을 덮어쓰지 않게
   if (text) { b.textContent = text; return; }
   if (window.gsap && !REDUCED) {
     const o = { v: Number(b.dataset.v || 0) };
-    gsap.to(o, { v: value, duration: .35, ease: 'power2.out', onUpdate: () => { b.textContent = won(Math.round(o.v)); } });
+    b._tw = gsap.to(o, { v: value, duration: .35, ease: 'power2.out', onUpdate: () => { b.textContent = won(Math.round(o.v)); }, onComplete: () => { b.textContent = won(value); } });
   } else b.textContent = won(value);
   b.dataset.v = value;
 }
 function updatePrice() { const it = state.item, d = state.draft; PRICE[it.kind]?.(it, d); }
 function noteField(body, label, ph = '') {
   const t = el('textarea', { placeholder: ph, oninput: e => { state.draft.note = e.target.value; } });
+  t.value = state.draft.note;
   body.append(el('label', { class: 'box' }, [el('h3', { text: label }), t]));
   return t;
 }
 function chips(options, current, onPick) {
   const wrap = el('div', { class: 'chips' });
   for (const o of options) {
-    const b = el('button', { class: 'chip', 'aria-pressed': String(o.id === current), onclick: () => {
+    const b = el('button', { class: 'chip', 'data-v': o.id, 'aria-pressed': String(o.id === current), onclick: () => {
       wrap.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(o);
       if (window.gsap && !REDUCED) gsap.fromTo(b, { scale: .9 }, { scale: 1, duration: .3, ease: 'back.out(3)' });
     } }, [o.name, el('small', { text: o.sub })]);
@@ -361,61 +385,81 @@ function chips(options, current, onPick) {
   return wrap;
 }
 
-/* ── 시간 드래그: 단계 경계마다 잠깐 걸렸다가 넘어감 ── */
-function timeBar(body, { steps, min, max, scale, fmt, onChange, start }) {
+/* ── 시간 드래그: 끄는 중에는 올라가는 단계 경계마다 잠깐 걸렸다가 손 간 곳까지 이어 간다 ──
+   누르기·키보드는 바로 간다. value는 지금 보이는 값, target은 손이 가 있는 값.
+   담기 직전에는 flush()로 target을 바로 확정한다. */
+function timeBar(body, { steps, min, max, scale, fmt, onChange, start, card }) {
   const toPos = h => scale === 'log' ? Math.log(h / min) / Math.log(max / min) : (h - min) / (max - min);
   const fromPos = p => scale === 'log' ? min * Math.pow(max / min, p) : min + p * (max - min);
   const bar = el('div', { class: 'timebar' });
   const track = el('div', { class: 'tb-track' });
   const fill = el('div', { class: 'tb-fill' });
-  const flag = el('div', { class: 'tb-flag' });
-  const knob = el('div', { class: 'tb-knob', role: 'slider', tabindex: '0', 'aria-valuemin': min, 'aria-valuemax': max, 'aria-label': '작업 시간' }, flag);
+  const knob = el('div', { class: 'tb-knob', role: 'slider', tabindex: '0', 'aria-valuemin': min, 'aria-valuemax': max, 'aria-label': '작업 시간' });
+  const cHead = el('b', { class: 'tc-head' }), cTitle = el('div', { class: 'tc-title' }), cDesc = el('p', { class: 'tc-desc' }), cShot = el('div', { class: 'tc-shot' });
+  const cardEl = el('div', { class: 'tb-card', 'aria-live': 'polite' }, [cShot, el('div', {}, [cHead, cTitle, cDesc])]);
+  let lastLbl = -1;
   const marks = steps.map(s => {
     const m = el('div', { class: 'tb-mark', style: `left:${toPos(s) * 100}%` });
-    track.append(m, el('span', { class: 'tb-lbl', style: `left:${toPos(s) * 100}%`, text: fmt(s) }));
+    // 눈금이 너무 붙어 있으면 글자는 앞의 것만 남긴다(동그라미는 그대로)
+    const low = toPos(s) - lastLbl < .07; if (!low) lastLbl = toPos(s);
+    track.append(m, el('span', { class: 'tb-lbl' + (low ? ' low' : ''), style: `left:${toPos(s) * 100}%`, text: fmt(s) }));
     return m;
   });
-  track.append(fill, knob); bar.append(track);
-  body.append(bar, el('p', { class: 'tb-hint', text: '◀ 끌어서 시간 정하기 ▶  (키보드 ←/→)' }));
+  track.append(fill, knob); bar.append(cardEl, track);
+  body.append(bar, el('p', { class: 'tb-hint', text: matchMedia('(pointer: coarse)').matches ? '끌어서 시간 정하기' : '끌어서 시간 정하기 · 손잡이를 누른 뒤 키보드 ←/→도 돼요' }));
 
-  let value = start, locked = false, dragging = false;
+  const draft = state.draft; // 패널을 닫고 다른 상품을 연 뒤에 늦게 온 호출은 버린다
   const snap = scale === 'log' ? (h => Math.max(min, Math.round(h))) : (h => steps.reduce((a, b) => Math.abs(b - h) < Math.abs(a - h) ? b : a));
   const tierIdx = h => steps.reduce((acc, s, i) => h >= s ? i : acc, 0);
+  let value = start, target = start, timer = null, dragging = false, moved = false;
+
   function place(h, anim) {
     const p = toPos(h) * 100;
+    if (window.gsap) gsap.killTweensOf([knob, fill], 'left,width'); // 앞선 이동이 새 위치를 덮어쓰지 않게
     if (anim && window.gsap && !REDUCED) { gsap.to(knob, { left: p + '%', duration: .25, ease: 'back.out(2)' }); gsap.to(fill, { width: p + '%', duration: .25 }); }
     else { knob.style.left = p + '%'; fill.style.width = p + '%'; }
-    flag.textContent = fmt(h);
+    const c = card ? card(h) : { head: fmt(h) };
+    cHead.textContent = c.head || fmt(h); cTitle.textContent = c.title || ''; cDesc.textContent = c.desc || '';
+    cShot.hidden = !c.shot; if (c.shot && cShot.dataset.src !== c.shot) { cShot.dataset.src = c.shot; cShot.style.backgroundImage = `url(${c.shot})`; }
+    // 카드는 손잡이 바로 위. 막대 밖으로 나가지 않게 양 끝에서 멈춘다.
+    const bw = bar.clientWidth || 1, cw = cardEl.offsetWidth, x = track.offsetLeft + track.clientWidth * p / 100;
+    cardEl.style.left = Math.min(bw - cw, Math.max(0, x - cw / 2)) + 'px';
     knob.setAttribute('aria-valuenow', h); knob.setAttribute('aria-valuetext', fmt(h));
     marks.forEach((m, i) => { const on = h >= steps[i]; m.classList.toggle('on', on); m.nextSibling.classList.toggle('on', on); });
   }
-  function set(h, anim) {
-    h = Math.min(max, Math.max(min, snap(h)));
-    const before = tierIdx(value), after = tierIdx(h);
-    if (after !== before && !locked) {
-      // 단계를 건너면 경계에서 한 번 멈춘다
-      const edge = after > before ? steps[before + 1] : steps[before];
-      const landing = after > before ? edge : steps[after];
-      value = after > before ? landing : h;
-      place(value, true);
-      onChange(value, true);
-      locked = true;
-      hitstop(knob, track);
-      setTimeout(() => { locked = false; }, REDUCED ? 0 : 420);
+  function commit(h, anim) {
+    if (state.draft !== draft) return;
+    const crossed = tierIdx(h) !== tierIdx(value);
+    value = h; place(h, anim); onChange(h, crossed);
+  }
+  function step() {
+    timer = null;
+    if (state.draft !== draft || target === value) return;
+    const before = tierIdx(value), after = tierIdx(target);
+    if (after > before) {
+      const edge = steps[before + 1];
+      commit(edge, true); hitstop(knob);
+      if (edge !== target) timer = setTimeout(step, REDUCED ? 0 : 420);
       return;
     }
-    if (locked) return;
-    if (h === value && !anim) return;
-    value = h; place(h, anim); onChange(h, false);
+    commit(target, true);
   }
+  function set(h, drag, exact) {
+    const near = exact ? null : steps.filter(s => Math.abs(toPos(s) - toPos(h)) < .012).sort((x, y) => Math.abs(toPos(x) - toPos(h)) - Math.abs(toPos(y) - toPos(h)))[0];
+    target = near ?? Math.min(max, Math.max(min, snap(h)));
+    if (!drag) { clearTimeout(timer); timer = null; if (target !== value) commit(target, true); return; }
+    if (!timer) step();
+  }
+  function flush() { clearTimeout(timer); timer = null; if (target !== value) commit(target, false); }
   function fromEvent(e) {
     const r = track.getBoundingClientRect();
     return fromPos(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)));
   }
-  bar.addEventListener('pointerdown', e => { dragging = true; bar.setPointerCapture(e.pointerId); set(fromEvent(e), true);
+  bar.addEventListener('pointerdown', e => { dragging = true; moved = false; bar.setPointerCapture(e.pointerId); knob.focus({ preventScroll: true }); if (!knob.contains(e.target)) set(fromEvent(e), false);
     if (window.gsap && !REDUCED) gsap.to(knob, { scale: 1.15, duration: .15 }); });
-  bar.addEventListener('pointermove', e => { if (dragging) set(fromEvent(e)); });
-  const up = () => { if (!dragging) return; dragging = false; if (window.gsap && !REDUCED) gsap.to(knob, { scale: 1, duration: .25, ease: 'back.out(3)' }); };
+  bar.addEventListener('pointermove', e => { if (dragging) { moved = true; set(fromEvent(e), true); } });
+  const up = e => { if (!dragging) return; dragging = false; if (e.type === 'pointerup' && moved) set(fromEvent(e), true);
+    if (window.gsap && !REDUCED) gsap.to(knob, { scale: 1, duration: .25, ease: 'back.out(3)' }); };
   bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
   knob.addEventListener('keydown', e => {
     const i = steps.indexOf(value);
@@ -424,83 +468,55 @@ function timeBar(body, { steps, min, max, scale, fmt, onChange, start }) {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = scale === 'log' ? value - 1 : steps[Math.max(0, i - 1)];
     if (e.key === 'PageUp') next = steps[Math.min(steps.length - 1, tierIdx(value) + 1)];
     if (e.key === 'PageDown') next = steps[Math.max(0, tierIdx(value) - (value === steps[tierIdx(value)] ? 1 : 0))];
-    if (next != null) { e.preventDefault(); locked = false; set(next, true); }
+    if (next != null) { e.preventDefault(); set(next, false, true); }
   });
+  draft.flush = flush;
   place(value); onChange(value, false);
 }
-function hitstop(knob, track) {
+function hitstop(knob) {
   if (!window.gsap || REDUCED) return;
+  // 손잡이만 찌그러진다. 막대나 패널을 흔들면 손가락 위치를 잘못 읽는다.
   gsap.timeline()
     .to(knob, { scaleX: 1.35, scaleY: .7, duration: .06 })
     .to(knob, { scaleX: .85, scaleY: 1.2, duration: .08 })
     .to(knob, { scaleX: 1, scaleY: 1, duration: .3, ease: 'elastic.out(1,.35)' });
-  gsap.fromTo(track, { x: -5 }, { x: 0, duration: .35, ease: 'elastic.out(1.2,.2)' });
-  gsap.fromTo('.detail-panel', { x: 4 }, { x: 0, duration: .25, ease: 'elastic.out(1,.2)' });
-}
-
-function tierCard(body) {
-  const shot = el('div', { class: 'tier-shot' });
-  const rank = el('div', { class: 'tier-rank' }), title = el('div', { class: 'tier-title' }), desc = el('p', { class: 'tier-desc' });
-  const games = el('div', { class: 'tier-games' });
-  const flash = el('div', { class: 'tier-flash' }), stamp = el('div', { class: 'tier-stamp', text: 'LEVEL UP!' });
-  const card = el('div', { class: 'tier' }, [shot, el('div', {}, [rank, title, desc, games]), flash, stamp]);
-  body.append(card);
-  return { card, shot, rank, title, desc, games, flash, stamp, cur: -1 };
-}
-function swapTier(tc, idx, data, up) {
-  if (tc.cur === idx) return;
-  const first = tc.cur === -1; tc.cur = idx;
-  const fill = () => {
-    tc.rank.textContent = data.rank; tc.title.textContent = data.title; tc.desc.textContent = data.desc;
-    tc.games.replaceChildren(...(data.games || []).map(g => el('span', { text: g })));
-    if (data.shot) { tc.shot.style.backgroundImage = `url(${data.shot})`; tc.shot.textContent = ''; }
-    else { tc.shot.style.backgroundImage = ''; tc.shot.textContent = data.shotText || ''; }
-  };
-  if (first || !window.gsap || REDUCED) return fill();
-  gsap.timeline()
-    .to(tc.card, { rotateY: 90, duration: .14, ease: 'power2.in', onComplete: fill })
-    .to(tc.card, { rotateY: 0, duration: .32, ease: 'back.out(2)' })
-    .fromTo(tc.flash, { opacity: .9 }, { opacity: 0, duration: .35 }, '<');
-  if (up) gsap.fromTo(tc.stamp, { opacity: 1, scale: 2.2, rotate: -10 }, { scale: 1, rotate: 8, duration: .3, ease: 'back.out(3)' }).then(() => gsap.to(tc.stamp, { opacity: 0, delay: .6, duration: .3 }));
 }
 
 let tinGames = [];
 fetch('tin/manifest.json').then(r => r.ok ? r.json() : []).then(j => { tinGames = j; }).catch(() => {});
-function tinFor(lo, hi) {
-  return tinGames.filter(g => TIN_HOURS[g.id] != null && TIN_HOURS[g.id] >= lo && TIN_HOURS[g.id] < hi);
+// h시간 이하로 만든 게임 가운데 가장 오래 걸린 것
+function gameAt(h) {
+  return tinGames.filter(g => TIN_HOURS[g.id] != null && TIN_HOURS[g.id] <= h).sort((x, y) => TIN_HOURS[y.id] - TIN_HOURS[x.id])[0];
 }
 
 const BUILD = {
   hours(body) {
-    const tc = tierCard(body);
-    const meter = el('div', { class: 'meter' }, STAT_NAMES.map(n => el('div', {}, [el('small', { text: n }), el('b', { class: 'stars' })])));
     const brk = el('p', { class: 'breakdown' });
-    const steps = GAME_TIERS.map(t => t.h);
-    let last = 0;
-    timeBar(body, { steps, min: 1, max: 80, scale: 'log', start: 1, fmt: h => h + 'h', onChange: (h, crossed) => {
-      const i = steps.reduce((a, s, k) => h >= s ? k : a, 0), t = GAME_TIERS[i];
-      const hi = GAME_TIERS[i + 1]?.h ?? Infinity;
-      const real = tinFor(t.h, hi);
-      swapTier(tc, i, { ...t, shot: real[0]?.shots?.[0], shotText: 'TINProject\n캡처 연결 예정', games: real.map(g => `${g.name} · ${TIN_HOURS[g.id]}h`) }, i > last);
-      meter.querySelectorAll('.stars').forEach((s, k) => { s.textContent = '★'.repeat(t.stats[k]) + '☆'.repeat(5 - t.stats[k]); });
-      if (crossed && i > last) say(`${t.rank}! ${t.title}. ${t.h}시간이면 이 정도야.`);
-      last = i;
-      state.draft.hours = h;
-      brk.innerHTML = `시급 <b>${won(RATE)}</b> + Claude <b>${won(AI_RATE)}</b><br>× <b>${h}시간</b> = <b>${won(h * HOUR)}</b>`;
-      updatePrice();
-    } });
-    body.append(meter, el('div', { class: 'box' }, brk));
+    const steps = [...new Set(Object.values(TIN_HOURS))].sort((x, y) => x - y);
+    if (steps[steps.length - 1] < 80) steps.push(80);
+    timeBar(body, { steps, min: 1, max: 80, scale: 'log', start: state.draft.prev?.hours || 1, fmt: h => h + 'h',
+      card: h => { const g = gameAt(h), n = g && TIN_HOURS[g.id];
+        return { head: `${h}시간 주문`, title: !g ? '' : n === h ? `딱 이 시간에 만든 게임: 「${g.name}」` : `참고: 「${g.name}」은 ${n}시간 걸렸어요`, desc: g?.blurb, shot: g?.shots?.[0] }; },
+      onChange: (h, crossed) => {
+        const g = gameAt(h), n = g && TIN_HOURS[g.id];
+        const line = !g ? `${h}시간.` : n === h ? `${h}시간이면 「${g.name}」 정도 나와.` : `${h}시간. 「${g.name}」(${n}시간)보다 조금 더 들어가.`;
+        if (crossed) say(line); else sayNow(line); // 말풍선이 옛 시간을 붙들고 있지 않게
+        state.draft.hours = h;
+        brk.innerHTML = `시급 <b>${won(RATE)}</b> + Claude <b>${won(AI_RATE)}</b><br>× <b>${h}시간</b> = <b>${won(h * HOUR)}</b>`;
+        updatePrice();
+      } });
+    body.append(el('div', { class: 'box' }, brk));
     noteField(body, '어떤 게임이었으면 해요?', '장르, 분위기, 참고할 게임, 누구에게 줄 건지…');
   },
   web(body) {
-    const tc = tierCard(body);
-    let last = 0;
-    timeBar(body, { steps: WEB_STEPS.map(s => s.h), min: .5, max: 6, scale: 'lin', start: .5, fmt: h => h < 1 ? '30m' : h + 'h', onChange: (h, crossed) => {
-      const i = WEB_STEPS.findIndex(s => s.h === h), s = WEB_STEPS[i];
-      swapTier(tc, i, { rank: `STEP ${i + 1}`, title: s.title, desc: s.desc, shotText: won(s.p) }, i > last);
-      if (crossed && i > last) say(`${s.title}! ${won(s.p)}.`);
-      last = i; state.draft.hours = h; state.draft.webPrice = s.p; updatePrice();
-    } });
+    const at = h => WEB_STEPS.find(s => s.h === h) || WEB_STEPS[0];
+    timeBar(body, { steps: WEB_STEPS.map(s => s.h), min: .5, max: 6, scale: 'lin', start: state.draft.prev?.hours || .5, fmt: h => h < 1 ? '30m' : h + 'h',
+      card: h => { const s = at(h); return { head: h < 1 ? '30분' : `${h}시간`, title: s.title, desc: s.desc }; },
+      onChange: (h, crossed) => {
+        const s = at(h);
+        if (crossed) say(`${s.title}! ${won(s.p)}.`);
+        state.draft.hours = h; state.draft.webPrice = s.p; updatePrice();
+      } });
     noteField(body, '무슨 사이트?', '목적, 들어갈 내용, 참고 사이트…');
   },
   read(body) {
@@ -531,7 +547,7 @@ const BUILD = {
   },
   pwyw(body) {
     state.draft.amount = 0;
-    const input = el('input', { type: 'number', min: '0', step: '500', value: '0', 'aria-label': '직접 입력', oninput: e => { state.draft.amount = Math.max(0, Number(e.target.value) || 0); updatePrice(); } });
+    const input = el('input', { type: 'number', min: '0', step: '500', value: '0', 'aria-label': '직접 입력', oninput: e => { state.draft.amount = Math.max(0, Number(e.target.value) || 0); e.target.closest('.box').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(Number(c.dataset.v) === state.draft.amount))); updatePrice(); } });
     body.append(el('div', { class: 'box' }, [el('h3', { text: '얼마 낼래요?' }),
       chips([0, 1000, 5000, 10000, 30000].map(v => ({ id: v, name: v ? won(v) : '0원', sub: v ? (v >= 10000 ? '감동받음' : '고마워요') : '일단 들어 볼게' })), 0,
         o => { state.draft.amount = o.id; input.value = o.id; updatePrice(); }),
@@ -587,113 +603,206 @@ function summary(it, d) {
 }
 
 $('#detail-buy').onclick = e => {
+  if (!state.item || state.closing) return;
+  state.draft.flush?.();
   const it = state.item, d = state.draft;
+  if (it.id === 'dm' && !state.editing && state.cart.some(c => c.item.id === 'dm')) { say('DM 해금은 이미 담겨 있어!'); closeDetail(); return; }
   if (it.kind === 'read' && !d.chars) { say('읽을 글을 먼저 붙여 넣어 줘!'); wiggle($('#detail-body textarea')); return; }
   if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) { say('뭘 원하는지 한 줄이라도 적어 줘!'); wiggle($('#detail-body textarea')); return; }
-  state.cart.push({ key: ++seq, item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), monthly: it.kind === 'bot' ? d.tier.month : 0 });
+  const entry = { item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), hours: d.hours, monthly: it.kind === 'bot' ? d.tier.month : 0 };
+  if (state.editing && state.cart.includes(state.editing)) {
+    Object.assign(state.editing, entry); say('고쳤어. 주문서에 반영했어.');
+    if (state.backToOrder) setTimeout(openOrder, REDUCED ? 0 : 320);
+  }
+  else { state.cart.push({ key: ++seq, ...entry }); say(LINES.added[seq % LINES.added.length]); }
   flyCoin(e.currentTarget);
-  say(LINES.added[seq % LINES.added.length]);
   renderCart();
   closeDetail();
 };
 function flyCoin(from) {
   if (!window.gsap || REDUCED) return;
-  const a = from.getBoundingClientRect(), b = $('#cart-toggle').getBoundingClientRect();
+  const a = from.getBoundingClientRect(), b = $('#btn-order').getBoundingClientRect();
   for (let i = 0; i < 5; i++) {
-    const c = el('span', { class: 'coin fly' }); // 이빨이 날아간다 document.body.append(c);
+    const c = el('span', { class: 'coin fly' }); document.body.append(c); // 이빨이 날아간다
     gsap.set(c, { left: a.left + a.width / 2, top: a.top });
     gsap.timeline({ onComplete: () => c.remove() })
       .to(c, { left: b.left + 30 + gsap.utils.random(-20, 20), duration: .7, ease: 'power1.inOut', delay: i * .06 })
       .to(c, { top: a.top - 120 - i * 10, duration: .3, ease: 'power2.out' }, `<`)
       .to(c, { top: b.top, duration: .4, ease: 'power2.in' }, `>-.02`);
   }
-  gsap.fromTo('#cart-toggle', { scale: 1 }, { scale: 1.15, duration: .12, yoyo: true, repeat: 1, delay: .9 });
+  gsap.fromTo('#btn-order', { scale: 1 }, { scale: 1.15, duration: .12, yoyo: true, repeat: 1, delay: .9 });
 }
 
-/* ── 장바구니 ── */
+/* ── 장바구니 (새로고침해도 남게 localStorage에 둔다) ── */
 function priced(c) { return c.item.id === 'dm' ? (state.cart.some(x => x.item.id !== 'dm') ? 0 : 5000) : c.price; }
+const CART_KEY = 'bongbongbong-cart';
+function saveCart() {
+  try { localStorage.setItem(CART_KEY, JSON.stringify(state.cart.map(c => ({ id: c.item.id, price: c.price, sum: c.sum, note: c.note, hours: c.hours, monthly: c.monthly })))); } catch {}
+}
+function loadCart() {
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch {}
+  for (const s of Array.isArray(saved) ? saved : []) {
+    const item = ITEMS.find(i => i.id === s.id && !i.soon);
+    if (item) state.cart.push({ key: ++seq, item, price: s.price || 0, sum: s.sum || '', note: s.note || '', hours: s.hours, monthly: s.monthly || 0 });
+  }
+}
+function removeFromCart(c) {
+  const at = state.cart.indexOf(c);
+  state.cart = state.cart.filter(x => x !== c); renderCart();
+  if ($('#checkout').open) { if (state.cart.length) renderOrder(); else { $('#checkout').close(); say('장바구니를 비웠어. 다시 골라 봐!'); } }
+  toast(`${c.item.name}${c.sum ? ` ${c.sum}` : ''} 뺐어요`, '되돌리기', () => { state.cart.splice(Math.min(at, state.cart.length), 0, c); renderCart(); if ($('#checkout').open) renderOrder(); say('되돌렸어.'); });
+}
 function renderCart() {
   const list = $('#cart-list'); list.replaceChildren();
   if (!state.cart.length) list.append(el('li', { class: 'cart-empty', style: 'border:0;background:none', text: '비어 있어요. 마음에 드는 걸 골라 봐요!' }));
-  for (const c of state.cart) list.append(el('li', {}, [c.item.name, el('small', { text: c.item.kind === 'quote' ? '견적' : won(priced(c)) }),
-    el('button', { 'aria-label': `${c.item.name} 빼기`, text: '✕', onclick: () => { state.cart = state.cart.filter(x => x !== c); renderCart(); } })]));
+  for (const c of state.cart) list.append(el('li', {}, [
+    el('button', { class: 'cart-open', title: c.item.kind === 'dm' ? '주문서 보기' : '고치기', onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
+      el('small', { text: ` ${c.item.kind === 'quote' ? '견적' : won(priced(c))}` })]),
+    el('button', { 'aria-label': `${c.item.name} 빼기`, text: '✕', onclick: () => removeFromCart(c) })]));
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
-  $('#cart-count').textContent = state.cart.length;
   $('#cart-total').textContent = won(total);
   $('#btn-order').disabled = !state.cart.length;
-  const w = $('#wallet-total');
-  if (window.gsap && !REDUCED) { const o = { v: Number(w.dataset.v || 0) }; gsap.to(o, { v: total, duration: .6, onUpdate: () => { w.textContent = Math.round(o.v).toLocaleString('ko-KR'); } }); }
-  else w.textContent = total.toLocaleString('ko-KR');
-  w.dataset.v = total;
+  $('#btn-order').textContent = state.cart.length ? `주문하기 (${state.cart.length})` : '주문하기';
+  saveCart();
 }
-$('#cart-toggle').onclick = () => { $('#cart-list').scrollTo({ left: 0, behavior: 'smooth' }); };
 
-/* ── 주문서 ── */
+/* ── 주문서: 담은 것을 고치거나 빼고, 닉네임을 적어 디스코드로 보낸다 ── */
+// 주문번호는 ordername.js가 만든 한글 10글자. 장바구니 하나에 하나, 보낼 때까지 그대로 둔다.
+const CODE_KEY = 'bongbongbong-code', BUYER_KEY = 'bongbongbong-buyer', DMUSER_KEY = 'bongbongbong-dmuser';
 function orderCode() {
-  const d = new Date(), p = n => String(n).padStart(2, '0');
-  return `BONG-${p(d.getMonth() + 1)}${p(d.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  let code = '';
+  try { code = localStorage.getItem(CODE_KEY) || ''; } catch {}
+  if (!code) { code = window.orderName(); try { localStorage.setItem(CODE_KEY, code); } catch {} }
+  return code;
 }
-$('#btn-order').onclick = () => {
-  const code = orderCode();
+function newOrderCode() { try { localStorage.removeItem(CODE_KEY); } catch {} }
+const needDmUser = () => state.cart.some(c => c.item.id === 'dm');
+// DM 해금은 Eve가 이 사용자명으로 계정을 찾는다 (소문자, 숫자, _, . 만)
+const dmUserValue = () => $('#dm-user').value.trim().replace(/^@/, '').toLowerCase();
+function orderBody(code) {
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
   const monthly = state.cart.reduce((s, c) => s + c.monthly, 0);
   const lines = [`[봉봉봉 주문서] ${code}`, ''];
   state.cart.forEach((c, i) => {
-    lines.push(`${i + 1}. ${c.item.name}${c.sum ? ` (${c.sum})` : ''} —${c.item.kind === 'quote' ? '견적 요청' : won(priced(c))}`);
+    lines.push(`${i + 1}. ${c.item.name}${c.sum ? ` (${c.sum})` : ''}: ${c.item.kind === 'quote' ? '견적 요청' : won(priced(c))}`);
     if (c.note) lines.push('   └ ' + c.note.replace(/\n+/g, ' / '));
   });
   lines.push('', `합계: ${won(total)}` + (monthly ? ` (+ 월 ${won(monthly)})` : '') + ' · 결제는 결과물 받은 뒤(후불)');
   if (state.cart.some(c => c.item.kind === 'quote')) lines.push('※ 견적 상품은 검토 후 가격을 알려 주세요.');
-  $('#order-code').textContent = code;
-  $('#order-text').textContent = lines.join('\n');
-  $('#send-result').textContent = '';
-  $('#dm-user-box').hidden = !state.cart.some(c => c.item.id === 'dm');
-  $('#send-order').disabled = false;
-  $('#send-order').hidden = !DISCORD.webhook;
-  $('#send-help').textContent = DISCORD.webhook ? '주문을 디스코드로 보내면 이놀아안이 스레드에서 같이 조율해요' : '주문서를 복사해서 이놀아안에게 DM으로 보내면 거기서 같이 조율해요';
-  $('#checkout').showModal();
-  say(LINES.order);
-  if (window.gsap && !REDUCED) gsap.fromTo('.checkout-inner', { yPercent: -60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: .6, ease: 'bounce.out' });
-};
+  return lines.join('\n');
+}
+function orderReady() {
+  if (!$('#buyer').value.trim()) return '디스코드 닉네임을 적으면 보낼 수 있어요.';
+  if (needDmUser() && !/^[a-z0-9_.]{2,32}$/.test(dmUserValue())) return 'DM 해금용 디스코드 사용자명을 적으면 보낼 수 있어요. 영어 소문자·숫자·_·. 만 써요.';
+  return '';
+}
+function refreshOrder() {
+  const code = $('#order-code').textContent, buyer = $('#buyer').value.trim(), dmUser = needDmUser() ? dmUserValue() : '';
+  $('#order-text').textContent = `주문자: ${buyer || '(닉네임을 적어 주세요)'}\n${dmUser ? `디스코드 사용자명: ${dmUser}\n` : ''}\n${orderBody(code)}`;
+  const why = orderReady(), btn = $('#send-order');
+  if (!btn.dataset.sent) { btn.disabled = !!why; $('#send-result').textContent = why; }
+}
+function renderOrder() {
+  const ul = $('#order-items'); ul.replaceChildren();
+  for (const c of state.cart) {
+    const note = el('textarea', { rows: 2, placeholder: '요청 사항 (고쳐도 돼요)', oninput: e => { c.note = e.target.value; saveCart(); refreshOrder(); } });
+    note.value = c.note;
+    ul.append(el('li', {}, [
+      el('div', { class: 'oi-head' }, [el('b', { text: c.item.name }), c.sum ? el('span', { text: c.sum }) : null,
+        el('span', { class: 'oi-price', text: c.item.kind === 'quote' ? '견적' : won(priced(c)) }),
+        c.item.kind === 'dm' ? null : el('button', { type: 'button', class: 'oi-del', text: '고치기', onclick: () => { $('#checkout').close(); openDetail(c.item, c); state.backToOrder = true; } }),
+        el('button', { type: 'button', class: 'oi-del', 'aria-label': `${c.item.name} 빼기`, text: '빼기', onclick: () => removeFromCart(c) })]),
+      note]));
+  }
+  const total = state.cart.reduce((s, c) => s + priced(c), 0), monthly = state.cart.reduce((s, c) => s + c.monthly, 0);
+  $('#order-total').textContent = `합계 ${won(total)}` + (monthly ? ` + 월 ${won(monthly)}` : '') + ' · 결과물 받은 뒤 결제';
+  $('#dm-user-box').hidden = !needDmUser();
+  refreshOrder();
+}
+function openOrder() {
+  if (!state.cart.length) { say('장바구니가 비어 있어. 먼저 하나 골라 봐!'); wiggle($('#btn-order')); return; }
+  const dlg = $('#checkout');
+  if (!dlg.open) {
+    $('#order-code').textContent = orderCode();
+    if (!$('#buyer').value) try { $('#buyer').value = localStorage.getItem(BUYER_KEY) || ''; } catch {}
+    if (!$('#dm-user').value) try { $('#dm-user').value = localStorage.getItem(DMUSER_KEY) || ''; } catch {}
+    $('#order-edit').inert = false;
+    $('#buyer').disabled = $('#dm-user').disabled = false;
+    const btn = $('#send-order'); delete btn.dataset.sent; btn.textContent = '디스코드로 주문 보내기';
+    btn.hidden = !DISCORD.webhook;
+    $('#send-help').textContent = DISCORD.webhook ? '보내면 가게 주인 이놀아안이 디스코드 스레드를 열고 불러요. 거기서 같이 조율해요.' : '주문서를 복사해서 가게 주인 이놀아안에게 DM으로 보내 주세요.';
+    orderStep('review');
+    dlg.showModal();
+    dlg.scrollTop = 0;
+    say(LINES.order);
+    if (window.gsap && !REDUCED) gsap.fromTo('.checkout-inner', { yPercent: -60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: .6, ease: 'bounce.out' });
+  }
+  renderOrder();
+}
+$('#btn-order').onclick = openOrder;
+function orderStep(which) {
+  $('#order-review').hidden = which !== 'review';
+  $('#order-send').hidden = which !== 'send';
+  $('#checkout').scrollTop = 0;
+  if (which === 'send') setTimeout(() => (!$('#buyer').value ? $('#buyer') : $('#send-order')).focus(), 30);
+}
+$('#order-next').onclick = () => orderStep('send');
+$('#order-back').onclick = () => orderStep('review');
+$('#checkout-close').onclick = () => $('#checkout').close();
+// 주문서 바깥(어두운 곳)을 누르면 닫힌다
+$('#checkout').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$('#order-more').onclick = () => { $('#checkout').close(); say('더 골라 봐. 담은 건 장바구니에 그대로 있어.'); };
+$('#buyer').oninput = () => { try { localStorage.setItem(BUYER_KEY, $('#buyer').value.trim()); } catch {} refreshOrder(); };
+$('#dm-user').oninput = () => { try { localStorage.setItem(DMUSER_KEY, $('#dm-user').value.trim()); } catch {} refreshOrder(); };
 async function copy(text, msg) {
   try { await navigator.clipboard.writeText(text); toast(msg); } catch { toast('복사가 안 됐어요. 길게 눌러 직접 복사해 주세요.'); }
 }
 $('#copy-order').onclick = () => copy($('#order-text').textContent, '주문서를 복사했어요!');
 // 포럼 채널 웹후크로 주문마다 스레드를 하나 연다. 그 스레드가 구매자와 조율하는 자리다.
 $('#send-order').onclick = async () => {
-  const buyer = $('#buyer').value.trim();
-  const out = $('#send-result');
-  if (!buyer) { out.textContent = '디스코드 닉네임을 먼저 적어 주세요.'; $('#buyer').focus(); return; }
-  // DM 해금은 Eve가 이 사용자명으로 계정을 찾는다 (소문자, 숫자, _, . 만)
-  const dmUser = $('#dm-user-box').hidden ? '' : $('#dm-user').value.trim().replace(/^@/, '').toLowerCase();
-  if (!$('#dm-user-box').hidden && !/^[a-z0-9_.]{2,32}$/.test(dmUser)) {
-    out.textContent = 'DM 해금용 디스코드 사용자명을 적어 주세요. 영어 소문자·숫자·_·. 만 써요.'; $('#dm-user').focus(); return;
-  }
+  const out = $('#send-result'), why = orderReady();
+  if (why) { out.textContent = why; return; }
+  const buyer = $('#buyer').value.trim(), dmUser = needDmUser() ? dmUserValue() : '';
   const code = $('#order-code').textContent;
   const btn = $('#send-order'); btn.disabled = true; out.textContent = '보내는 중…';
   try {
     const r = await fetch(DISCORD.webhook + '?wait=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
       username: '봉봉봉', thread_name: `${code} · ${buyer}`.slice(0, 100), allowed_mentions: { parse: [] },
-      content: `주문자: **${buyer}**\n${dmUser ? `디스코드 사용자명: ${dmUser}\n` : ''}\`\`\`\n${$('#order-text').textContent}\n\`\`\``.slice(0, 2000) }) });
+      content: `주문자: **${buyer}**\n${dmUser ? `디스코드 사용자명: ${dmUser}\n` : ''}\`\`\`\n${orderBody(code)}\n\`\`\``.slice(0, 2000) }) });
     if (!r.ok) throw new Error(r.status);
     const msg = await r.json();
-    out.replaceChildren('보냈어요! 이 스레드에서 이놀아안이 불러요 → ',
+    btn.dataset.sent = '1'; btn.textContent = '보냈어요 ✓';
+    $('#order-edit').inert = true;
+    $('#buyer').disabled = $('#dm-user').disabled = true;
+    out.replaceChildren('주문이 들어갔어요! 이놀아안이 이 스레드에서 불러요 → ',
       el('a', { href: `https://discord.com/channels/${DISCORD.guild}/${msg.channel_id}`, target: '_blank', rel: 'noopener', text: '스레드 열기' }));
     say('주문 들어왔다! 스레드에서 보자.');
+    state.cart = []; renderCart(); newOrderCode();
   } catch {
     btn.disabled = false;
     out.textContent = '보내기에 실패했어요. 아래 "주문서 복사"로 DM 보내 주세요.';
   }
 };
 $('#copy-bank').onclick = () => copy('카카오뱅크 3333-34-4447561 이충호', '계좌번호를 복사했어요!');
-function toast(msg) {
-  const t = $('#toast'); t.textContent = msg;
-  if (window.gsap) gsap.timeline().to(t, { opacity: 1, y: 0, duration: .25, ease: 'back.out(2)' }).to(t, { opacity: 0, y: 40, delay: 1.6, duration: .25 });
-  else { t.style.opacity = 1; t.style.transform = 'translate(-50%,0)'; setTimeout(() => { t.style.opacity = 0; }, 1800); }
+// 알림. action을 주면 버튼(되돌리기 등)이 붙고 조금 더 오래 떠 있는다.
+function toast(msg, action, onAction) {
+  const t = $('#toast'); t.replaceChildren(msg);
+  ($('#checkout').open ? $('#checkout') : document.body).append(t); // 주문서가 열려 있으면 그 위에 뜬다
+  if (action) t.append(' ', el('button', { type: 'button', text: action, onclick: () => { if (window.gsap) gsap.killTweensOf(t); onAction(); t.style.opacity = 0; t.classList.remove('on'); } }));
+  t.classList.toggle('on', !!action);
+  const hold = action ? 6 : 1.6;
+  if (action) { // 누를 버튼이 있으면 움직이지 않는다
+    if (window.gsap) { gsap.killTweensOf(t); gsap.set(t, { opacity: 1, y: 0 }); gsap.to(t, { opacity: 0, delay: hold, duration: .2, onComplete: () => t.classList.remove('on') }); }
+    else { t.style.opacity = 1; t.style.transform = 'translate(-50%,0)'; clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = 0; t.classList.remove('on'); }, hold * 1000); }
+    return;
+  }
+  if (window.gsap) { gsap.killTweensOf(t); gsap.timeline().to(t, { opacity: 1, y: 0, duration: .25, ease: 'back.out(2)' }).to(t, { opacity: 0, y: 40, delay: hold, duration: .25, onComplete: () => t.classList.remove('on') }); }
+  else { t.style.opacity = 1; t.style.transform = 'translate(-50%,0)'; clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = 0; t.classList.remove('on'); }, hold * 1000); }
 }
 
 /* ── 시작 ── */
-renderRail(); renderShelf(); renderCart();
+loadCart(); renderRail(); renderShelf(); renderExtras(); renderCart();
 setTimeout(() => say(LINES.hello), 300);
 if (window.gsap && !REDUCED) {
   gsap.from('.sign', { y: -120, rotate: -12, duration: .9, ease: 'bounce.out' });

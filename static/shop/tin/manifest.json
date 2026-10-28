@@ -1,46 +1,5 @@
 [
   {
-    "id": "rule_rewriting",
-    "name": "규칙 재작성실",
-    "genre": "퍼즐",
-    "blurb": "낱말 블록을 밀어 규칙 문장을 바꾸면 세계의 법칙이 바뀌는 퍼즐.",
-    "shots": [
-      "tin/rule_rewriting/01.png",
-      "tin/rule_rewriting/02.png"
-    ]
-  },
-  {
-    "id": "odd_road_adventure",
-    "name": "기묘한 로드",
-    "genre": "어드벤처",
-    "blurb": "같은 길에서 매번 다른 일이 생기는 사건·아이템 중심 로드 어드벤처.",
-    "shots": [
-      "tin/odd_road_adventure/01.png",
-      "tin/odd_road_adventure/02.png",
-      "tin/odd_road_adventure/03.png"
-    ]
-  },
-  {
-    "id": "deduction_casework",
-    "name": "추리 사건 기록",
-    "genre": "추리",
-    "blurb": "장면 속 물건과 인물을 살펴 단서를 모으고 사건을 맞춰 가는 추리 게임.",
-    "shots": [
-      "tin/deduction_casework/01.webp",
-      "tin/deduction_casework/02.png"
-    ]
-  },
-  {
-    "id": "top_down_action_rpg",
-    "name": "탑다운 액션 RPG",
-    "genre": "액션 RPG",
-    "blurb": "지하 교환소를 누비며 사람을 만나고 싸우는 탑다운 액션 RPG.",
-    "shots": [
-      "tin/top_down_action_rpg/01.webp",
-      "tin/top_down_action_rpg/02.webp"
-    ]
-  },
-  {
     "id": "stone_story_rpg",
     "name": "자동 전투 RPG",
     "genre": "자동 전투 RPG",
@@ -60,16 +19,6 @@
       "tin/stacking_descent/01.webp",
       "tin/stacking_descent/02.webp",
       "tin/stacking_descent/03.webp"
-    ]
-  },
-  {
-    "id": "descent_exploration",
-    "name": "하강",
-    "genre": "탐험",
-    "blurb": "끝없는 수직 갱도를 따라 아래로 내려가는 하강 탐사.",
-    "shots": [
-      "tin/descent_exploration/01.png",
-      "tin/descent_exploration/02.png"
     ]
   },
   {
@@ -102,34 +51,14 @@
     ]
   },
   {
-    "id": "quote_vn",
-    "name": "인용된 사랑",
-    "genre": "비주얼 노벨",
-    "blurb": "모든 문장이 고전 문학 인용으로 이루어진 비주얼 노벨.",
-    "shots": [
-      "tin/quote_vn/01.png",
-      "tin/quote_vn/02.png",
-      "tin/quote_vn/03.png"
-    ]
-  },
-  {
     "id": "pixel_arena",
     "name": "선이 되기 전에",
     "genre": "액션 생존",
     "blurb": "75초 동안 몰려드는 선 인간들을 베어 넘기는 횡스크롤 생존 아레나.",
     "shots": [
       "tin/pixel_arena/01.webp",
-      "tin/pixel_arena/02.png",
+      "tin/pixel_arena/02.webp",
       "tin/pixel_arena/03.webp"
-    ]
-  },
-  {
-    "id": "jar_climb",
-    "name": "항아리 오르기",
-    "genre": "등반 액션",
-    "blurb": "잡동사니 더미를 손으로 붙잡으며 위로 오르는 물리 등반.",
-    "shots": [
-      "tin/jar_climb/01.png"
     ]
   },
   {
