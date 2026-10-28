@@ -1,0 +1,157 @@
+[
+  {
+    "id": "rule_rewriting",
+    "name": "규칙 재작성실",
+    "genre": "퍼즐",
+    "blurb": "낱말 블록을 밀어 규칙 문장을 바꾸면 세계의 법칙이 바뀌는 퍼즐.",
+    "shots": [
+      "tin/rule_rewriting/01.png",
+      "tin/rule_rewriting/02.png"
+    ]
+  },
+  {
+    "id": "odd_road_adventure",
+    "name": "기묘한 로드",
+    "genre": "어드벤처",
+    "blurb": "같은 길에서 매번 다른 일이 생기는 사건·아이템 중심 로드 어드벤처.",
+    "shots": [
+      "tin/odd_road_adventure/01.png",
+      "tin/odd_road_adventure/02.png",
+      "tin/odd_road_adventure/03.png"
+    ]
+  },
+  {
+    "id": "deduction_casework",
+    "name": "추리 사건 기록",
+    "genre": "추리",
+    "blurb": "장면 속 물건과 인물을 살펴 단서를 모으고 사건을 맞춰 가는 추리 게임.",
+    "shots": [
+      "tin/deduction_casework/01.webp",
+      "tin/deduction_casework/02.png"
+    ]
+  },
+  {
+    "id": "top_down_action_rpg",
+    "name": "탑다운 액션 RPG",
+    "genre": "액션 RPG",
+    "blurb": "지하 교환소를 누비며 사람을 만나고 싸우는 탑다운 액션 RPG.",
+    "shots": [
+      "tin/top_down_action_rpg/01.webp",
+      "tin/top_down_action_rpg/02.webp"
+    ]
+  },
+  {
+    "id": "stone_story_rpg",
+    "name": "자동 전투 RPG",
+    "genre": "자동 전투 RPG",
+    "blurb": "장비를 골라 탐험을 보내면 알아서 싸우며 나아가는 자동 전투 RPG.",
+    "shots": [
+      "tin/stone_story_rpg/01.webp",
+      "tin/stone_story_rpg/02.png",
+      "tin/stone_story_rpg/03.png"
+    ]
+  },
+  {
+    "id": "stacking_descent",
+    "name": "쌓고 내려가는 사막",
+    "genre": "3D 탐험",
+    "blurb": "물건을 쌓아 오르고 안개 낀 사막 아래로 내려가는 3D 탐험.",
+    "shots": [
+      "tin/stacking_descent/01.webp",
+      "tin/stacking_descent/02.webp",
+      "tin/stacking_descent/03.webp"
+    ]
+  },
+  {
+    "id": "descent_exploration",
+    "name": "하강",
+    "genre": "탐험",
+    "blurb": "끝없는 수직 갱도를 따라 아래로 내려가는 하강 탐사.",
+    "shots": [
+      "tin/descent_exploration/01.png",
+      "tin/descent_exploration/02.png"
+    ]
+  },
+  {
+    "id": "physics_puzzle_platformer",
+    "name": "균열 조합장",
+    "genre": "물리 퍼즐 플랫포머",
+    "blurb": "도구를 붙잡고 던지고 쌓아 길을 만드는 물리 퍼즐 플랫포머.",
+    "shots": [
+      "tin/physics_puzzle_platformer/01.png"
+    ]
+  },
+  {
+    "id": "mage_arcana",
+    "name": "마법사 (가위 마법)",
+    "genre": "3D 액션",
+    "blurb": "마법 조각을 엮어 주문을 짜는 3인칭 마법 액션.",
+    "shots": [
+      "tin/mage_arcana/01.png",
+      "tin/mage_arcana/02.png",
+      "tin/mage_arcana/03.png"
+    ]
+  },
+  {
+    "id": "platformer",
+    "name": "플랫포머",
+    "genre": "플랫포머",
+    "blurb": "게임 안에서 맵을 고치고 바로 뛰어 보는 메트로배니아 플랫포머.",
+    "shots": [
+      "tin/platformer/01.png"
+    ]
+  },
+  {
+    "id": "quote_vn",
+    "name": "인용된 사랑",
+    "genre": "비주얼 노벨",
+    "blurb": "모든 문장이 고전 문학 인용으로 이루어진 비주얼 노벨.",
+    "shots": [
+      "tin/quote_vn/01.png",
+      "tin/quote_vn/02.png",
+      "tin/quote_vn/03.png"
+    ]
+  },
+  {
+    "id": "pixel_arena",
+    "name": "선이 되기 전에",
+    "genre": "액션 생존",
+    "blurb": "75초 동안 몰려드는 선 인간들을 베어 넘기는 횡스크롤 생존 아레나.",
+    "shots": [
+      "tin/pixel_arena/01.webp",
+      "tin/pixel_arena/02.png",
+      "tin/pixel_arena/03.webp"
+    ]
+  },
+  {
+    "id": "jar_climb",
+    "name": "항아리 오르기",
+    "genre": "등반 액션",
+    "blurb": "잡동사니 더미를 손으로 붙잡으며 위로 오르는 물리 등반.",
+    "shots": [
+      "tin/jar_climb/01.png"
+    ]
+  },
+  {
+    "id": "guineastar",
+    "name": "쿠키 옷입히기 (GuineaStar)",
+    "genre": "옷입히기",
+    "blurb": "기니피그 쿠키에게 옷을 입히고 라이벌 모카와 패션 대결을 하는 아이용 게임.",
+    "shots": [
+      "tin/guineastar/01.png",
+      "tin/guineastar/02.png",
+      "tin/guineastar/03.png"
+    ]
+  },
+  {
+    "id": "fleshpit",
+    "name": "flesh-pit",
+    "genre": "1인칭 호러",
+    "blurb": "구체 한가운데 화장실에서 시작해 다시 자라는 살을 먹으며 바깥으로 파고 나가는 1인칭 게임.",
+    "shots": [
+      "tin/fleshpit/01.png",
+      "tin/fleshpit/02.png",
+      "tin/fleshpit/03.webp"
+    ]
+  }
+]
