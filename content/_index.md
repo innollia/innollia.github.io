@@ -10,6 +10,7 @@ description = "어서오십시요! 방문자 여러분! 본 홈-페-지는 800x6
 <a href="/posts/">&gt;&gt; 나는 글을 본다</a>
 <a href="/chronicle/" style="margin-left: 15px; color: #ffff00 !important;">&gt;&gt; 📜 메모 연대기 (739개의 기록)</a>
 <a href="/morse/" style="margin-left: 15px;">&gt;&gt; 모스 압축</a>
+<a href="/shop/" style="margin-left: 15px; color: #ff77a8 !important;">&gt;&gt; 🪙 봉봉봉 (시키는 거 해드림)</a>
 </div>
 
 <p class="wordart-3d-yellow blink">*재단장 기념 방문 환영!*</p>

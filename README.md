@@ -17,6 +17,9 @@
 | `static/` | 그대로 복사되는 파일들 — 이미지, 자바스크립트(뽁뽁이 클리커·앰비언트 오디오), eaglercraft |
 | `static/js/bubble-clicker.js` | 화면 오른쪽 위 "뽁뽁이" 클리커 게임 로직 |
 | `static/js/ambient-audio.js` | 배경 앰비언트 오디오 |
+| `static/shop/` | 유료 부탁 상점 "봉봉봉"(`/shop/`). 설명은 [docs/shop.md](docs/shop.md) |
+| `tools/` | 상점 후원자 목록 정리 스크립트 (입금 확인은 All Tomorrow 콘솔) |
+| `design/` | 공개되지 않는 작업물(상점 시안, 원본 캡처) |
 | `hugo.toml` | 사이트 기본 설정(제목, 주소, 언어 등) |
 
 ## 새 글 쓰는 법
