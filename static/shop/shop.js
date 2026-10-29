@@ -6,63 +6,17 @@ const RATE = 20000, AI_RATE = 5000, HOUR = RATE + AI_RATE;
 /* 주문을 받을 디스코드 포럼 채널의 웹후크 주소. 비어 있으면 "복사 → DM"으로만 받는다. */
 const DISCORD = { webhook: 'https://discord.com/api/webhooks/1564973701697507438/F-r_V9ZolGjywsiOHrfTN3xceXLt4WQWqPn-IjKzQMYLayQOe9R3kWP5OcMqx8qYHpbY', guild: '1533421689558270152' }; // 주문 포럼은 이놀아안 개인 서버. 손님은 못 들어가니 링크를 주지 않는다
 
-/* ── 상품별 용례: "이걸로 뭐 할 건데?" ── */
-const USES = {
-  game: { q: '게임으로 뭐 할 건데?', ex: [
-    ['생일 친구가 주인공인 한 판', '케이크 지키다가 마지막에 축하 메시지'],
-    ['서버 밈 게임', '수육공·절데적진리가 아이템으로 나오는 미니게임'],
-    ['TRPG 보스전 직접 해 보기', '세션에서 못 이긴 보스를 게임으로'],
-    ['내 자작곡으로 리듬 게임', '변주곡 박자에 맞춰 누르기'],
-  ] },
-  web: { q: '사이트로 뭐 할 건데?', ex: [
-    ['내 TRPG 캐릭터 소개 페이지', '과거사·능력치·그림 한 곳에'],
-    ['작곡 모음 감상실', '변주곡 악장별로 듣고 악보 보기'],
-    ['기념일 축하 사이트', '사진, 편지, 숨은 버튼 하나'],
-    ['서버 연대기', '한글날 축제, Bake or Die 사건 기록'],
-  ] },
-  bot: { q: '디스코드 봇 만들어서 뭐 할 건데?', ex: [
-    ['외래어 단속 봇', '한글날마다 외래어 쓰면 잡아서 순우리말 반성문 받기'],
-    ['작곡 릴레이 진행 봇', '다음 차례·마감 알림, 올라온 곡 모아 두기'],
-    ['TRPG 주사위 + 시트 봇', '/굴려 2d6+3, 내 캐릭터 능력치 불러오기'],
-    ['게임 파티 모집 봇', '로블록스 몇 시에 할 사람? 모이면 다 같이 핑'],
-    ['명대사 박제 봇', '말실수를 박제하고 아무 때나 랜덤으로 꺼내기'],
-    ['내 캐릭터 상주 봇', '자작 캐릭터가 서버에 살면서 대화에 끼어들기'],
-  ] },
-  read: { q: '무슨 글을 읽어 줄까?', ex: [
-    ['내 자작시', '담백하게, 끝에 여운'],
-    ['TRPG 시나리오 도입부', '성우처럼 분위기 잡고'],
-    ['잠 안 올 때 들을 소설 한 장', '조용조용'],
-  ] },
-  song: { q: '무슨 노래?', ex: [
-    ['생일 축하 노래', '이름 넣어서'],
-    ['음성 채널 입장 테마', '짧게 한 소절'],
-    ['서버 노동요', '다 같이 작업할 때'],
-  ] },
-  oracle: { q: '무엇을 물어볼까?', ex: [
-    ['진로 고민', '이 길 계속 가도 될까'],
-    ['업무 자동화', '매주 하는 엑셀 정리, AI로 없앨 수 있을까'],
-    ['게임 아이디어 검증', '이거 재밌을까, 만들 수 있을까'],
-  ] },
-  research: { q: '무엇을 파 볼까?', ex: [
-    ['옛날 플래시 게임 원작자 찾기', '제목만 기억나는 그 게임'],
-    ['밈의 최초 출처', '이 짤 처음 누가 올렸나'],
-    ['아주 마이너한 역사', '특정 악기 주법이 언제 생겼나'],
-  ] },
-  xpost: { q: '무엇을 올려 줄까?', ex: [
-    ['내 작품 홍보 한 줄', '링크 + 한 줄 소개'],
-    ['공개 생일 축하', '친구 이름 넣어서'],
-  ] },
-  dm: { q: 'ss0랑 DM으로 뭐 할 건데?', ex: [
-    ['1:1 고민 상담', '서버에선 못 하는 얘기'],
-    ['개인 메모 비서', '떠오른 걸 던지면 정리해서 보관'],
-  ] },
-  ss0feat: { q: 'ss0에 뭘 붙일 건데?', ex: [
-    ['/칭호', '서버 밈으로 랜덤 칭호 붙여 주기'],
-    ['/박제', '명대사 저장하고 랜덤으로 꺼내기'],
-    ['내 캐릭터 페르소나', '내 TRPG 캐릭터 말투로 대답하는 ss0'],
-    ['음성 채널 입장 알림', '누가 들어오면 그 사람 테마 한 줄'],
-  ] },
-};
+/* ── 사이트의 글: 전부 dialogue.js에 있다(사용자가 직접 고치는 파일) ──
+   T('키', { 이름: … })는 {이름} 자리를 채워 돌려준다. 배열이면 하나를 고른다.
+   F('키', { 링크: 요소 })는 자리에 요소를 끼운 조각 목록을 돌려준다(el의 자식으로 쓴다). */
+const D = window.DIALOGUE || {};
+const pick = key => key.split('.').reduce((o, k) => o?.[k], D);
+function T(key, vars = {}) {
+  let v = pick(key);
+  if (Array.isArray(v)) v = v[Math.floor(Math.random() * v.length)];
+  return String(v ?? '').replace(/\{([^}]+)\}/g, (m, k) => vars[k] ?? m);
+}
+const F = (key, vars = {}) => String(pick(key) ?? '').split(/(\{[^}]+\})/).map(x => { const k = x.match(/^\{([^}]+)\}$/)?.[1]; return k && k in vars ? vars[k] : x; }).filter(x => x !== '');
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const won = n => n.toLocaleString('ko-KR') + '원';
 const $ = (s, r = document) => r.querySelector(s);
@@ -100,86 +54,39 @@ const sign = (k, text) => el('img', { src: IMG(`sign_${k}`), alt: text, class: '
 const img = (k, cls = '') => el('img', { src: IMG(k), alt: '', class: cls, loading: 'lazy', decoding: 'async' });
 
 /* ── 상품 ── */
-const CATS = [
-  { id: 'make', name: '제작소', sub: '게임·웹사이트·봇' },
-  { id: 'voice', name: '목소리', sub: '낭독·노래' },
-  { id: 'brain', name: '머리 빌리기', sub: '신탁·조사·대행' },
-  { id: 'ss0', name: 'ss0 봇', sub: '해금·기능 추가' },
-];
+const CATS = ['make', 'voice', 'brain', 'ss0'].map(id => ({ id, name: id, sub: '', ...D.cats?.[id] }));
+// 이름·설명·값 글은 dialogue.js의 goods에 있다. 여기는 계산에 쓰는 값만
 const ITEMS = [
-  { id: 'game', cat: 'make', icon: 'game', c: '#7a5cff', name: '게임 제작', sub: '시간을 끌어서 퀄리티를 골라요', badge: ['간판', 'hot'],
-    priceText: '25,000원/시간~', kind: 'hours',
-    desc: '드래그로 작업 시간을 정하면 그만큼의 게임이 나와요.\n단계를 넘을 때마다 실제로 그 시간 들여 만든 게임을 보여 드려요.' },
-  { id: 'web', cat: 'make', icon: 'web', c: '#4ab8ff', name: '웹사이트', sub: '최대 6시간 · 1만~10만', priceText: '10,000원~', kind: 'web',
-    desc: '기념일 페이지, 소개 페이지, 작은 도구 사이트.\n6시간 안에 끝나는 크기만 받아요.' },
-  { id: 'bot', cat: 'make', icon: 'bot', c: '#2fe0b0', name: '새 디스코드 봇', sub: '제작 + 서버비 포함 월 유지', priceText: '30,000원~', kind: 'bot',
-    desc: '처음부터 우리 서버 전용 봇을 만들어요.\n제작비는 완성 후에 한 번, 서버비를 포함한 월 유지비는 매달 먼저.' },
-  { id: 'read', cat: 'voice', icon: 'read', c: '#ff7ac0', name: '글 읽어주기', sub: '띄어쓰기 포함 글자당', priceText: '글자당 10~50원', kind: 'read', badge: ['시범가'],
-    desc: '보내 준 글을 제 목소리로 읽어 녹음해 드려요.\n띄어쓰기 포함 글자 수로 계산해요. 최소 1,000원.' },
-  { id: 'song', cat: 'voice', icon: 'song', c: '#ffc93c', name: '노래 1곡', sub: '불러 드려요', priceText: '2,000원', kind: 'qty', price: 2000, unit: '곡',
-    desc: '듣고 싶은 노래를 불러서 녹음해 드려요.', field: '곡 제목 / 가수' },
-  { id: 'oracle', cat: 'brain', icon: 'oracle', c: '#7a5cff', name: '신탁', sub: '개인 고민 ~ 업무 자동화', priceText: '주고 싶은 만큼', kind: 'pwyw', badge: ['자율', 'free'],
-    desc: '개인 고민부터 회사 특정 업무 자동화까지 물어보세요.\n값은 답을 듣고 주고 싶은 만큼. 0원도 돼요.' },
-  { id: 'research', cat: 'brain', icon: 'research', c: '#4ab8ff', name: '개빡센 조사', sub: '무지막지하게 마이너해도 OK', priceText: '10,000원', kind: 'text', price: 10000,
-    desc: 'AI한테 물어도 안 나오는 걸 끝까지 파서 정리해 드려요.\n마이너할수록 좋아요.', field: '무엇을 조사할까요?' },
-  { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', name: 'X 대리 포스트', sub: '제 X에 대신 올려요', priceText: '1,000원', kind: 'qty', price: 1000, unit: '개',
-    desc: '하고 싶은 말을 제 X 계정에 대신 올려 드려요.\n(올리기 전에 제가 한 번 읽어요.)', field: '올릴 내용' },
-  { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', name: 'ss0 DM 해금', sub: '다른 상품 사면 공짜', priceText: '5,000원', kind: 'dm',
-    desc: 'ss0 봇과 1:1 DM으로 대화할 수 있게 열어 드려요.\n장바구니에 다른 상품이 하나라도 있으면 무료.\n주문이 들어오면 이놀아안이 확인하고 직접 열어 줘요(조금 걸릴 수 있어요). 혼자 살 때 5,000원도 열린 뒤에 내요.' },
-  { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', name: 'ss0 기능 추가', sub: '이놀아안이 검토 후 가격 책정', priceText: '검토 후 가격', kind: 'quote',
-    desc: 'ss0에 갖고 싶은 기능을 주문하세요.\n종류를 고르고 설명을 적으면, 제가 검토해서 가격을 정해 답장해요.' },
-  { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', name: '동업자 되기', sub: 'PICO-8로 뭐라도 만들어 와', priceText: '0원 · 도전', kind: 'partner', badge: ['모집'],
-    desc: '내 사업시도의 동료가 되고 싶다면, PICO-8 독학해서 뭐라도 작동하는 거 하나 가져와요. 검토해 줄게요.\n아래는 제가 PICO-8로 만든 것들이에요. 이 정도면 충분해요.',
-    field: '만든 게임 링크나 설명' },
-  { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', name: '픽셀 프로필', sub: '디코 프사·이모티콘', soon: true },
-  { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', name: '선물 게임', sub: '생일·기념일용 한 판짜리', soon: true },
-  { id: 'aisetup', cat: 'soon', icon: 'setup', c: '#4ab8ff', name: 'AI 작업환경 세팅', sub: '내 컴퓨터에 클로드코드 깔고 길들이기', soon: true },
-  { id: 'playtest', cat: 'soon', icon: 'playtest', c: '#7a5cff', name: '플레이테스트', sub: '버그·재미 리포트', soon: true },
-  { id: 'trpg', cat: 'soon', icon: 'dice', c: '#ffc93c', name: 'TRPG 캐릭터 패키지', sub: '과거사·능력·시트', soon: true },
-  { id: 'theme', cat: 'soon', icon: 'theme', c: '#2fe0b0', name: '개인 등장 테마', sub: '8비트 BGM 루프', soon: true },
+  { id: 'game', cat: 'make', icon: 'game', c: '#7a5cff', badgeStyle: 'hot', kind: 'hours' },
+  { id: 'web', cat: 'make', icon: 'web', c: '#4ab8ff', kind: 'web' },
+  { id: 'bot', cat: 'make', icon: 'bot', c: '#2fe0b0', kind: 'bot' },
+  { id: 'read', cat: 'voice', icon: 'read', c: '#ff7ac0', kind: 'read' },
+  { id: 'song', cat: 'voice', icon: 'song', c: '#ffc93c', kind: 'qty', price: 2000 },
+  { id: 'oracle', cat: 'brain', icon: 'oracle', c: '#7a5cff', badgeStyle: 'free', kind: 'pwyw' },
+  { id: 'research', cat: 'brain', icon: 'research', c: '#4ab8ff', kind: 'text', price: 10000 },
+  { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', kind: 'qty', price: 1000 },
+  { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', kind: 'dm' },
+  { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', kind: 'quote' },
+  { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', kind: 'partner' },
+  { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', soon: true },
+  { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', soon: true },
+  { id: 'aisetup', cat: 'soon', icon: 'setup', c: '#4ab8ff', soon: true },
+  { id: 'playtest', cat: 'soon', icon: 'playtest', c: '#7a5cff', soon: true },
+  { id: 'trpg', cat: 'soon', icon: 'dice', c: '#ffc93c', soon: true },
+  { id: 'theme', cat: 'soon', icon: 'theme', c: '#2fe0b0', soon: true },
 ];
-const WEB_STEPS = [
-  { h: .5, p: 10000, title: '한 장짜리', desc: '사진 몇 장과 글이 들어간 한 페이지.' },
-  { h: 1, p: 20000, title: '꾸민 한 장', desc: '움직이는 장식, 음악, 숨은 버튼 하나.' },
-  { h: 2, p: 35000, title: '여러 장', desc: '메뉴가 있고 페이지가 3~4개.' },
-  { h: 3, p: 50000, title: '놀거리 있는 사이트', desc: '퀴즈·방명록 같은 작은 기능 하나.' },
-  { h: 4, p: 65000, title: '작은 도구', desc: '입력하면 계산·변환해 주는 사이트.' },
-  { h: 5, p: 80000, title: '이벤트 사이트', desc: '기념일·행사용, 연출 듬뿍.' },
-  { h: 6, p: 100000, title: '최대치', desc: '6시간 꽉 채운 사이트.' },
-];
-const READ_TIERS = [
-  { id: 'plain', name: '담백', rate: 10, sub: '또박또박' },
-  { id: 'base', name: '기본', rate: 20, sub: '자연스럽게' },
-  { id: 'act', name: '연기', rate: 35, sub: '감정 넣어서' },
-  { id: 'soul', name: '혼신', rate: 50, sub: '다역·효과음까지' },
-];
-const BOT_TIERS = [
-  { id: 'mini', name: '꼬마 봇', build: 30000, month: 3000, sub: '명령 5개 이하, AI 없음' },
-  { id: 'work', name: '일꾼 봇', build: 80000, month: 7000, sub: '버튼·모달·저장' },
-  { id: 'soul', name: '영혼 봇', build: 150000, month: 15000, sub: 'AI 캐릭터·기억 (토큰 포함)' },
-];
-const FEAT_KINDS = [
-  { id: 'cmd', name: '간단 명령', sub: '랜덤 별명·명대사 뽑기' },
-  { id: 'data', name: '놀이·데이터', sub: '밈 빙고·퀴즈·파티 모집' },
-  { id: 'ui', name: '버튼·화면', sub: 'TRPG 시트·작곡 릴레이 진행' },
-  { id: 'ai', name: 'AI 연동', sub: '전용 페르소나·요약' },
-  { id: 'mem', name: '기억·외부 연동', sub: '장기 기억·자동 알림' },
-];
-const CARTS = [
-  { id: 'bounce', name: '바운스', label: 'carts/bounce.png' },
-  { id: 'curser2', name: '커서 2' },
-  { id: 'squashy', name: '스퀴시' },
-  { id: 'train', name: '트레인' },
-  { id: 'eatkano', name: '잇 카노', label: 'carts/eatkano.p8.png' },
-];
-/* ── 말풍선 대사: 전부 dialogue.js에 있다(사용자가 직접 고치는 파일) ──
-   T('키', { 이름: … })는 {이름} 자리를 채워 돌려준다. 배열이면 하나를 고른다. */
-const D = window.DIALOGUE || {};
-function T(key, vars = {}) {
-  let v = key.split('.').reduce((o, k) => o?.[k], D);
-  if (Array.isArray(v)) v = v[Math.floor(Math.random() * v.length)];
-  return String(v ?? '').replace(/\{([^}]+)\}/g, (m, k) => vars[k] ?? m);
-}
+ITEMS.forEach(it => { const g = D.goods?.[it.id] || {};
+  Object.assign(it, { name: g.name || it.id, sub: g.sub || '', priceText: g.price || '', desc: g.desc || '', field: g.field || '', hint: g.hint || '', unit: g.unit || '',
+    badge: g.badge ? [g.badge, it.badgeStyle || ''] : null }); });
+// 상품별 예시 칸("이걸로 뭐 할 건데?")
+const USES = Object.fromEntries(ITEMS.filter(it => D.goods?.[it.id]?.ask).map(it => [it.id, { q: D.goods[it.id].ask, ex: D.goods[it.id].examples || [] }]));
+const named = (list, key) => list.map(o => ({ ...o, name: o.id, sub: '', ...pick(`detail.${key}.${o.id}`) }));
+const WEB_STEPS = [[.5, 10000], [1, 20000], [2, 35000], [3, 50000], [4, 65000], [5, 80000], [6, 100000]]
+  .map(([h, p], i) => ({ h, p, title: '', desc: '', ...D.detail?.webSteps?.[i] }));
+const READ_TIERS = named([{ id: 'plain', rate: 10 }, { id: 'base', rate: 20 }, { id: 'act', rate: 35 }, { id: 'soul', rate: 50 }], 'readTiers');
+const BOT_TIERS = named([{ id: 'mini', build: 30000, month: 3000 }, { id: 'work', build: 80000, month: 7000 }, { id: 'soul', build: 150000, month: 15000 }], 'botTiers');
+const FEAT_KINDS = named([{ id: 'cmd' }, { id: 'data' }, { id: 'ui' }, { id: 'ai' }, { id: 'mem' }], 'featKinds');
+const CARTS = ['bounce', 'curser2', 'squashy', 'train', 'eatkano'].map(id => ({ id, name: pick(`detail.carts.${id}`) || id }));
 let idleTimer;
 function poke() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!$('#checkout').open) say(T('idle')); poke(); }, 25000); }
 ['pointerdown', 'keydown'].forEach(t => addEventListener(t, poke, { passive: true }));
@@ -241,7 +148,7 @@ function renderGrid() {
 function renderRing() {
   gsap.registerPlugin(ScrollTrigger);
   const shelf = $('#shelf'); shelf.replaceChildren();
-  const wrap = el('div', { class: 'ring', role: 'listbox', 'aria-label': '상품 (←/→로 돌리기)', tabindex: '0' });
+  const wrap = el('div', { class: 'ring', role: 'listbox', 'aria-label': T('shelf.ringLabel'), tabindex: '0' });
   ring.cards = SHELF.map((it, i) => {
     const c = makeCard(it, () => { if (ring.moved) return; if (ring.spread) return pickSpread(i); if (i === ring.front) chompThen(() => openDetail(it)); else ringGo(nearest(i)); });
     c.setAttribute('role', 'option'); c.tabIndex = -1; wrap.append(c); return c;
@@ -249,13 +156,13 @@ function renderRing() {
   wrap.prepend(img('stage_tongue', 'tongue')); // 앞에 온 칸이 올라서는 혀
   const cat = el('h2', { class: 'ring-cat' }), catSub = el('p', { class: 'ring-catsub' });
   const fName = el('h3', { class: 'front-name' }), fDesc = el('p', { class: 'front-desc' });
-  const fBtn = el('button', { class: 'btn-buy pic front-open', 'aria-label': '열어 보기', text: '열어 보기', onclick: () => chompThen(() => openDetail(SHELF[Math.max(0, ring.front)])) });
+  const fBtn = el('button', { class: 'btn-buy pic front-open', 'aria-label': T('shelf.open'), text: T('shelf.open'), onclick: () => chompThen(() => openDetail(SHELF[Math.max(0, ring.front)])) });
   // 위치는 숫자 대신 상품 그림 줄로 보여 준다. 누르면 그 상품으로 돈다
-  const count = el('div', { class: 'ring-dots', role: 'tablist', 'aria-label': '상품 고르기' }, SHELF.map((it, i) =>
+  const count = el('div', { class: 'ring-dots', role: 'tablist', 'aria-label': T('shelf.dotsLabel') }, SHELF.map((it, i) =>
     el('button', { class: 'ring-dot', 'aria-label': it.name, title: it.name, onclick: () => ringGo(nearest(i)) }, icon(it.icon))));
-  const spread = el('button', { class: 'ring-spread', 'aria-expanded': 'false', text: '한눈에 보기', onclick: () => toggleSpread() });
-  const prev = el('button', { class: 'ring-nav', 'aria-label': '이전 상품', text: '◀', onclick: () => ringGo(ring.front - 1) });
-  const next = el('button', { class: 'ring-nav', 'aria-label': '다음 상품', text: '▶', onclick: () => ringGo(ring.front + 1) });
+  const spread = el('button', { class: 'ring-spread', 'aria-expanded': 'false', text: T('shelf.spread'), onclick: () => toggleSpread() });
+  const prev = el('button', { class: 'ring-nav', 'aria-label': T('shelf.prev'), text: '◀', onclick: () => ringGo(ring.front - 1) });
+  const next = el('button', { class: 'ring-nav', 'aria-label': T('shelf.next'), text: '▶', onclick: () => ringGo(ring.front + 1) });
   const stage = el('section', { class: 'stage', id: 'stage' }, [
     el('div', { class: 'ring-head' }, [$('#rail'), cat, catSub]), // 범주 탭도 고정된 판 안에 둔다
     wrap,
@@ -308,7 +215,7 @@ function toggleSpread(on = !ring.spread, then) {
   const u = ring.ui;
   ring.spread = on;
   u.stage.classList.toggle('spreading', on); u.spread.setAttribute('aria-expanded', String(on));
-  u.spread.textContent = on ? '돌려 보기' : '한눈에 보기';
+  u.spread.textContent = on ? T('shelf.unspread') : T('shelf.spread');
   document.documentElement.classList.toggle('locked', on); // 펼친 동안 스크롤로 원통이 돌지 않게
   if (on) ring.layout = spreadLayout();
   gsap.killTweensOf(ring, 'mix');
@@ -402,7 +309,7 @@ function makeCard(it, onPick) {
   const card = el('button', { class: 'card' + (it.soon ? ' soon' : ''), style: `--c:${it.c}`, 'aria-disabled': it.soon ? 'true' : false,
     onclick: () => it.soon ? (say(T('soonItem', { 이름: it.name })), wiggle(card)) : onPick ? onPick() : openDetail(it) }, [
     it.badge ? el('span', { class: 'badge ' + (it.badge[1] || ''), text: it.badge[0] }) : null,
-    it.soon ? el('span', { class: 'stamp', text: '입고 예정' }) : null,
+    it.soon ? el('span', { class: 'stamp', text: T('shelf.soonStamp') }) : null,
     el('div', { class: 'card-art' }, [img(SLOTS[ITEMS.indexOf(it) % SLOTS.length], 'slot'), icon(it.icon, 'icon')]),
     el('div', { class: 'card-body' }, [el('div', { class: 'card-name', text: it.name }), el('div', { class: 'card-sub', text: it.sub }),
       it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'tag-text', text: it.priceText })])]),
@@ -428,9 +335,9 @@ function peek(it, card) {
     el('div', { class: 'peek-head', text: it.name }),
     el('div', { class: 'peek-art' + (shot ? ' shot' : ''), style: shot ? `background-image:url(${shot})` : '' }, shot ? null : icon(it.icon)),
     el('div', { class: 'peek-body' }, [
-      el('p', { class: 'peek-cat', text: it.soon ? '입고 예정' : CATS.find(c => c.id === it.cat)?.name || '' }),
+      el('p', { class: 'peek-cat', text: it.soon ? T('shelf.soonStamp') : CATS.find(c => c.id === it.cat)?.name || '' }),
       el('p', { class: 'peek-sub', text: it.sub }),
-      it.soon ? null : el('p', { class: 'peek-price' }, ['가격 ', el('b', { text: it.priceText }), ' (후불)']),
+      it.soon ? null : el('p', { class: 'peek-price' }, F('shelf.peekPrice', { 가격: el('b', { text: it.priceText }) })),
       ex.length ? el('ul', { class: 'peek-ex' }, ex.map(x => el('li', { text: x[0] }))) : null,
     ]));
   // 칸 오른쪽에 띄우고, 자리가 없으면 왼쪽
@@ -449,9 +356,9 @@ function unpeek() {
 }
 addEventListener('scroll', () => { if (peekFor) unpeek(); }, { passive: true }); // 진열대가 돌면 칸이 움직이니 닫는다
 function renderExtras() {
-  const soon = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('soon', '입고 예정')), el('p', { text: '곧 들어와요' })]),
+  const soon = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('soon', T('extras.soonTitle'))), el('p', { text: T('extras.soonSub') })]),
     el('div', { class: 'grid' }, ITEMS.filter(i => i.soon).map(it => makeCard(it)))]);
-  const hall = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('hall', '똘라따무')), el('p', { text: '봉 신주해 를비소' })])]);
+  const hall = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('hall', T('extras.hallTitle'))), el('p', { text: T('extras.hallSub') })])]);
   $('#extras').replaceChildren(soon, hall);
   renderHall(hall);
 }
@@ -464,8 +371,8 @@ async function playCart(c, player) {
   try { ok = (await fetch(url, { method: 'HEAD' })).ok; } catch {}
   const frame = el('div', { class: 'player-frame' }, ok
     ? el('iframe', { src: url, title: c.name, allow: 'autoplay; fullscreen; gamepad', loading: 'lazy' })
-    : el('div', { class: 'player-empty', text: `${c.name}\n카트리지 굽는 중...\n곧 여기서 바로 할 수 있어요` }));
-  player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: '화면을 한 번 누르면 시작 · 방향키 + Z/X' })]));
+    : el('div', { class: 'player-empty', text: T('detail.cartBaking', { 이름: c.name }) }));
+  player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: T('detail.cartBar') })]));
   player.classList.add('on');
   say(T(ok ? 'cartPlay' : 'cartBaking', { 이름: c.name }));
   if (window.gsap && !REDUCED) gsap.fromTo(frame, { scaleY: .02, filter: 'brightness(4)' }, { scaleY: 1, filter: 'brightness(1)', duration: .45, ease: 'expo.out' });
@@ -476,11 +383,11 @@ async function renderHall(shelf) {
   const hall = el('div', { class: 'hall' }); shelf.append(hall);
   let rows = [];
   try { rows = await (await fetch('supporters.json', { cache: 'no-store' })).json(); } catch {}
-  if (!rows.length) { hall.append(el('p', { class: 'hall-empty', text: '아직이 술 마신다요. 티-원이 되어 주세요!' })); return; }
+  if (!rows.length) { hall.append(el('p', { class: 'hall-empty', text: T('extras.hallEmpty') })); return; }
   rows.sort((a, b) => (b.amount || 0) - (a.amount || 0)).forEach((r, i) => hall.append(el('div', { class: 'hall-row' }, [
     el('span', { class: 'rank', text: String(i + 1).padStart(2, '0') }), el('b', { text: r.name }),
     r.note ? el('span', { text: r.note }) : null, el('span', { class: 'amt', text: !r.amount ? '♥' : (r.currency && r.currency !== 'KRW') ? `${r.amount} ${r.currency}` : won(r.amount) })])));
-  hall.append(el('a', { class: 'bmc', href: 'https://buymeacoffee.com/innollia', target: '_blank', rel: 'noopener', text: '☕ 커피 한 잔 사 주기' }));
+  hall.append(el('a', { class: 'bmc', href: 'https://buymeacoffee.com/innollia', target: '_blank', rel: 'noopener', text: T('extras.coffee') }));
   if (window.gsap && !REDUCED) gsap.from(hall.children, { x: -40, opacity: 0, stagger: .05, duration: .35 });
 }
 
@@ -494,7 +401,7 @@ function openDetail(it, prev) {
   lastFocus = document.activeElement;
   state.item = it; state.draft = { note: prev?.note || '', prev }; state.editing = prev || null;
   const already = it.id === 'dm' && !prev && state.cart.some(c => c.item.id === 'dm');
-  $('#detail-buy').textContent = prev ? '수정 완료' : already ? '이미 담겨 있어요' : '담기';
+  $('#detail-buy').textContent = prev ? T('detail.editDone') : already ? T('detail.already') : T('detail.buy');
   $('#detail-buy').classList.toggle('pic', !prev && !already); // 그림 버튼에 "사기"가 그려져 있다
   $('#detail-buy').disabled = already;
   $('#detail-say').textContent = '';
@@ -548,7 +455,7 @@ $('#detail-close').onclick = closeDetail;
 $('.detail-slash').onclick = closeDetail;
 addEventListener('keydown', e => { if (e.key !== 'Escape') return; if ($('#checkout').open) $('#checkout').close(); else closeDetail(); });
 
-function setPrice(value, label = '가격 (후불)', text) {
+function setPrice(value, label = T('detail.price'), text) {
   state.draft.price = value;
   const b = $('#detail-price'); $('#detail-price-label').textContent = label;
   b._tw?.kill(); // 앞선 숫자 애니메이션이 늦게 끝나며 옛 가격을 덮어쓰지 않게
@@ -587,7 +494,7 @@ function timeBar(body, { steps, min, max, scale, fmt, onChange, start, card }) {
   const bar = el('div', { class: 'timebar' });
   const track = el('div', { class: 'tb-track' });
   const fill = el('div', { class: 'tb-fill' });
-  const knob = el('div', { class: 'tb-knob', role: 'slider', tabindex: '0', 'aria-valuemin': min, 'aria-valuemax': max, 'aria-label': '작업 시간' });
+  const knob = el('div', { class: 'tb-knob', role: 'slider', tabindex: '0', 'aria-valuemin': min, 'aria-valuemax': max, 'aria-label': T('detail.barLabel') });
   const cHead = el('b', { class: 'tc-head' }), cTitle = el('div', { class: 'tc-title' }), cDesc = el('p', { class: 'tc-desc' }), cShot = el('div', { class: 'tc-shot' });
   const cardEl = el('div', { class: 'tb-card', 'aria-live': 'polite' }, [cShot, el('div', {}, [cHead, cTitle, cDesc])]);
   let lastLbl = -1;
@@ -599,7 +506,7 @@ function timeBar(body, { steps, min, max, scale, fmt, onChange, start, card }) {
     return m;
   });
   track.append(fill, knob); bar.append(cardEl, track);
-  body.append(bar, el('p', { class: 'tb-hint', text: matchMedia('(pointer: coarse)').matches ? '끌어서 시간 정하기' : '끌어서 시간 정하기 · 손잡이를 누른 뒤 키보드 ←/→도 돼요' }));
+  body.append(bar, el('p', { class: 'tb-hint', text: T(matchMedia('(pointer: coarse)').matches ? 'detail.barHintTouch' : 'detail.barHintMouse') }));
 
   const draft = state.draft; // 패널을 닫고 다른 상품을 연 뒤에 늦게 온 호출은 버린다
   const snap = scale === 'log' ? (h => Math.max(min, Math.round(h))) : (h => steps.reduce((a, b) => Math.abs(b - h) < Math.abs(a - h) ? b : a));
@@ -685,43 +592,43 @@ function gameAt(h) {
 // 담아 둔 것을 수정할 때 고른 등급·개수·금액을 되살린다(summary()가 남긴 이름으로 찾는다)
 const was = list => list.find(t => state.draft.prev?.sum?.startsWith(t.name));
 const BUILD = {
-  hours(body) {
+  hours(body, it) {
     const brk = el('p', { class: 'breakdown' });
     const steps = [...new Set(Object.values(TIN_HOURS))].sort((x, y) => x - y);
     if (steps[steps.length - 1] < 80) steps.push(80);
     timeBar(body, { steps, min: 1, max: 80, scale: 'log', start: state.draft.prev?.hours || 1, fmt: h => h + 'h',
       card: h => { const g = gameAt(h), n = g && TIN_HOURS[g.id];
-        return { head: `${h}시간 주문`, title: !g ? '' : n === h ? `딱 이 시간에 만든 게임: 「${g.name}」` : `참고: 「${g.name}」은 ${n}시간 걸렸어요`, desc: g?.blurb, shot: g?.shots?.[0] }; },
+        return { head: T('detail.gameHead', { 시간: h }), title: !g ? '' : T(n === h ? 'detail.gameExact' : 'detail.gameMore', { 게임: g.name, 걸린: n }), desc: g?.blurb, shot: g?.shots?.[0] }; },
       onChange: (h, crossed) => {
         const g = gameAt(h), n = g && TIN_HOURS[g.id];
         const line = T(!g ? 'hours' : n === h ? 'hoursExact' : 'hoursMore', { 시간: h, 게임: g?.name, 걸린: n });
         if (crossed) say(line); else sayNow(line); // 말풍선이 옛 시간을 붙들고 있지 않게
         state.draft.hours = h;
-        brk.innerHTML = `시급 <b>${won(RATE)}</b> + Claude <b>${won(AI_RATE)}</b><br>× <b>${h}시간</b> = <b>${won(h * HOUR)}</b>`;
+        brk.innerHTML = T('detail.gameBreakdown', { 시급: won(RATE), AI: won(AI_RATE), 시간: h, 합계: won(h * HOUR) });
         updatePrice();
       } });
     body.append(el('div', { class: 'box' }, brk));
-    noteField(body, '어떤 게임이었으면 해요?', '장르, 분위기, 참고할 게임, 누구에게 줄 건지…');
+    noteField(body, it.field, it.hint);
   },
-  web(body) {
+  web(body, it) {
     const at = h => WEB_STEPS.find(s => s.h === h) || WEB_STEPS[0];
     timeBar(body, { steps: WEB_STEPS.map(s => s.h), min: .5, max: 6, scale: 'lin', start: state.draft.prev?.hours || .5, fmt: h => h < 1 ? '30m' : h + 'h',
-      card: h => { const s = at(h); return { head: h < 1 ? '30분' : `${h}시간`, title: s.title, desc: s.desc }; },
+      card: h => { const s = at(h); return { head: h < 1 ? T('detail.halfHour') : T('detail.hoursN', { 시간: h }), title: s.title, desc: s.desc }; },
       onChange: (h, crossed) => {
         const s = at(h);
         if (crossed) say(T('webStep', { 단계: s.title, 가격: won(s.p) }));
         state.draft.hours = h; state.draft.webPrice = s.p; updatePrice();
       } });
-    noteField(body, '무슨 사이트?', '목적, 들어갈 내용, 참고 사이트…');
+    noteField(body, it.field, it.hint);
   },
-  read(body) {
+  read(body, it) {
     state.draft.tier = was(READ_TIERS) || READ_TIERS[1];
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '연기 등급' }), chips(READ_TIERS.map(t => ({ ...t, sub: `${t.rate}원/자 · ${t.sub}` })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.readTierTitle') }), chips(READ_TIERS.map(t => ({ ...t, sub: T('detail.readTierSub', { 값: t.rate, 설명: t.sub }) })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
     const count = el('b', { text: '0' });
-    const t = noteField(body, '읽을 글', '여기에 붙여 넣으면 글자 수를 세요');
+    const t = noteField(body, it.field, it.hint);
     const recount = () => { state.draft.chars = [...t.value].filter(c => c !== '\n' && c !== '\r').length; count.textContent = state.draft.chars.toLocaleString(); updatePrice(); };
     t.addEventListener('input', recount);
-    body.append(el('p', { class: 'note' }, ['띄어쓰기 포함 ', count, '자 · 최소 1,000원 · 아직 시범가예요']));
+    body.append(el('p', { class: 'note' }, F('detail.readCount', { 글자: count })));
     state.draft.chars = 0; if (t.value) recount();
   },
   qty(body, it) {
@@ -729,73 +636,72 @@ const BUILD = {
     const n = el('b', { text: String(state.draft.qty) });
     const step = d => { state.draft.qty = Math.max(1, Math.min(99, state.draft.qty + d)); n.textContent = state.draft.qty; updatePrice();
       if (window.gsap && !REDUCED) gsap.fromTo(n, { y: d > 0 ? -10 : 10 }, { y: 0, duration: .25, ease: 'back.out(3)' }); };
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '개수' }), el('div', { class: 'stepper' }, [
-      el('button', { 'aria-label': '하나 빼기', text: '−', onclick: () => step(-1) }), n, el('button', { 'aria-label': '하나 더', text: '+', onclick: () => step(1) }),
-      el('span', { class: 'lbl', text: `${won(it.price)} / ${it.unit}` })])]));
-    noteField(body, it.field);
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.qtyTitle') }), el('div', { class: 'stepper' }, [
+      el('button', { 'aria-label': T('detail.qtyLess'), text: '−', onclick: () => step(-1) }), n, el('button', { 'aria-label': T('detail.qtyMore'), text: '+', onclick: () => step(1) }),
+      el('span', { class: 'lbl', text: T('detail.qtyEach', { 가격: won(it.price), 단위: it.unit }) })])]));
+    noteField(body, it.field, it.hint);
   },
-  text(body, it) { noteField(body, it.field); },
+  text(body, it) { noteField(body, it.field, it.hint); },
   partner(body, it) {
     const player = el('div', { class: 'player' });
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '내가 만든 것들' }),
-      chips(CARTS.map(c => ({ id: c.id, name: c.name, sub: '눌러서 해 보기' })), null, o => playCart(CARTS.find(c => c.id === o.id), player)), player]));
-    noteField(body, it.field, 'itch.io 링크, .p8 파일 위치, 무슨 게임인지');
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.cartsTitle') }),
+      chips(CARTS.map(c => ({ id: c.id, name: c.name, sub: T('detail.cartTry') })), null, o => playCart(CARTS.find(c => c.id === o.id), player)), player]));
+    noteField(body, it.field, it.hint);
   },
-  pwyw(body) {
+  pwyw(body, it) {
     state.draft.amount = state.draft.prev?.price || 0;
-    const input = el('input', { type: 'number', min: '0', step: '500', value: String(state.draft.amount), 'aria-label': '직접 입력', oninput: e => { state.draft.amount = Math.max(0, Number(e.target.value) || 0); e.target.closest('.box').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(Number(c.dataset.v) === state.draft.amount))); updatePrice(); } });
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '얼마 낼래요?' }),
-      chips([0, 1000, 5000, 10000, 30000].map(v => ({ id: v, name: won(v), sub: v ? (v >= 10000 ? '감동받음' : '고마워요') : '일단 들어 볼게' })), state.draft.amount,
+    const input = el('input', { type: 'number', min: '0', step: '500', value: String(state.draft.amount), 'aria-label': T('detail.payInput'), oninput: e => { state.draft.amount = Math.max(0, Number(e.target.value) || 0); e.target.closest('.box').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(Number(c.dataset.v) === state.draft.amount))); updatePrice(); } });
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.payTitle') }),
+      chips([0, 1000, 5000, 10000, 30000].map(v => ({ id: v, name: won(v), sub: T(v ? (v >= 10000 ? 'detail.payBig' : 'detail.paySmall') : 'detail.payZero') })), state.draft.amount,
         o => { state.draft.amount = o.id; input.value = o.id; updatePrice(); }),
-      el('p', { class: 'note', style: 'margin:10px 0 6px', text: '직접 입력' }), input]));
-    noteField(body, '물어볼 것', '고민, 자동화하고 싶은 업무, 무엇이든');
+      el('p', { class: 'note', style: 'margin:10px 0 6px', text: T('detail.payInput') }), input]));
+    noteField(body, it.field, it.hint);
     // 말풍선 점술 답의 출처(CC BY 4.0은 출처를 보이는 곳에 밝혀야 한다)
-    body.append(el('p', { class: 'note' }, ['말풍선 점술 답 출처: C. Gilman 『Oracles from the Poets』(공유 저작물), ', el('a', { href: 'https://github.com/bmc/fortunes', target: '_blank', rel: 'noopener', text: 'bmc/fortunes' }), ' (CC BY 4.0) 번역']));
+    body.append(el('p', { class: 'note' }, F('detail.oracleCredit', { 링크: el('a', { href: 'https://github.com/bmc/fortunes', target: '_blank', rel: 'noopener', text: 'bmc/fortunes' }) })));
   },
   dm(body) {
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '무료 조건' }), el('p', { style: 'margin:0', id: 'dm-free' })]),
-      el('div', { class: 'box' }, [el('h3', { text: '열리면 이렇게 돼요' }), el('p', { style: 'margin:0;white-space:pre-line', text:
-        'ss0에게 DM으로 그냥 말 걸면 대화가 돼요. 횟수 제한은 없어요.\n명령어·버튼·제어판은 못 써요. 대화만 돼요.\n열리기 전에 DM을 보내면 "해금된 분만 이용할 수 있어요"라고 답해요.' })]));
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.dmFreeTitle') }), el('p', { style: 'margin:0', id: 'dm-free' })]),
+      el('div', { class: 'box' }, [el('h3', { text: T('detail.dmHowTitle') }), el('p', { style: 'margin:0;white-space:pre-line', text: T('detail.dmHow') })]));
   },
-  quote(body) {
+  quote(body, it) {
     state.draft.kindSel = was(FEAT_KINDS) || FEAT_KINDS[0];
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '어떤 종류?' }), chips(FEAT_KINDS, state.draft.kindSel.id, k => { state.draft.kindSel = k; })]));
-    noteField(body, '원하는 기능 설명', '예) /별명 치면 서버 밈으로 랜덤 칭호 붙여 주기');
-    body.append(el('p', { class: 'note', text: '담으면 0원(견적 대기)으로 들어가고, 이놀아안이 검토해서 가격을 정해 답장해요.' }));
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.featTitle') }), chips(FEAT_KINDS, state.draft.kindSel.id, k => { state.draft.kindSel = k; })]));
+    noteField(body, it.field, it.hint);
+    body.append(el('p', { class: 'note', text: T('detail.featNote') }));
   },
-  bot(body) {
+  bot(body, it) {
     state.draft.tier = was(BOT_TIERS) || BOT_TIERS[0];
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '봇 크기' }),
-      chips(BOT_TIERS.map(t => ({ ...t, sub: `${won(t.build)} + 월 ${won(t.month)} · ${t.sub}` })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
-    noteField(body, '어떤 봇?', '서버, 하고 싶은 일, 참고할 봇…');
-    body.append(el('p', { class: 'note', text: '월 유지비에는 서버비와 고장 수리가 들어 있어요. 끊으면 봇도 쉬어요.' }));
+    body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.botTierTitle') }),
+      chips(BOT_TIERS.map(t => ({ ...t, sub: T('detail.botTierSub', { 제작비: won(t.build), 월: won(t.month), 설명: t.sub }) })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
+    noteField(body, it.field, it.hint);
+    body.append(el('p', { class: 'note', text: T('detail.botNote') }));
   },
 };
 const otherInCart = () => state.cart.some(c => c.item.id !== 'dm');
 const PRICE = {
   hours: (it, d) => setPrice((d.hours || 1) * HOUR),
   web: (it, d) => setPrice(d.webPrice || 10000),
-  read: (it, d) => setPrice(d.chars ? Math.max(1000, d.chars * d.tier.rate) : 0, `${d.tier.name} · ${d.tier.rate}원/자`),
+  read: (it, d) => setPrice(d.chars ? Math.max(1000, d.chars * d.tier.rate) : 0, T('detail.readPrice', { 등급: d.tier.name, 값: d.tier.rate })),
   qty: (it, d) => setPrice(it.price * d.qty),
   text: (it, d) => setPrice(it.price),
-  partner: () => setPrice(0, '도전장', '0원'),
-  pwyw: (it, d) => setPrice(d.amount, '주고 싶은 만큼'),
+  partner: () => setPrice(0, T('detail.partnerPrice'), T('detail.partnerZero')),
+  pwyw: (it, d) => setPrice(d.amount, T('detail.payPrice')),
   dm: (it, d) => { const free = otherInCart(); const p = $('#dm-free');
-    if (p) p.textContent = free ? '장바구니에 다른 상품이 있어서 무료예요!' : '다른 상품을 하나라도 담으면 무료가 돼요.';
-    setPrice(free ? 0 : 5000, free ? '무료 해금' : '가격 (후불)'); },
-  quote: () => setPrice(0, '이놀아안 검토 후 가격 책정', '견적 대기'),
-  bot: (it, d) => setPrice(d.tier.build, `제작비 (월 ${won(d.tier.month)} 별도)`),
+    if (p) p.textContent = T(free ? 'detail.dmFreeYes' : 'detail.dmFreeNo');
+    setPrice(free ? 0 : 5000, T(free ? 'detail.dmFreePrice' : 'detail.price')); },
+  quote: () => setPrice(0, T('detail.featPrice'), T('detail.featWait')),
+  bot: (it, d) => setPrice(d.tier.build, T('detail.botPrice', { 월: won(d.tier.month) })),
 };
 function summary(it, d) {
   switch (it.kind) {
-    case 'hours': return `${d.hours}시간`;
-    case 'web': return d.hours < 1 ? '30분' : `${d.hours}시간`;
-    case 'read': return `${d.tier.name} · ${(d.chars || 0).toLocaleString()}자`;
+    case 'hours': return T('detail.hoursN', { 시간: d.hours });
+    case 'web': return d.hours < 1 ? T('detail.halfHour') : T('detail.hoursN', { 시간: d.hours });
+    case 'read': return T('detail.readSum', { 등급: d.tier.name, 글자: (d.chars || 0).toLocaleString() });
     case 'qty': return `${d.qty}${it.unit}`;
-    case 'pwyw': return '자율';
-    case 'partner': return '도전장';
+    case 'pwyw': return T('detail.paySum');
+    case 'partner': return T('detail.partnerPrice');
     case 'quote': return d.kindSel.name;
-    case 'bot': return `${d.tier.name} · 월 ${won(d.tier.month)}`;
+    case 'bot': return T('detail.botSum', { 등급: d.tier.name, 월: won(d.tier.month) });
     default: return '';
   }
 }
@@ -848,19 +754,19 @@ function removeFromCart(c) {
   const at = state.cart.indexOf(c);
   state.cart = state.cart.filter(x => x !== c); renderCart();
   if ($('#checkout').open) { if (state.cart.length) renderOrder(); else { $('#checkout').close(); say(T('cartEmptied')); } }
-  toast(`${c.item.name}${c.sum ? ` ${c.sum}` : ''} 뺐어요`, '되돌리기', () => { state.cart.splice(Math.min(at, state.cart.length), 0, c); renderCart(); if ($('#checkout').open) renderOrder(); say(T('undone')); });
+  toast(T('cart.removed', { 이름: c.item.name + (c.sum ? ` ${c.sum}` : '') }), T('cart.undo'), () => { state.cart.splice(Math.min(at, state.cart.length), 0, c); renderCart(); if ($('#checkout').open) renderOrder(); say(T('undone')); });
 }
 function renderCart() {
   const list = $('#cart-list'); list.replaceChildren();
-  if (!state.cart.length) list.append(el('li', { class: 'cart-empty', style: 'border:0;background:none', text: '비어 있어요. 마음에 드는 걸 골라 봐요!' }));
+  if (!state.cart.length) list.append(el('li', { class: 'cart-empty', style: 'border:0;background:none', text: T('cart.empty') }));
   for (const c of state.cart) list.append(el('li', {}, [
-    el('button', { class: 'cart-open', title: c.item.kind === 'dm' ? '주문서 보기' : '수정', onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
-      el('small', { text: ` ${c.item.kind === 'quote' ? '견적' : won(priced(c))}` })]),
-    el('button', { 'aria-label': `${c.item.name} 빼기`, text: '✕', onclick: () => removeFromCart(c) })]));
+    el('button', { class: 'cart-open', title: T(c.item.kind === 'dm' ? 'cart.seeOrder' : 'cart.edit'), onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
+      el('small', { text: ` ${c.item.kind === 'quote' ? T('cart.quote') : won(priced(c))}` })]),
+    el('button', { 'aria-label': T('cart.remove', { 이름: c.item.name }), text: '✕', onclick: () => removeFromCart(c) })]));
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
   $('#cart-total').textContent = won(total);
   $('#btn-order').disabled = !state.cart.length;
-  $('#btn-order').textContent = state.cart.length ? `주문하기 (${state.cart.length})` : '주문하기';
+  $('#btn-order').textContent = state.cart.length ? T('cart.orderN', { 개수: state.cart.length }) : T('cart.order');
   saveCart();
 }
 
@@ -880,17 +786,17 @@ const dmUserValue = () => $('#dm-user').value.normalize('NFKC').replace(/[\u0000
 function orderBody(code) {
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
   const monthly = state.cart.reduce((s, c) => s + c.monthly, 0);
-  const lines = [`[봉봉봉 주문서] ${code}`, ''];
+  const lines = [T('discord.head', { 번호: code }), ''];
   state.cart.forEach((c, i) => {
-    lines.push(`${i + 1}. ${c.item.name}${c.sum ? ` (${c.sum})` : ''}: ${c.item.kind === 'quote' ? '견적 요청' : won(priced(c))}`);
+    lines.push(T('discord.line', { 순번: i + 1, 이름: c.item.name, 요약: c.sum ? ` (${c.sum})` : '', 가격: c.item.kind === 'quote' ? T('discord.quote') : won(priced(c)) }));
     if (c.note) lines.push('   └ ' + c.note.replace(/\n+/g, ' / '));
   });
-  lines.push('', `합계: ${won(total)}` + (monthly ? ` (+ 월 ${won(monthly)})` : '') + ' · 결제는 결과물 받은 뒤(후불)');
-  if (state.cart.some(c => c.item.kind === 'quote')) lines.push('※ 견적 상품은 검토 후 가격을 알려 주세요.');
+  lines.push('', T('discord.total', { 합계: won(total) }) + (monthly ? T('discord.totalMonthly', { 월: won(monthly) }) : '') + T('discord.totalTail'));
+  if (state.cart.some(c => c.item.kind === 'quote')) lines.push(T('discord.quoteNote'));
   return lines.join('\n');
 }
 function orderReady() {
-  if (!dmUserValue()) return '디스코드 이름을 적으면 보낼 수 있어요.';
+  if (!dmUserValue()) return T('orderForm.needName');
   return '';
 }
 function refreshOrder() {
@@ -900,17 +806,17 @@ function refreshOrder() {
 function renderOrder() {
   const ul = $('#order-items'); ul.replaceChildren();
   for (const c of state.cart) {
-    const note = c.item.kind === 'dm' ? null : el('textarea', { rows: 2, placeholder: '요청 사항 (수정할 수 있어요)', oninput: e => { c.note = e.target.value; saveCart(); } });
+    const note = c.item.kind === 'dm' ? null : el('textarea', { rows: 2, placeholder: T('orderForm.note'), oninput: e => { c.note = e.target.value; saveCart(); } });
     if (note) note.value = c.note;
     ul.append(el('li', {}, [
       el('div', { class: 'oi-head' }, [el('b', { text: c.item.name }), c.sum ? el('span', { text: c.sum }) : null,
-        el('span', { class: 'oi-price', text: c.item.kind === 'quote' ? '견적' : won(priced(c)) }),
-        c.item.kind === 'dm' ? null : el('button', { type: 'button', class: 'oi-del', text: '수정', onclick: () => { $('#checkout').close(); openDetail(c.item, c); state.backToOrder = true; } }),
-        el('button', { type: 'button', class: 'oi-del', 'aria-label': `${c.item.name} 빼기`, text: '빼기', onclick: () => removeFromCart(c) })]),
+        el('span', { class: 'oi-price', text: c.item.kind === 'quote' ? T('cart.quote') : won(priced(c)) }),
+        c.item.kind === 'dm' ? null : el('button', { type: 'button', class: 'oi-del', text: T('orderForm.edit'), onclick: () => { $('#checkout').close(); openDetail(c.item, c); state.backToOrder = true; } }),
+        el('button', { type: 'button', class: 'oi-del', 'aria-label': T('cart.remove', { 이름: c.item.name }), text: T('orderForm.remove'), onclick: () => removeFromCart(c) })]),
       note]));
   }
   const total = state.cart.reduce((s, c) => s + priced(c), 0), monthly = state.cart.reduce((s, c) => s + c.monthly, 0);
-  $('#order-total').textContent = `합계 ${won(total)}` + (monthly ? ` + 월 ${won(monthly)}` : '') + ' (후불)';
+  $('#order-total').textContent = T('orderForm.total', { 합계: won(total) }) + (monthly ? T('orderForm.totalMonthly', { 월: won(monthly) }) : '') + T('orderForm.totalTail');
   refreshOrder();
 }
 function openOrder() {
@@ -920,7 +826,7 @@ function openOrder() {
     $('#order-code').textContent = orderCode();
     if (!$('#dm-user').value) try { $('#dm-user').value = localStorage.getItem(DMUSER_KEY) || ''; } catch {}
     $('#order-edit').inert = false; $('#dm-user').disabled = false;
-    const btn = $('#send-order'); delete btn.dataset.sent; btn.textContent = '디스코드로 주문 보내기';
+    const btn = $('#send-order'); delete btn.dataset.sent; btn.textContent = T('orderForm.send');
     $('#send-fail').hidden = true;
     dlg.showModal();
     dlg.scrollTop = 0;
@@ -941,21 +847,21 @@ $('#send-order').onclick = async () => {
   if (why) { out.textContent = why; return; }
   const dmUser = dmUserValue();
   const code = $('#order-code').textContent;
-  const first = state.cart[0], title = `${code} · ${first.item.name}${state.cart.length > 1 ? ` 외 ${state.cart.length - 1}` : ''}`;
-  const btn = $('#send-order'); btn.disabled = true; out.textContent = '보내는 중…';
+  const first = state.cart[0], title = T('discord.thread', { 번호: code, 이름: first.item.name }) + (state.cart.length > 1 ? T('discord.threadMore', { 개수: state.cart.length - 1 }) : '');
+  const btn = $('#send-order'); btn.disabled = true; out.textContent = T('orderForm.sending');
   try {
     const r = await fetch(DISCORD.webhook + '?wait=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
       username: '봉봉봉', thread_name: title.slice(0, 100), allowed_mentions: { parse: [] },
-      content: `디스코드 사용자명: ${dmUser}\n\`\`\`\n${orderBody(code)}\n\`\`\``.slice(0, 2000) }) });
+      content: `${T('discord.user', { 이름: dmUser })}\n\`\`\`\n${orderBody(code)}\n\`\`\``.slice(0, 2000) }) });
     if (!r.ok) throw new Error(r.status);
-    btn.dataset.sent = '1'; btn.textContent = '보냈어요 ✓';
+    btn.dataset.sent = '1'; btn.textContent = T('orderForm.sentBtn');
     $('#order-edit').inert = true; $('#dm-user').disabled = true;
-    out.textContent = `주문이 들어갔어요! 이놀아안이 "${dmUser}"님을 찾아 DM 줄게요. 거기서 같이 조율해요.`;
+    out.textContent = T('orderForm.sentMsg', { 이름: dmUser });
     say(T('sent'));
     state.cart = []; renderCart(); newOrderCode();
   } catch {
     btn.disabled = false;
-    out.textContent = '보내기에 실패했어요.';
+    out.textContent = T('orderForm.fail');
     $('#send-fail').hidden = false;
   }
 };
@@ -1027,6 +933,13 @@ $('.doodles').replaceChildren(...DOODLES.map(([n, x, y, r]) => { const d = img(`
 { const L = $('#loader img'); if (L && !REDUCED) [2, 3].forEach((n, i) => setTimeout(() => { L.src = IMG(`load_${n}`); }, 220 * (i + 1))); }
 
 /* ── 시작 ── */
+// index.html에 적힌 글도 여기서 바꿔 끼운다(data-t: 글, data-t-alt: 그림 설명, data-t-label: 읽어 주는 이름, data-t-ph: 흐린 글)
+{ const put = (sel, f) => document.querySelectorAll(sel).forEach(n => { const k = n.getAttribute(sel.slice(1, -1)), v = T(k); if (v) f(n, v); });
+  put('[data-t]', (n, v) => { n.textContent = v; }); put('[data-t-alt]', (n, v) => { n.alt = v; });
+  put('[data-t-label]', (n, v) => n.setAttribute('aria-label', v)); put('[data-t-ph]', (n, v) => { n.placeholder = v; });
+  if (D.page?.title) document.title = D.page.title;
+  if (D.page?.description) document.querySelector('meta[name=description]')?.setAttribute('content', D.page.description);
+  document.getElementById('send-fail').replaceChildren(...F('orderForm.failHelp', { DM: el('a', { href: 'https://discord.com/users/823053384633417738', target: '_blank', rel: 'noopener', text: T('orderForm.failDm') }) })); }
 loadCart(); renderRail(); renderShelf(); renderExtras(); renderCart();
 setTimeout(() => say(T('hello')), 600); poke();
 if (window.gsap && !REDUCED) {

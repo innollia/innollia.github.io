@@ -27,7 +27,9 @@ static/shop/
   index.html              뼈대: 간판, 주인 말풍선, 진열대, 상세 패널, 장바구니, 주문서(영수증)
   shop.css                전체 스타일. 색·글꼴은 :root 변수
   shop.js                 상품·가격·동작 전부 (아래 표)
-  dialogue.js             말풍선 대사 전부(사용자가 직접 고치는 파일). 헛소리(idle)는 문장생성기 accept가 더한다
+  dialogue.js             사이트의 글 전부(사용자가 직접 고치는 파일). 1부 말풍선 대사, 2부 화면 글(상품 이름·설명·버튼·안내·주문서).
+                          헛소리(idle)는 문장생성기 accept가 더한다. shop.js에는 값(가격·시간)만 남기고 글은 두지 않는다
+  oracle.js               신탁 점술 답 185줄(dialogue.js 다음에 읽힌다)
   img/                    art/의 그림을 여백 잘라 webp로 만든 것(층 그림 bg_*·jaw_*·load_*는 자르지 않음)
   supporters.json         똘라따무(후원자 이름 칸). 워크플로가 만든다. 손으로 고치지 말 것
   supporters_manual.json  계좌로 직접 받은 후원. 손으로 적는다
@@ -136,7 +138,7 @@ UI 참조(트릭컬, 엔터 더 건전, 스매시 얼티밋, 음식점 키오스
 
 ## 신탁 점술 답
 
-「신탁」 상품 창을 열 때마다 말풍선에 점술 답이 하나씩 무작위로 나온다. 문장은 `dialogue.js`의 `oracle` 목록에 있다(185줄).
+「신탁」 상품 창을 열 때마다 말풍선에 점술 답이 하나씩 무작위로 나온다. 문장은 `oracle.js`에 있다(185줄).
 - 출처: Caroline Gilman 『Oracles from the Poets』(1844, Project Gutenberg #47200, 공유 저작물), bmc/fortunes(CC BY 4.0).
 - 영어 원문을 Antigravity(gemini-3.8-flash-medium)가 번역했다. 출처 표기는 신탁 상품 창 아래에 있다.
 - 쓰지 않은 자료와 이유

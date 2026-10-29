@@ -21,17 +21,17 @@
 
 <div class="booth">
   <header class="marquee">
-    <a class="back" href="/">&lt; 홈-페-지</a>
-    <h1 class="sign"><img src="img/ui_sign.webp" alt="봉봉봉" width="466" height="186"></h1>
-    <p class="sign-small">어서오십쇼! 이길드에!</p>
+    <a class="back" href="/" data-t="page.back">&lt; 홈-페-지</a>
+    <h1 class="sign"><img src="img/ui_sign.webp" alt="봉봉봉" data-t-alt="page.title" width="466" height="186"></h1>
+    <p class="sign-small" data-t="page.signSmall">어서오십쇼! 이길드에!</p>
   </header>
-  <section class="counter" aria-label="상점 주인">
+  <section class="counter" aria-label="상점 주인" data-t-label="page.keeperLabel">
     <div class="bubble" role="status" aria-live="polite"><p id="keeper-line"></p></div>
   </section>
 </div>
 
 <div class="shop">
-  <nav class="rail" id="rail" aria-label="진열대"></nav>
+  <nav class="rail" id="rail" aria-label="진열대" data-t-label="page.railLabel"></nav>
   <main class="shelf" id="shelf" aria-live="polite"></main>
 </div>
 <div class="extras" id="extras"></div>
@@ -39,7 +39,7 @@
 <aside class="detail" id="detail" aria-hidden="true" aria-labelledby="detail-title" role="dialog">
   <div class="detail-slash" aria-hidden="true"></div>
   <div class="detail-panel">
-    <button class="x" id="detail-close" aria-label="닫기">✕</button>
+    <button class="x" id="detail-close" aria-label="닫기" data-t-label="detail.close">✕</button>
     <div class="detail-head">
       <div class="detail-icon" id="detail-icon" aria-hidden="true"></div>
       <div><p class="detail-cat" id="detail-cat"></p><h2 id="detail-title"></h2></div>
@@ -48,8 +48,8 @@
     <p class="detail-say" id="detail-say" role="status" aria-live="polite"></p>
     <div class="detail-body" id="detail-body"></div>
     <div class="detail-foot">
-      <div class="detail-price"><small id="detail-price-label">가격</small><b id="detail-price">0</b></div>
-      <button class="btn-buy" id="detail-buy">담기</button>
+      <div class="detail-price"><small id="detail-price-label" data-t="detail.price">가격</small><b id="detail-price">0</b></div>
+      <button class="btn-buy" id="detail-buy" data-t="detail.buy">담기</button>
     </div>
   </div>
 </aside>
@@ -57,21 +57,21 @@
 <footer class="cartbar" id="cartbar">
   <img class="cart-hand" src="img/ui_cart.webp" alt="" width="466" height="284">
   <ul class="cart-list" id="cart-list"></ul>
-  <div class="cart-sum"><small>합계 (후불)</small><b id="cart-total">0원</b></div>
-  <button class="btn-order" id="btn-order" disabled>주문하기</button>
+  <div class="cart-sum"><small data-t="cart.total">합계 (후불)</small><b id="cart-total">0원</b></div>
+  <button class="btn-order" id="btn-order" disabled data-t="cart.order">주문하기</button>
 </footer>
 
 <dialog class="checkout" id="checkout">
   <div class="checkout-inner">
-    <div class="checkout-top"><p class="receipt-top">주문번호 <b id="order-code"></b></p><button type="button" class="x" id="checkout-close" aria-label="닫기">✕</button></div>
-    <h2><img class="sign-img" src="img/sign_order.webp" alt="주문서" width="466" height="169"></h2>
+    <div class="checkout-top"><p class="receipt-top"><span data-t="orderForm.code">주문번호</span> <b id="order-code"></b></p><button type="button" class="x" id="checkout-close" aria-label="닫기" data-t-label="detail.close">✕</button></div>
+    <h2><img class="sign-img" src="img/sign_order.webp" alt="주문서" data-t-alt="orderForm.title" width="466" height="169"></h2>
     <div id="order-edit">
       <ul class="order-items" id="order-items"></ul>
       <p class="order-total" id="order-total"></p>
-      <p><button type="button" class="btn-sub" id="order-more">← 더 고르기</button></p>
+      <p><button type="button" class="btn-sub" id="order-more" data-t="orderForm.more">← 더 고르기</button></p>
     </div>
-    <div id="dm-user-box"><p><label for="dm-user">연락받을 디스코드 이름 (필수)</label></p><input type="text" id="dm-user" maxlength="40" placeholder="예) 비빔, bibim_99" autocomplete="off" spellcheck="false"><p class="tiny">서버 닉네임, 표시 이름, 사용자명 중 아무거나 적어 주세요. 조금 틀려도 찾아요.</p></div>
-    <p><button type="button" class="btn-buy send-big" id="send-order">디스코드로 주문 보내기</button></p>
+    <div id="dm-user-box"><p><label for="dm-user" data-t="orderForm.nameLabel">연락받을 디스코드 이름 (필수)</label></p><input type="text" id="dm-user" maxlength="40" placeholder="예) 비빔, bibim_99" data-t-ph="orderForm.nameHint" autocomplete="off" spellcheck="false"><p class="tiny" data-t="orderForm.nameHelp">서버 닉네임, 표시 이름, 사용자명 중 아무거나 적어 주세요. 조금 틀려도 찾아요.</p></div>
+    <p><button type="button" class="btn-buy send-big" id="send-order" data-t="orderForm.send">디스코드로 주문 보내기</button></p>
     <p class="tiny" id="send-result" role="status"></p>
     <p class="tiny" id="send-fail" hidden>그럴 땐 <a href="https://discord.com/users/823053384633417738" target="_blank" rel="noopener">이놀아안에게 DM</a>으로 주문번호와 원하는 걸 보내 주세요.</p>
   </div>
@@ -81,8 +81,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="dialogue.js?v=3"></script>
+<script src="dialogue.js?v=5"></script>
+<script src="oracle.js?v=1"></script>
 <script src="ordername.js?v=2"></script>
-<script src="shop.js?v=56"></script>
+<script src="shop.js?v=57"></script>
 </body>
 </html>
