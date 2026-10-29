@@ -17,7 +17,10 @@ function T(key, vars = {}) {
   return String(v ?? '').replace(/\{([^}]+)\}/g, (m, k) => vars[k] ?? m);
 }
 const F = (key, vars = {}) => String(pick(key) ?? '').split(/(\{[^}]+\})/).map(x => { const k = x.match(/^\{([^}]+)\}$/)?.[1]; return k && k in vars ? vars[k] : x; }).filter(x => x !== '');
-const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// 움직임 줄이기는 가게 안 단추로만 켠다. 윈도 '애니메이션 효과'를 끈 컴퓨터는 브라우저가 줄이기를 켜 버려서 가게가 통째로 멈춰 보였다
+const CALM_KEY = 'bongbongbong-calm';
+const REDUCED = (() => { try { return localStorage.getItem(CALM_KEY) === '1'; } catch { return false; } })();
+document.documentElement.classList.toggle('calm', REDUCED);
 const won = n => n.toLocaleString('ko-KR') + '원';
 const $ = (s, r = document) => r.querySelector(s);
 const el = (tag, attrs = {}, kids = []) => {
@@ -69,11 +72,11 @@ const ITEMS = [
   { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', kind: 'quote' },
   { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', kind: 'partner' },
   { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', soon: true },
-  { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', soon: true },
-  { id: 'aisetup', cat: 'soon', icon: 'setup', c: '#4ab8ff', soon: true },
-  { id: 'playtest', cat: 'soon', icon: 'playtest', c: '#7a5cff', soon: true },
-  { id: 'trpg', cat: 'soon', icon: 'dice', c: '#ffc93c', soon: true },
-  { id: 'theme', cat: 'soon', icon: 'theme', c: '#2fe0b0', soon: true },
+  { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', soon: true, hidden: true }, // hidden: 입고 예정 칸에도 안 보임
+  { id: 'aisetup', cat: 'soon', icon: 'setup', c: '#4ab8ff', soon: true, hidden: true },
+  { id: 'playtest', cat: 'soon', icon: 'playtest', c: '#7a5cff', soon: true, hidden: true },
+  { id: 'trpg', cat: 'soon', icon: 'dice', c: '#ffc93c', soon: true, hidden: true },
+  { id: 'theme', cat: 'soon', icon: 'theme', c: '#2fe0b0', soon: true, hidden: true },
 ];
 ITEMS.forEach(it => { const g = D.goods?.[it.id] || {};
   Object.assign(it, { name: g.name || it.id, sub: g.sub || '', priceText: g.price || '', desc: g.desc || '', field: g.field || '', hint: g.hint || '', unit: g.unit || '',
@@ -150,7 +153,7 @@ function renderRing() {
   const shelf = $('#shelf'); shelf.replaceChildren();
   const wrap = el('div', { class: 'ring', role: 'listbox', 'aria-label': T('shelf.ringLabel'), tabindex: '0' });
   ring.cards = SHELF.map((it, i) => {
-    const c = makeCard(it, () => { if (ring.moved) return; if (ring.spread) return pickSpread(i); if (i === ring.front) chompThen(() => openDetail(it)); else ringGo(nearest(i)); });
+    const c = makeCard(it, () => { if (ring.moved) return; if (ring.mix > .5 || i === ring.front) chompThen(() => openDetail(it)); else ringGo(nearest(i)); });
     c.setAttribute('role', 'option'); c.tabIndex = -1; wrap.append(c); return c;
   });
   wrap.prepend(img('stage_tongue', 'tongue')); // 앞에 온 칸이 올라서는 혀
@@ -160,33 +163,39 @@ function renderRing() {
   // 위치는 숫자 대신 상품 그림 줄로 보여 준다. 누르면 그 상품으로 돈다
   const count = el('div', { class: 'ring-dots', role: 'tablist', 'aria-label': T('shelf.dotsLabel') }, SHELF.map((it, i) =>
     el('button', { class: 'ring-dot', 'aria-label': it.name, title: it.name, onclick: () => ringGo(nearest(i)) }, icon(it.icon))));
-  const spread = el('button', { class: 'ring-spread', 'aria-expanded': 'false', text: T('shelf.spread'), onclick: () => toggleSpread() });
-  const prev = el('button', { class: 'ring-nav', 'aria-label': T('shelf.prev'), text: '◀', onclick: () => ringGo(ring.front - 1) });
-  const next = el('button', { class: 'ring-nav', 'aria-label': T('shelf.next'), text: '▶', onclick: () => ringGo(ring.front + 1) });
+  const prev = el('button', { class: 'ring-nav', 'aria-label': T('shelf.prev'), text: '◀', onclick: () => ringGo(Math.round(ring.target) - 1) });
+  const next = el('button', { class: 'ring-nav', 'aria-label': T('shelf.next'), text: '▶', onclick: () => ringGo(Math.round(ring.target) + 1) });
   const stage = el('section', { class: 'stage', id: 'stage' }, [
     el('div', { class: 'ring-head' }, [$('#rail'), cat, catSub]), // 범주 탭도 고정된 판 안에 둔다
     wrap,
     el('div', { class: 'front' }, [el('div', { class: 'front-text' }, [fName, fDesc]), fBtn]),
-    el('div', { class: 'ring-bar' }, [prev, count, next, spread]),
+    el('div', { class: 'ring-bar' }, [prev, count, next]),
   ]);
   shelf.append(stage);
-  ring.ui = { cat, catSub, fName, fDesc, count, wrap, spread, stage, front: stage.querySelector('.front') };
+  ring.ui = { cat, catSub, fName, fDesc, count, wrap, stage, front: stage.querySelector('.front'), bar: stage.querySelector('.ring-bar') };
 
   const n = SHELF.length;
-  ring.st = ScrollTrigger.create({ trigger: stage, start: 'top top', end: () => '+=' + Math.round((n - 1) * innerHeight * .42), pin: true, pinSpacing: true,
-    onUpdate: self => { ring.target = ring.lap + self.progress * (n - 1); },
-    snap: { snapTo: 1 / (n - 1), duration: { min: .2, max: .6 }, delay: .08, ease: 'power2.inOut' } });
+  // 휠(세로)은 원통을 돌리지 않고 페이지를 내린다. 진열대에서 내리면 그동안 판이 고정되고 칸들이 날아가 한눈에 펼쳐진다.
+  // 끝까지 펼친 뒤 더 내리면 아래 칸(똘라따무)으로 넘어가고, 올리면 다시 원통으로 접힌다.
+  ring.st = ScrollTrigger.create({ trigger: stage, start: 'top top', end: () => '+=' + Math.round(innerHeight * .9), pin: true, pinSpacing: true, scrub: REDUCED ? true : .5,
+    onUpdate: self => { const m = gsap.parseEase('power2.inOut')(Math.min(1, self.progress / .8));
+      if (m > 0 && !ring.layout) ring.layout = spreadLayout();
+      ring.mix = m; spreadState(m > .5); } });
+  // 옆으로 미는 휠(트랙패드·가로 휠)은 원통을 돌린다
+  let wx = 0, wt = null;
+  wrap.addEventListener('wheel', e => { if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || ring.mix > .2) return; e.preventDefault();
+    wx += e.deltaX; ring.target += e.deltaX / 240; clearTimeout(wt); wt = setTimeout(() => { ring.target = Math.round(ring.target); wx = 0; }, 140); }, { passive: false });
 
   // 끌기: 누른 채 옆으로 밀면 원통만 돌리고(스크롤은 그대로), 놓으면 가장 가까운 칸으로 스크롤을 옮긴다.
   // 끄는 동안 스크롤을 건드리면 멈출 때마다 칸 맞추기(snap)가 손 밑에서 원통을 끌어가서 따로 돈다.
   let sx = 0, t0 = 0, down = false;
   const end = () => {
     if (!down) return; down = false;
-    if (ring.moved) ringGo(Math.round(ring.target) - ring.lap, true);
+    if (ring.moved) ring.target = Math.round(ring.target);
     setTimeout(() => { ring.moved = false; }, 0); // 놓을 때 생기는 click이 칸을 열지 않게
   };
   wrap.addEventListener('dragstart', e => e.preventDefault()); // 그림을 끌어 가 버리면 놓은 걸 못 듣는다
-  wrap.addEventListener('pointerdown', e => { if (e.button !== 0 || ring.spread) return; down = true; ring.moved = false; sx = e.clientX; t0 = ring.target; });
+  wrap.addEventListener('pointerdown', e => { if (e.button !== 0 || ring.mix > .2) return; down = true; ring.moved = false; sx = e.clientX; t0 = ring.target; });
   wrap.addEventListener('pointermove', e => {
     if (!down) return;
     if (e.pointerType === 'mouse' && !(e.buttons & 1)) return end(); // 창 밖에서 놓고 들어온 경우
@@ -196,10 +205,10 @@ function renderRing() {
   });
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => wrap.addEventListener(t, end));
   wrap.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') { e.preventDefault(); ringGo(ring.front + 1); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); ringGo(ring.front - 1); }
-    if (e.key === 'Home') { e.preventDefault(); ringGo(0); }
-    if (e.key === 'End') { e.preventDefault(); ringGo(SHELF.length - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); ringGo(Math.round(ring.target) + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); ringGo(Math.round(ring.target) - 1); }
+    if (e.key === 'Home') { e.preventDefault(); ringGo(nearest(0)); }
+    if (e.key === 'End') { e.preventDefault(); ringGo(nearest(SHELF.length - 1)); }
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(SHELF[Math.max(0, ring.front)]); }
   });
 
@@ -207,25 +216,12 @@ function renderRing() {
   ring.pos = REDUCED ? 0 : -n * .6;
   gsap.ticker.add(ringTick);
 }
-// i: 이번 바퀴 안에서의 칸 번호. 11번째 다음(n)이나 1번째 앞(-1)이면 바퀴를 넘기고 스크롤을 반대쪽 끝으로 옮긴다.
-// 화면은 고정돼 있어 스크롤이 튀어도 보이지 않고, 원통은 한 칸만 돈다.
 // 한눈에 보기: 원통의 칸들이 그대로 날아가 판에 펼쳐지고, 접으면 원통 제자리로 돌아간다.
-// ring.mix는 0(원통)~1(펼침). 칸마다 조금씩 늦게 출발해 차례로 날아간다.
-function toggleSpread(on = !ring.spread, then) {
-  const u = ring.ui;
-  ring.spread = on;
-  u.stage.classList.toggle('spreading', on); u.spread.setAttribute('aria-expanded', String(on));
-  u.spread.textContent = on ? T('shelf.unspread') : T('shelf.spread');
-  document.documentElement.classList.toggle('locked', on); // 펼친 동안 스크롤로 원통이 돌지 않게
-  if (on) ring.layout = spreadLayout();
-  gsap.killTweensOf(ring, 'mix');
-  gsap.to(ring, { mix: on ? 1 : 0, duration: REDUCED ? 0 : .75, ease: 'power3.inOut', onComplete: then });
-  say(on ? T('spread') : T(`cat.${state.cat}`));
-}
-// 펼친 판에서 하나 고르면: 그 칸이 앞에 오게 원통을 맞춰 두고 접은 뒤 연다
-function pickSpread(i) {
-  ringGo(nearest(i), true); ring.pos = ring.target;
-  toggleSpread(false, () => chompThen(() => openDetail(SHELF[i])));
+// ring.mix는 0(원통)~1(펼침)이고 스크롤이 정한다. 칸마다 조금씩 늦게 출발해 차례로 날아간다.
+function spreadState(on) {
+  if (ring.spread === on) return;
+  ring.spread = on; ring.ui.stage.classList.toggle('spreading', on);
+  if (on) { unpeek(); say(T('spread')); } else say(T(`cat.${state.cat}`));
 }
 // 칸 크기에 맞춰 가장 크게 보이는 열 수를 고른다. 아래 설명판 자리까지 쓴다
 function spreadLayout() {
@@ -244,19 +240,15 @@ function spreadLayout() {
     return { x, y, z: 0, ry: 0, rz: ((i * 37) % 7 - 3) * .8, sc: best.s, op: 1, br: 1, zi: 60, pe: '' };
   });
 }
-function ringGo(i, now) {
-  const n = SHELF.length;
-  if (!ring.st) return;
-  while (i > n - 1) { ring.lap += n; i -= n; now = true; }
-  while (i < 0) { ring.lap -= n; i += n; now = true; }
-  ring.target = ring.lap + i;
-  const y = ring.st.start + (ring.st.end - ring.st.start) * i / (n - 1);
-  scrollTo({ top: Math.round(y) + 1, behavior: REDUCED || now ? 'auto' : 'smooth' }); // now: 끌기를 놓은 자리에서 바로(원통은 ringTick이 부드럽게 따라간다)
+function ringGo(i) {
+  if (!ring.ui) return;
+  ring.target = i;
+  if (ring.mix > 0) scrollTo({ top: ring.st.start, behavior: REDUCED ? 'auto' : 'smooth' }); // 펼친 채로 탭·점을 누르면 원통으로 돌아와 돈다
 }
 // 지금 앞 칸에서 i번 칸으로 가는 가까운 길(돌아가는 쪽이 짧으면 그쪽)
 function nearest(i) {
-  const n = SHELF.length, cur = Math.round(ring.target) - ring.lap;
-  let d = ((i - cur) % n + n) % n; if (d > n / 2) d -= n;
+  const n = SHELF.length, cur = Math.round(ring.target), at = ((cur % n) + n) % n;
+  let d = ((i - at) % n + n) % n; if (d > n / 2) d -= n;
   return cur + d;
 }
 function ringTick() {
@@ -288,6 +280,9 @@ function ringTick() {
     c.style.zIndex = String(p.zi);
     c.style.pointerEvents = p.pe;
   });
+  const hide = Math.max(0, 1 - ring.mix * 2.5);
+  ring.ui.front.style.opacity = ring.ui.bar.style.opacity = hide.toFixed(2);
+  ring.ui.front.style.pointerEvents = ring.ui.bar.style.pointerEvents = hide < .5 ? 'none' : '';
   ring.drawn = ring.pos; ring.mixDrawn = ring.mix; ring.W = W;
   const f = ((Math.round(ring.pos) % n) + n) % n;
   if (f !== ring.front) ringFront(f);
@@ -299,7 +294,7 @@ function ringFront(f) {
   ring.cards.forEach((card, i) => { card.classList.toggle('is-front', i === f); card.setAttribute('aria-selected', String(i === f)); });
   u.wrap.setAttribute('aria-activedescendant', '');
   u.cat.replaceChildren(sign(c.id, c.name)); u.catSub.textContent = c.sub;
-  u.fName.textContent = it.name; u.fDesc.textContent = `${it.sub}. ${it.desc.split('\n')[0]}`; // 무료 조건 같은 핵심이 sub에 있다
+  u.fName.textContent = it.name; u.fDesc.textContent = it.desc ? `${it.sub}. ${it.desc.split('\n')[0]}` : it.sub; // 무료 조건 같은 핵심이 sub에 있다
   u.count.querySelectorAll('.ring-dot').forEach((d, i) => { d.classList.toggle('on', i === f); d.setAttribute('aria-selected', String(i === f)); });
   selectTab(it.cat);
   if (window.gsap && !REDUCED) gsap.fromTo([u.fName, u.fDesc], { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: .3, stagger: .05, ease: 'back.out(2)' });
@@ -357,7 +352,7 @@ function unpeek() {
 addEventListener('scroll', () => { if (peekFor) unpeek(); }, { passive: true }); // 진열대가 돌면 칸이 움직이니 닫는다
 function renderExtras() {
   const soon = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('soon', T('extras.soonTitle'))), el('p', { text: T('extras.soonSub') })]),
-    el('div', { class: 'grid' }, ITEMS.filter(i => i.soon).map(it => makeCard(it)))]);
+    el('div', { class: 'grid' }, ITEMS.filter(i => i.soon && !i.hidden).map(it => makeCard(it)))]);
   const hall = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('hall', T('extras.hallTitle'))), el('p', { text: T('extras.hallSub') })])]);
   $('#extras').replaceChildren(soon, hall);
   renderHall(hall);
@@ -407,7 +402,7 @@ function openDetail(it, prev) {
   $('#detail-say').textContent = '';
   $('#detail-cat').textContent = CATS.find(c => c.id === it.cat).name;
   $('#detail-title').textContent = it.name;
-  $('#detail-desc').textContent = it.desc;
+  $('#detail-desc').textContent = it.desc; $('#detail-desc').hidden = !it.desc;
   detail.style.setProperty('--c', it.c);
   $('#detail-icon').replaceChildren(icon(it.icon));
   const body = $('#detail-body'); body.replaceChildren();
@@ -488,10 +483,10 @@ function chips(options, current, onPick) {
 /* ── 시간 드래그: 끄는 중에는 올라가는 단계 경계마다 잠깐 걸렸다가 손 간 곳까지 이어 간다 ──
    누르기·키보드는 바로 간다. value는 지금 보이는 값, target은 손이 가 있는 값.
    담기 직전에는 flush()로 target을 바로 확정한다. */
-function timeBar(body, { steps, min, max, scale, fmt, onChange, start, card }) {
+function timeBar(body, { steps, min, max, scale, fmt, onChange, start, card, hero }) {
   const toPos = h => scale === 'log' ? Math.log(h / min) / Math.log(max / min) : (h - min) / (max - min);
   const fromPos = p => scale === 'log' ? min * Math.pow(max / min, p) : min + p * (max - min);
-  const bar = el('div', { class: 'timebar' });
+  const bar = el('div', { class: 'timebar' + (hero ? ' hero' : '') }); // hero: 카드 대신 게임 화면을 크게
   const track = el('div', { class: 'tb-track' });
   const fill = el('div', { class: 'tb-fill' });
   const knob = el('div', { class: 'tb-knob', role: 'slider', tabindex: '0', 'aria-valuemin': min, 'aria-valuemax': max, 'aria-label': T('detail.barLabel') });
@@ -520,7 +515,8 @@ function timeBar(body, { steps, min, max, scale, fmt, onChange, start, card }) {
     else { knob.style.left = p + '%'; fill.style.width = p + '%'; }
     const c = card ? card(h) : { head: fmt(h) };
     cHead.textContent = c.head || fmt(h); cTitle.textContent = c.title || ''; cDesc.textContent = c.desc || '';
-    cShot.hidden = !c.shot; if (c.shot && cShot.dataset.src !== c.shot) { cShot.dataset.src = c.shot; cShot.style.backgroundImage = `url(${c.shot})`; }
+    cShot.hidden = !c.shot; if (c.shot && cShot.dataset.src !== c.shot) { cShot.dataset.src = c.shot; cShot.style.backgroundImage = `url(${c.shot})`;
+      if (window.gsap && !REDUCED) gsap.fromTo(cShot, { scale: 1.08, filter: 'brightness(2.2)' }, { scale: 1, filter: 'brightness(1)', duration: .45, ease: 'expo.out' }); }
     // 카드는 손잡이 바로 위. 막대 밖으로 나가지 않게 양 끝에서 멈춘다.
     const bw = bar.clientWidth || 1, cw = cardEl.offsetWidth, x = track.offsetLeft + track.clientWidth * p / 100;
     cardEl.style.left = Math.min(bw - cw, Math.max(0, x - cw / 2)) + 'px';
@@ -596,9 +592,9 @@ const BUILD = {
     const brk = el('p', { class: 'breakdown' });
     const steps = [...new Set(Object.values(TIN_HOURS))].sort((x, y) => x - y);
     if (steps[steps.length - 1] < 80) steps.push(80);
-    timeBar(body, { steps, min: 1, max: 80, scale: 'log', start: state.draft.prev?.hours || 1, fmt: h => h + 'h',
+    timeBar(body, { steps, hero: true, min: 1, max: 80, scale: 'log', start: state.draft.prev?.hours || 1, fmt: h => h + 'h',
       card: h => { const g = gameAt(h), n = g && TIN_HOURS[g.id];
-        return { head: T('detail.gameHead', { 시간: h }), title: !g ? '' : T(n === h ? 'detail.gameExact' : 'detail.gameMore', { 게임: g.name, 걸린: n }), desc: g?.blurb, shot: g?.shots?.[0] }; },
+        return { head: T('detail.gameHead', { 시간: h }), title: !g ? '' : T(n === h ? 'detail.gameExact' : 'detail.gameMore', { 게임: g.name, 걸린: n }), shot: g?.shots?.[0] }; },
       onChange: (h, crossed) => {
         const g = gameAt(h), n = g && TIN_HOURS[g.id];
         const line = T(!g ? 'hours' : n === h ? 'hoursExact' : 'hoursMore', { 시간: h, 게임: g?.name, 걸린: n });
@@ -718,22 +714,41 @@ $('#detail-buy').onclick = e => {
     Object.assign(state.editing, entry); say(T('edited'));
   }
   else { state.cart.push({ key: ++seq, ...entry }); say(T('added')); }
-  flyCoin(e.currentTarget);
+  const fresh = !state.editing && state.cart[state.cart.length - 1];
   renderCart();
+  if (fresh) flyIn(fresh, e.currentTarget);
   closeDetail();
 };
-function flyCoin(from) {
-  if (!window.gsap || REDUCED) return;
-  const a = from.getBoundingClientRect(), b = $('#btn-order').getBoundingClientRect();
+// 담은 상품 그림이 버튼에서 포물선을 그리며 아래 더미로 날아가 떨어진다
+function flyIn(c, from) {
+  const li = $(`#cart-list li[data-key="${c.key}"]`), pic = li?.querySelector('img');
+  if (!pic || !window.gsap || REDUCED) return;
+  const a = from.getBoundingClientRect(), b = pic.getBoundingClientRect();
+  const dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2);
+  const o = { t: 0 }, lift = Math.min(260, Math.abs(dy) * .6 + 120);
+  gsap.set(pic, { x: dx, y: dy, scale: 1.8, rotation: -40, zIndex: 60 });
+  gsap.timeline()
+    .to(o, { t: 1, duration: .75, ease: 'power1.in', onUpdate: () => { const t = o.t;
+      gsap.set(pic, { x: dx * (1 - t), y: dy * (1 - t) - Math.sin(t * Math.PI) * lift, scale: 1.8 - .8 * t, rotation: -40 + 400 * t }); } })
+    .to(pic, { scaleX: 1.35, scaleY: .65, duration: .07 }) // 떨어져 찌그러졌다
+    .to(pic, { scaleX: 1, scaleY: 1, rotation: 0, duration: .5, ease: 'elastic.out(1,.35)' })
+    .add(() => { gsap.set(pic, { clearProps: 'zIndex' }); burst(pic); }, '<');
+  // 더미 전체가 받는 충격으로 한 번 출렁인다
+  gsap.fromTo('#cart-list li:not([data-key="' + c.key + '"]) img', { y: 0 }, { y: -6, duration: .08, yoyo: true, repeat: 1, delay: .76, stagger: .01 });
+  gsap.fromTo('#btn-order', { scale: 1 }, { scale: 1.15, duration: .12, yoyo: true, repeat: 1, delay: .8 });
+}
+function burst(n) {
+  const r = n.getBoundingClientRect();
   for (let i = 0; i < 5; i++) {
-    const c = img(`mote_${1 + (i % 4)}`, 'fly'); c.loading = 'eager'; document.body.append(c); // 담은 것이 장바구니로 날아간다
-    gsap.set(c, { left: a.left + a.width / 2, top: a.top });
-    gsap.timeline({ onComplete: () => c.remove() })
-      .to(c, { left: b.left + 30 + gsap.utils.random(-20, 20), duration: .7, ease: 'power1.inOut', delay: i * .06 })
-      .to(c, { top: a.top - 120 - i * 10, duration: .3, ease: 'power2.out' }, `<`)
-      .to(c, { top: b.top, duration: .4, ease: 'power2.in' }, `>-.02`);
+    const m = img(`mote_${1 + (i % 4)}`, 'fly'); m.loading = 'eager'; document.body.append(m);
+    gsap.set(m, { left: r.left + r.width / 2, top: r.top + r.height / 2, scale: gsap.utils.random(.4, .8) });
+    gsap.to(m, { x: gsap.utils.random(-70, 70), y: gsap.utils.random(-60, -10), opacity: 0, rotation: gsap.utils.random(-120, 120), duration: .6, ease: 'power2.out', onComplete: () => m.remove() });
   }
-  gsap.fromTo('#btn-order', { scale: 1 }, { scale: 1.15, duration: .12, yoyo: true, repeat: 1, delay: .9 });
+}
+// 더미 속 자리: 바닥부터 한 줄에 몇 개씩 엇갈려 쌓인다(같은 칸은 늘 같은 자리)
+function pileSpot(i) {
+  const cols = 5, row = Math.floor(i / cols), col = i % cols, j = ((i * 53) % 11) - 5;
+  return { x: (col + .5 + (row % 2) * .5) / (cols + .5) * 100 + j * .5, y: row * 22 + Math.abs(j), r: ((i * 37) % 31) - 15 };
 }
 
 /* ── 장바구니 (새로고침해도 남게 localStorage에 둔다) ── */
@@ -758,11 +773,13 @@ function removeFromCart(c) {
 }
 function renderCart() {
   const list = $('#cart-list'); list.replaceChildren();
-  if (!state.cart.length) list.append(el('li', { class: 'cart-empty', style: 'border:0;background:none', text: T('cart.empty') }));
-  for (const c of state.cart) list.append(el('li', {}, [
-    el('button', { class: 'cart-open', title: T(c.item.kind === 'dm' ? 'cart.seeOrder' : 'cart.edit'), onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
-      el('small', { text: ` ${c.item.kind === 'quote' ? T('cart.quote') : won(priced(c))}` })]),
-    el('button', { 'aria-label': T('cart.remove', { 이름: c.item.name }), text: '✕', onclick: () => removeFromCart(c) })]));
+  list.classList.toggle('empty', !state.cart.length);
+  if (!state.cart.length) list.append(el('li', { class: 'cart-empty', text: T('cart.empty') }));
+  // 담은 것은 목록이 아니라 더미로 쌓인다. 그림을 누르면 고치고, 주문하기를 누르면 주문서에서 다 볼 수 있다
+  state.cart.forEach((c, i) => { const p = pileSpot(i);
+    const label = `${c.item.name}${c.sum ? ` ${c.sum}` : ''} · ${c.item.kind === 'quote' ? T('cart.quote') : won(priced(c))}`;
+    list.append(el('li', { 'data-key': c.key, style: `left:${p.x}%;bottom:${p.y}px;--r:${p.r}deg;z-index:${10 + i}` }, [
+      el('button', { class: 'cart-open', title: label, 'aria-label': label, onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, icon(c.item.icon))])); });
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
   $('#cart-total').textContent = won(total);
   $('#btn-order').disabled = !state.cart.length;
@@ -933,6 +950,25 @@ $('.doodles').replaceChildren(...DOODLES.map(([n, x, y, r]) => { const d = img(`
 { const L = $('#loader img'); if (L && !REDUCED) [2, 3].forEach((n, i) => setTimeout(() => { L.src = IMG(`load_${n}`); }, 220 * (i + 1))); }
 
 /* ── 시작 ── */
+// 간판을 누르면 찌그러졌다 튕기며 한마디. 빨리 다섯 번 누르면 입이 문다
+{ const sg = $('.sign'); let hits = 0, ht = null;
+  sg.addEventListener('click', e => {
+    hits++; clearTimeout(ht); ht = setTimeout(() => { hits = 0; }, 1200);
+    if (hits >= 5) { hits = 0; say(T('signBite')); chompThen(() => {}); return; }
+    say(T('signPoke'));
+    if (!window.gsap || REDUCED) return;
+    gsap.timeline().to(sg, { scaleX: 1.25, scaleY: .72, rotate: -10, duration: .08 })
+      .to(sg, { scaleX: .9, scaleY: 1.15, rotate: 4, duration: .1 })
+      .to(sg, { scaleX: 1, scaleY: 1, rotate: -3, duration: .7, ease: 'elastic.out(1,.3)' });
+    const r = sg.getBoundingClientRect();
+    for (let i = 0; i < 7; i++) {
+      const m = img(`mote_${1 + (i % 4)}`, 'fly'); m.loading = 'eager'; document.body.append(m);
+      gsap.set(m, { left: e.clientX, top: e.clientY, scale: gsap.utils.random(.5, 1) });
+      gsap.to(m, { x: gsap.utils.random(-140, 140), y: gsap.utils.random(-120, 60), rotation: gsap.utils.random(-180, 180), opacity: 0, duration: gsap.utils.random(.6, 1.1), ease: 'power2.out', onComplete: () => m.remove() });
+    }
+  }); }
+{ const b = $('#calm'); b.textContent = T(REDUCED ? 'page.calmOff' : 'page.calmOn');
+  b.onclick = () => { try { localStorage.setItem(CALM_KEY, REDUCED ? '0' : '1'); } catch {} location.reload(); }; }
 // index.html에 적힌 글도 여기서 바꿔 끼운다(data-t: 글, data-t-alt: 그림 설명, data-t-label: 읽어 주는 이름, data-t-ph: 흐린 글)
 { const put = (sel, f) => document.querySelectorAll(sel).forEach(n => { const k = n.getAttribute(sel.slice(1, -1)), v = T(k); if (v) f(n, v); });
   put('[data-t]', (n, v) => { n.textContent = v; }); put('[data-t-alt]', (n, v) => { n.alt = v; });

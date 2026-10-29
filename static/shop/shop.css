@@ -240,9 +240,8 @@ textarea{min-height:120px;resize:vertical}
 @media (max-width:380px){
   .card-price small{display:none}
 }
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-}
+/* 움직임 줄이기(가게 안 단추로 켠다) */
+html.calm *,html.calm *::before,html.calm *::after{animation:none!important;transition:none!important}
 
 /* ── 도는 진열대(원통). 스크롤하는 동안 이 판이 화면에 고정되고 원통만 돈다 ── */
 .scene{inset:-24px}
@@ -338,7 +337,7 @@ html.locked{overscroll-behavior:none}
 .loader{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--wall);pointer-events:none;animation:loader-out .4s 1.1s forwards}
 .loader img{width:min(60vw,300px);height:auto}
 @keyframes loader-out{to{opacity:0;visibility:hidden}}
-@media (prefers-reduced-motion:reduce){.loader{display:none}}
+html.calm .loader{display:none}
 
 /* 팻말: 글자가 그림이다 */
 .sign-img{display:block;width:auto;height:56px;max-width:100%}
@@ -439,3 +438,31 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .stage.spreading .ring{cursor:auto}
 .stage.spreading .ring-dots,.stage.spreading .ring-nav{visibility:hidden} /* 다 펼쳐 보일 땐 위치 줄이 필요 없다 */
 .note a{color:var(--mint)}
+
+/* 움직임 줄이기 단추: 왼쪽 위 홈 글 옆에 작게 */
+.calm-toggle{background:none;border:0;color:var(--muted);font:15px var(--body);text-decoration:underline dotted;cursor:pointer;padding:2px 6px;margin-left:8px}
+.calm-toggle:hover{color:var(--cream)}
+
+/* 게임 제작 시간 막대: 게임 화면이 주인공. 막대 위를 꽉 채우고 제목만 위에 얹는다 */
+.timebar.hero{padding-top:calc(56.25% + 22px)}
+.timebar.hero .tb-card{left:0!important;width:100%;max-height:none;min-height:0;padding:0;display:block;overflow:hidden;background:#000;border-radius:14px}
+.timebar.hero .tc-shot{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:0}
+.timebar.hero .tb-card>div:last-child{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 10px;background:linear-gradient(transparent,rgba(10,8,6,.85));color:var(--cream);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.timebar.hero .tc-head{font-size:30px;color:var(--yellow)}
+.timebar.hero .tc-title{font-size:18px}
+.timebar.hero .tc-desc{display:none}
+
+/* 간판은 눌러 볼 수 있다 */
+.sign{cursor:pointer}
+
+/* 장바구니: 목록 대신 담은 상품 그림이 쌓이는 더미 */
+.cart-list{position:relative;flex:1;height:64px;overflow:visible;display:block;padding:0;margin:-30px 0 0}
+.cart-list li{position:absolute;transform:translateX(-50%) rotate(var(--r,0deg));background:none;border:0;padding:0;margin:0}
+.cart-list li .cart-open{display:block;width:60px;height:60px;padding:0;background:none;border:0;cursor:pointer}
+.cart-list li .cart-open img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 0 var(--ink));transition:transform .15s}
+.cart-list li .cart-open:hover img{transform:translateY(-8px) scale(1.12) rotate(6deg)}
+.cart-list .cart-empty{position:static;transform:none;color:#7c3338;font-size:16px;padding-top:34px}
+@media (max-width:640px){
+  .cart-list{order:0;flex-basis:auto;height:50px;margin-top:-24px}
+  .cart-list li .cart-open{width:46px;height:46px}
+}
