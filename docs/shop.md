@@ -133,3 +133,15 @@ UI 참조(트릭컬, 엔터 더 건전, 스매시 얼티밋, 음식점 키오스
 - **BMC 연동**: developers.buymeacoffee.com(옛 API)에는 "더 이상 관리하지 않음" 표시가 붙었고, 웹후크로 옮기라고 안내한다. 웹후크는 BMC가 우리 주소로 POST를 보내는 방식이라 정적 사이트(GitHub Pages)로는 받을 수 없고, 받는 서버가 따로 있어야 한다. 옛 API에서 토큰이 아직 발급되면 지금 워크플로가 그대로 돈다. BMC 웹후크 수신은 All Tomorrow 콘솔에 준비돼 있고(확인 대기 → "이 후원으로 채우기"), 공개 주소는 사용자 확인 뒤에 켠다. `supporters.yml`(옛 API 워크플로)은 저장소에 올리지 않았다.
 - **글 읽어주기 단가 확정**: 지금은 시범가 4단계다.
 - **배포 전 확인**: 휴대폰 화면, 디스코드 실제 주문 전송 시험 한 번.
+
+## 신탁 점술 답
+
+「신탁」 상품 창을 열 때마다 말풍선에 점술 답이 하나씩 무작위로 나온다. 문장은 `dialogue.js`의 `oracle` 목록에 있다(185줄).
+- 출처: Caroline Gilman 『Oracles from the Poets』(1844, Project Gutenberg #47200, 공유 저작물), bmc/fortunes(CC BY 4.0).
+- 영어 원문을 Antigravity(gemini-3.8-flash-medium)가 번역했다. 출처 표기는 신탁 상품 창 아래에 있다.
+- 쓰지 않은 자료와 이유
+  - A-kirami/answersbook: GPL-3.0이라 상점 파일까지 GPL이 된다.
+  - fortune-cookie-quotes: 라이선스 표시가 없다.
+  - 나폴레옹 운명서(Wikisource): 공개된 쪽에 답 본문이 없다.
+  - 꿈 해몽 사전(Gutenberg #53879): 무작위 답에 맞지 않는다.
+- 상스러운 말, 특정 인물 비방, 컴퓨터 농담은 번역 전에 뺐다. 번역기가 말장난이라 뜻이 안 산다고 버린 2줄도 뺐다.

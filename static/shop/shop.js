@@ -520,7 +520,7 @@ function openDetail(it, prev) {
   detail.setAttribute('aria-hidden', 'false'); document.documentElement.classList.add('locked');
   BACKDROP.forEach(q => { $(q).inert = true; });
   $('.detail-panel').scrollTop = 0;
-  say(prev ? (prev.sum ? T('editingNow', { 지금: prev.sum }) : T('editing')) : T(`item.${it.id}`));
+  say(prev ? (prev.sum ? T('editingNow', { 지금: prev.sum }) : T('editing')) : it.id === 'oracle' ? T('oracle') : T(`item.${it.id}`)); // 신탁은 열 때마다 점술 답 하나
   if (window.gsap && !REDUCED) {
     gsap.fromTo('.detail-slash', { opacity: 0 }, { opacity: 1, duration: .25 });
     gsap.fromTo('.detail-panel', { xPercent: 100, skewX: -8 }, { xPercent: 0, skewX: 0, duration: .5, ease: 'expo.out' });
@@ -747,6 +747,8 @@ const BUILD = {
         o => { state.draft.amount = o.id; input.value = o.id; updatePrice(); }),
       el('p', { class: 'note', style: 'margin:10px 0 6px', text: '직접 입력' }), input]));
     noteField(body, '물어볼 것', '고민, 자동화하고 싶은 업무, 무엇이든');
+    // 말풍선 점술 답의 출처(CC BY 4.0은 출처를 보이는 곳에 밝혀야 한다)
+    body.append(el('p', { class: 'note' }, ['말풍선 점술 답 출처: C. Gilman 『Oracles from the Poets』(공유 저작물), ', el('a', { href: 'https://github.com/bmc/fortunes', target: '_blank', rel: 'noopener', text: 'bmc/fortunes' }), ' (CC BY 4.0) 번역']));
   },
   dm(body) {
     body.append(el('div', { class: 'box' }, [el('h3', { text: '무료 조건' }), el('p', { style: 'margin:0', id: 'dm-free' })]),
