@@ -426,3 +426,15 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
   .ring-dot{width:26px;height:26px}
   .ring-spread{font-size:18px;padding:5px 12px}
 }
+
+/* 한눈에 보기(2안): 원통의 칸이 그대로 펼쳐진다. 따로 뜨던 목록판은 없앴다 */
+.stage.spreading .ring{visibility:visible}
+.stage.spreading .front{visibility:hidden}
+.ring .tongue{transition:opacity .3s}
+.stage.spreading .ring .tongue{opacity:0}
+.stage.spreading .ring .card .card-price{opacity:1;transform:none;margin:-6px auto 0;width:92%}
+.stage.spreading .ring .card .badge{opacity:1}
+.stage.spreading .ring .card .card-name{color:var(--cream);border-color:var(--cream)}
+.stage.spreading .ring .card:hover .card-name{color:var(--yellow);border-color:var(--yellow)}
+.stage.spreading .ring{cursor:auto}
+.stage.spreading .ring-dots,.stage.spreading .ring-nav{visibility:hidden} /* 다 펼쳐 보일 땐 위치 줄이 필요 없다 */

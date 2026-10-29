@@ -84,6 +84,16 @@ const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, phy
 /* ── 그림: art/의 원본을 투명 여백만 잘라 img/*.webp로 둔다 ── */
 const IMG = k => `img/${k}.webp`;
 const SLOTS = ['ui_slot', 'ui_slot_pink', 'ui_slot_yellow', 'ui_slot_blue'];
+// 상품 아이콘. 프레임 그림(<이름>_f1~3)이 있으면 아래 FRAMED에 이름을 더해 움직이게 한다
+const icon = (k, cls = '') => { const m = img(k, cls); m.dataset.icon = k; return m; };
+const FRAMED = new Set([]);
+if (!REDUCED) {
+  const SEQ = [1, 2, 3, 2]; let tick = 0; // 1초에 7장쯤, 칸마다 박자를 어긋나게
+  setInterval(() => {
+    if (!FRAMED.size || document.hidden) return; tick++;
+    document.querySelectorAll('img[data-icon]').forEach((m, j) => { const k = m.dataset.icon; if (FRAMED.has(k)) m.src = IMG(`${k}_f${SEQ[(tick + j) % 4]}`); });
+  }, 140);
+}
 const sign = (k, text) => el('img', { src: IMG(`sign_${k}`), alt: text, class: 'sign-img' });
 const img = (k, cls = '') => el('img', { src: IMG(k), alt: '', class: cls, loading: 'lazy', decoding: 'async' });
 
@@ -200,7 +210,7 @@ function say(text) {
    끌어도 돌고, 옆 칸을 누르면 그 칸이 앞으로 오고, 앞에 온 칸을 누르면 열린다.
    ScrollTrigger가 없으면 예전처럼 범주별 격자로 보여 준다. */
 const SHELF = CATS.flatMap(c => ITEMS.filter(i => i.cat === c.id && !i.soon));
-const ring = { pos: 0, target: 0, lap: 0, cards: [], st: null, front: -1, vel: 0 }; // lap: 끝에서 처음으로 넘어간 바퀴 수×n
+const ring = { pos: 0, target: 0, lap: 0, mix: 0, cards: [], st: null, front: -1, vel: 0 }; // lap: 끝에서 처음으로 넘어간 바퀴 수×n
 function selectTab(id) {
   state.cat = id;
   $('#rail').querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.cat === id)));
@@ -231,7 +241,7 @@ function renderRing() {
   const shelf = $('#shelf'); shelf.replaceChildren();
   const wrap = el('div', { class: 'ring', role: 'listbox', 'aria-label': '상품 (←/→로 돌리기)', tabindex: '0' });
   ring.cards = SHELF.map((it, i) => {
-    const c = makeCard(it, () => { if (ring.moved) return; if (i === ring.front) chompThen(() => openDetail(it)); else ringGo(nearest(i)); });
+    const c = makeCard(it, () => { if (ring.moved) return; if (ring.spread) return pickSpread(i); if (i === ring.front) chompThen(() => openDetail(it)); else ringGo(nearest(i)); });
     c.setAttribute('role', 'option'); c.tabIndex = -1; wrap.append(c); return c;
   });
   wrap.prepend(img('stage_tongue', 'tongue')); // 앞에 온 칸이 올라서는 혀
@@ -240,7 +250,7 @@ function renderRing() {
   const fBtn = el('button', { class: 'btn-buy pic front-open', 'aria-label': '열어 보기', text: '열어 보기', onclick: () => chompThen(() => openDetail(SHELF[Math.max(0, ring.front)])) });
   // 위치는 숫자 대신 상품 그림 줄로 보여 준다. 누르면 그 상품으로 돈다
   const count = el('div', { class: 'ring-dots', role: 'tablist', 'aria-label': '상품 고르기' }, SHELF.map((it, i) =>
-    el('button', { class: 'ring-dot', 'aria-label': it.name, title: it.name, onclick: () => ringGo(nearest(i)) }, img(it.icon))));
+    el('button', { class: 'ring-dot', 'aria-label': it.name, title: it.name, onclick: () => ringGo(nearest(i)) }, icon(it.icon))));
   const spread = el('button', { class: 'ring-spread', 'aria-expanded': 'false', text: '한눈에 보기', onclick: () => toggleSpread() });
   const prev = el('button', { class: 'ring-nav', 'aria-label': '이전 상품', text: '◀', onclick: () => ringGo(ring.front - 1) });
   const next = el('button', { class: 'ring-nav', 'aria-label': '다음 상품', text: '▶', onclick: () => ringGo(ring.front + 1) });
@@ -249,10 +259,9 @@ function renderRing() {
     wrap,
     el('div', { class: 'front' }, [el('div', { class: 'front-text' }, [fName, fDesc]), fBtn]),
     el('div', { class: 'ring-bar' }, [prev, count, next, spread]),
-    buildSpread(),
   ]);
   shelf.append(stage);
-  ring.ui = { cat, catSub, fName, fDesc, count, wrap, spread, stage };
+  ring.ui = { cat, catSub, fName, fDesc, count, wrap, spread, stage, front: stage.querySelector('.front') };
 
   const n = SHELF.length;
   ring.st = ScrollTrigger.create({ trigger: stage, start: 'top top', end: () => '+=' + Math.round((n - 1) * innerHeight * .42), pin: true, pinSpacing: true,
@@ -268,7 +277,7 @@ function renderRing() {
     setTimeout(() => { ring.moved = false; }, 0); // 놓을 때 생기는 click이 칸을 열지 않게
   };
   wrap.addEventListener('dragstart', e => e.preventDefault()); // 그림을 끌어 가 버리면 놓은 걸 못 듣는다
-  wrap.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = true; ring.moved = false; sx = e.clientX; t0 = ring.target; });
+  wrap.addEventListener('pointerdown', e => { if (e.button !== 0 || ring.spread) return; down = true; ring.moved = false; sx = e.clientX; t0 = ring.target; });
   wrap.addEventListener('pointermove', e => {
     if (!down) return;
     if (e.pointerType === 'mouse' && !(e.buttons & 1)) return end(); // 창 밖에서 놓고 들어온 경우
@@ -291,21 +300,40 @@ function renderRing() {
 }
 // i: 이번 바퀴 안에서의 칸 번호. 11번째 다음(n)이나 1번째 앞(-1)이면 바퀴를 넘기고 스크롤을 반대쪽 끝으로 옮긴다.
 // 화면은 고정돼 있어 스크롤이 튀어도 보이지 않고, 원통은 한 칸만 돈다.
-function buildSpread() {
-  const grid = el('div', { class: 'spread', hidden: true }, CATS.map(c => el('section', { class: 'spread-cat' }, [
-    el('h3', {}, sign(c.id, c.name)),
-    el('div', { class: 'spread-row' }, SHELF.map((it, i) => it.cat !== c.id ? null : el('button', { class: 'spread-item', onclick: () => { toggleSpread(false); ringGo(nearest(i)); setTimeout(() => chompThen(() => openDetail(it)), REDUCED ? 0 : 350); } }, [
-      img(it.icon), el('b', { text: it.name }), el('small', { text: it.priceText })]))),
-  ])));
-  ring.spreadEl = grid;
-  return grid;
-}
-function toggleSpread(on = ring.spreadEl.hidden) {
-  const g = ring.spreadEl, u = ring.ui;
+// 한눈에 보기: 원통의 칸들이 그대로 날아가 판에 펼쳐지고, 접으면 원통 제자리로 돌아간다.
+// ring.mix는 0(원통)~1(펼침). 칸마다 조금씩 늦게 출발해 차례로 날아간다.
+function toggleSpread(on = !ring.spread, then) {
+  const u = ring.ui;
+  ring.spread = on;
   u.stage.classList.toggle('spreading', on); u.spread.setAttribute('aria-expanded', String(on));
   u.spread.textContent = on ? '돌려 보기' : '한눈에 보기';
-  g.hidden = !on;
-  if (on && window.gsap && !REDUCED) gsap.from(g.querySelectorAll('.spread-item'), { scale: .4, rotate: () => gsap.utils.random(-25, 25), opacity: 0, y: 40, duration: .45, stagger: { each: .03, from: 'center' }, ease: 'back.out(1.7)' });
+  document.documentElement.classList.toggle('locked', on); // 펼친 동안 스크롤로 원통이 돌지 않게
+  if (on) ring.layout = spreadLayout();
+  gsap.killTweensOf(ring, 'mix');
+  gsap.to(ring, { mix: on ? 1 : 0, duration: REDUCED ? 0 : .75, ease: 'power3.inOut', onComplete: then });
+  say(on ? T('spread') : T(`cat.${state.cat}`));
+}
+// 펼친 판에서 하나 고르면: 그 칸이 앞에 오게 원통을 맞춰 두고 접은 뒤 연다
+function pickSpread(i) {
+  ringGo(nearest(i), true); ring.pos = ring.target;
+  toggleSpread(false, () => chompThen(() => openDetail(SHELF[i])));
+}
+// 칸 크기에 맞춰 가장 크게 보이는 열 수를 고른다. 아래 설명판 자리까지 쓴다
+function spreadLayout() {
+  const u = ring.ui, n = ring.cards.length, W = u.wrap.clientWidth;
+  const cw = ring.cards[0].offsetWidth, ch = ring.cards[0].offsetHeight * 1.12 + 30; // 펼치면 이름표·가격표가 다 보여서 칸이 조금 길어진다
+  const top = 6, H = u.wrap.clientHeight + u.front.offsetHeight - 6, oy = u.wrap.clientHeight * .52;
+  let best = { s: 0 };
+  for (let cols = 3; cols <= 6; cols++) {
+    const rows = Math.ceil(n / cols), s = Math.min(1, W / cols / cw * .94, H / rows / ch * .96);
+    if (s > best.s) best = { s, cols, rows };
+  }
+  const cellW = W / best.cols, cellH = H / best.rows;
+  return ring.cards.map((c, i) => {
+    const row = Math.floor(i / best.cols), inRow = Math.min(best.cols, n - row * best.cols), col = i % best.cols;
+    const x = (col - (inRow - 1) / 2) * cellW, y = top + cellH * (row + .5) - oy;
+    return { x, y, z: 0, ry: 0, rz: ((i * 37) % 7 - 3) * .8, sc: best.s, op: 1, br: 1, zi: 60, pe: '' };
+  });
 }
 function ringGo(i, now) {
   const n = SHELF.length;
@@ -325,24 +353,33 @@ function nearest(i) {
 function ringTick() {
   const n = ring.cards.length; if (!n) return;
   // 멈춰 있으면 다시 그리지 않는다(앞 칸의 둥실거림은 CSS가 한다)
-  if (ring.pos === ring.target && Math.abs(ring.vel) < 1e-4 && ring.drawn === ring.pos && ring.W === ring.ui.wrap.clientWidth) return;
+  if (ring.pos === ring.target && Math.abs(ring.vel) < 1e-4 && ring.drawn === ring.pos && ring.mixDrawn === ring.mix && ring.W === ring.ui.wrap.clientWidth) return;
   const before = ring.pos;
   ring.pos += (ring.target - ring.pos) * (REDUCED ? 1 : .12);
   if (Math.abs(ring.target - ring.pos) < .0005) ring.pos = ring.target;
   ring.vel = ring.vel * .8 + (ring.pos - before) * .2;
   // 반쯤 보이는 원통: 앞 칸은 크게, 옆 칸은 비스듬히 물러나고, 너무 뒤로 간 칸은 사라진다
   const W = ring.ui.wrap.clientWidth, Rx = W * .52, Rz = 760, step = .82;
+  if (ring.mix > 0 && ring.layoutW !== W) { ring.layout = spreadLayout(); ring.layoutW = W; }
   ring.cards.forEach((c, i) => {
     let d = ((i - ring.pos) % n + n) % n; if (d > n / 2) d -= n; // 원통이라 뒤쪽 칸은 왼편으로 돌아 나온다
     const a = Math.max(-2.4, Math.min(2.4, d * step)), depth = (1 - Math.cos(a)) / 2; // 0 = 맨 앞, 1 = 맨 뒤
-    const x = Math.sin(a) * Rx, z = (Math.cos(a) - 1) * Rz + 0, pop = 1 + (1 - Math.min(1, Math.abs(d))) * .32; // 앞에 오면 크게 튀어나온다
-    c.style.transform = `translate(-50%,-50%) translate3d(${x.toFixed(1)}px,${(-depth * 70).toFixed(1)}px,${z.toFixed(1)}px) rotateY(${(a * .55).toFixed(3)}rad) rotateZ(${(-ring.vel * 40).toFixed(2)}deg) scale(${pop.toFixed(3)})`;
-    c.style.opacity = Math.max(0, Math.min(1 - depth * .7, 3.2 - Math.abs(d))).toFixed(3);
-    c.style.filter = depth > .02 ? `brightness(${(1 - depth * .55).toFixed(2)})` : '';
-    c.style.zIndex = String(100 - Math.round(depth * 100));
-    c.style.pointerEvents = Math.abs(d) > 2.5 ? 'none' : '';
+    let p = { x: Math.sin(a) * Rx, y: -depth * 70, z: (Math.cos(a) - 1) * Rz, ry: a * .55, rz: -ring.vel * 40,
+      sc: 1 + (1 - Math.min(1, Math.abs(d))) * .32, // 앞에 오면 크게 튀어나온다
+      op: Math.max(0, Math.min(1 - depth * .7, 3.2 - Math.abs(d))), br: 1 - depth * .55, zi: 100 - Math.round(depth * 100), pe: Math.abs(d) > 2.5 ? 'none' : '' };
+    if (ring.mix > 0 && ring.layout) {
+      const k = Math.max(0, Math.min(1, ring.mix * 1.5 - i / n * .5)), q = ring.layout[i], L = (u, v) => u + (v - u) * k; // 칸마다 조금씩 늦게
+      const lift = Math.sin(k * Math.PI) * -60; // 날아가는 동안 위로 붕 떴다 내려앉는다
+      p = { x: L(p.x, q.x), y: L(p.y, q.y) + lift, z: L(p.z, q.z) + Math.sin(k * Math.PI) * 120, ry: L(p.ry, q.ry) + Math.sin(k * Math.PI) * .6, rz: L(p.rz, q.rz), sc: L(p.sc, q.sc),
+        op: L(p.op, q.op), br: L(p.br, q.br), zi: k > .5 ? q.zi : p.zi, pe: k > .5 ? q.pe : p.pe };
+    }
+    c.style.transform = `translate(-50%,-50%) translate3d(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px,${p.z.toFixed(1)}px) rotateY(${p.ry.toFixed(3)}rad) rotateZ(${p.rz.toFixed(2)}deg) scale(${p.sc.toFixed(3)})`;
+    c.style.opacity = p.op.toFixed(3);
+    c.style.filter = p.br < .99 ? `brightness(${p.br.toFixed(2)})` : '';
+    c.style.zIndex = String(p.zi);
+    c.style.pointerEvents = p.pe;
   });
-  ring.drawn = ring.pos; ring.W = W;
+  ring.drawn = ring.pos; ring.mixDrawn = ring.mix; ring.W = W;
   const f = ((Math.round(ring.pos) % n) + n) % n;
   if (f !== ring.front) ringFront(f);
 }
@@ -364,7 +401,7 @@ function makeCard(it, onPick) {
     onclick: () => it.soon ? (say(T('soonItem', { 이름: it.name })), wiggle(card)) : onPick ? onPick() : openDetail(it) }, [
     it.badge ? el('span', { class: 'badge ' + (it.badge[1] || ''), text: it.badge[0] }) : null,
     it.soon ? el('span', { class: 'stamp', text: '입고 예정' }) : null,
-    el('div', { class: 'card-art' }, [img(SLOTS[ITEMS.indexOf(it) % SLOTS.length], 'slot'), img(it.icon, 'icon')]),
+    el('div', { class: 'card-art' }, [img(SLOTS[ITEMS.indexOf(it) % SLOTS.length], 'slot'), icon(it.icon, 'icon')]),
     el('div', { class: 'card-body' }, [el('div', { class: 'card-name', text: it.name }), el('div', { class: 'card-sub', text: it.sub }),
       it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'tag-text', text: it.priceText })])]),
   ]);
@@ -387,7 +424,7 @@ function peek(it, card) {
   const ex = USES[it.id]?.ex.slice(0, 3) || [];
   peekEl.replaceChildren(
     el('div', { class: 'peek-head', text: it.name }),
-    el('div', { class: 'peek-art' + (shot ? ' shot' : ''), style: shot ? `background-image:url(${shot})` : '' }, shot ? null : img(it.icon)),
+    el('div', { class: 'peek-art' + (shot ? ' shot' : ''), style: shot ? `background-image:url(${shot})` : '' }, shot ? null : icon(it.icon)),
     el('div', { class: 'peek-body' }, [
       el('p', { class: 'peek-cat', text: it.soon ? '입고 예정' : CATS.find(c => c.id === it.cat)?.name || '' }),
       el('p', { class: 'peek-sub', text: it.sub }),
@@ -463,7 +500,7 @@ function openDetail(it, prev) {
   $('#detail-title').textContent = it.name;
   $('#detail-desc').textContent = it.desc;
   detail.style.setProperty('--c', it.c);
-  $('#detail-icon').replaceChildren(img(it.icon));
+  $('#detail-icon').replaceChildren(icon(it.icon));
   const body = $('#detail-body'); body.replaceChildren();
   BUILD[it.kind](body, it);
   const uses = it.kind === 'read' ? null : USES[it.id]; // 낭독은 칸이 '읽을 글'이라 예시를 넣으면 값이 바뀐다
