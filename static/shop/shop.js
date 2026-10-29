@@ -85,14 +85,16 @@ const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, phy
 const IMG = k => `img/${k}.webp`;
 const SLOTS = ['ui_slot', 'ui_slot_pink', 'ui_slot_yellow', 'ui_slot_blue'];
 // 상품 아이콘. 프레임 그림(<이름>_f1~3)이 있으면 아래 FRAMED에 이름을 더해 움직이게 한다
-const icon = (k, cls = '') => { const m = img(k, cls); m.dataset.icon = k; return m; };
-const FRAMED = new Set([]);
+const FRAMED = new Set(['game', 'web', 'bot', 'read', 'song', 'oracle', 'research', 'xpost', 'key', 'gear', 'partner', 'face', 'gift', 'setup', 'playtest', 'dice', 'theme']);
+// 움직이는 아이콘은 멈춘 때에도 f1을 쓴다(정지 그림과 크기가 조금 달라 바꿀 때 튀지 않게)
+const icon = (k, cls = '') => { const m = img(FRAMED.has(k) ? `${k}_f1` : k, cls); m.dataset.icon = k; return m; };
 if (!REDUCED) {
   const SEQ = [1, 2, 3, 2]; let tick = 0; // 1초에 7장쯤, 칸마다 박자를 어긋나게
+  FRAMED.forEach(k => [2, 3].forEach(i => { new Image().src = IMG(`${k}_f${i}`); })); // 미리 받아 두어 깜빡이지 않게
   setInterval(() => {
     if (!FRAMED.size || document.hidden) return; tick++;
     document.querySelectorAll('img[data-icon]').forEach((m, j) => { const k = m.dataset.icon; if (FRAMED.has(k)) m.src = IMG(`${k}_f${SEQ[(tick + j) % 4]}`); });
-  }, 140);
+  }, 143);
 }
 const sign = (k, text) => el('img', { src: IMG(`sign_${k}`), alt: text, class: 'sign-img' });
 const img = (k, cls = '') => el('img', { src: IMG(k), alt: '', class: cls, loading: 'lazy', decoding: 'async' });
