@@ -8,12 +8,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dokdo&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="img/ui_bg.webp">
-<link rel="stylesheet" href="shop.css?v=27">
+<link rel="preload" as="image" href="img/bg_upper.webp">
+<link rel="stylesheet" href="shop.css?v=37">
 </head>
 <body>
 <!-- 생물이 벌린 입 속이 가게다. 배경 그림의 어두운 입 안에 진열대가 들어간다. -->
-<div class="scene" aria-hidden="true"></div>
+<!-- 층으로 나눈 그림이라 겹치면 원래 배경 한 장이 된다. 마우스를 따라 층마다 다르게 움직인다. -->
+<div class="scene" aria-hidden="true">
+  <i class="l l-wall"></i><div class="l doodles"></div><i class="l l-green"></i><i class="l l-yellow"></i><i class="l l-lower"></i><i class="l l-upper"></i>
+</div>
+<div class="loader" id="loader" aria-hidden="true"><img src="img/load_1.webp" alt=""></div>
 
 <div class="booth">
   <header class="marquee">
@@ -23,7 +27,6 @@
   </header>
   <section class="counter" aria-label="상점 주인">
     <div class="bubble" role="status" aria-live="polite"><p id="keeper-line"></p></div>
-    <div id="keeper" aria-hidden="true"></div>
   </section>
 </div>
 
@@ -45,7 +48,7 @@
     <p class="detail-say" id="detail-say" role="status" aria-live="polite"></p>
     <div class="detail-body" id="detail-body"></div>
     <div class="detail-foot">
-      <div class="detail-price"><small id="detail-price-label">가격</small><b id="detail-price">0</b><small class="won" id="detail-won"></small></div>
+      <div class="detail-price"><small id="detail-price-label">가격</small><b id="detail-price">0</b></div>
       <button class="btn-buy" id="detail-buy">담기</button>
     </div>
   </div>
@@ -54,14 +57,14 @@
 <footer class="cartbar" id="cartbar">
   <img class="cart-hand" src="img/ui_cart.webp" alt="" width="466" height="284">
   <ul class="cart-list" id="cart-list"></ul>
-  <div class="cart-sum"><small>합계 (후불)</small><b id="cart-total">이빨 0개</b><small class="won" id="cart-won"></small></div>
+  <div class="cart-sum"><small>합계 (후불)</small><b id="cart-total">0원</b></div>
   <button class="btn-order" id="btn-order" disabled>주문하기</button>
 </footer>
 
 <dialog class="checkout" id="checkout">
   <div class="checkout-inner">
     <div class="checkout-top"><p class="receipt-top">주문번호 <b id="order-code"></b></p><button type="button" class="x" id="checkout-close" aria-label="닫기">✕</button></div>
-    <h2>주문서</h2>
+    <h2><img class="sign-img" src="img/sign_order.webp" alt="주문서" width="466" height="169"></h2>
     <div id="order-edit">
       <ul class="order-items" id="order-items"></ul>
       <p class="order-total" id="order-total"></p>
@@ -78,7 +81,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="dialogue.js?v=1"></script>
 <script src="ordername.js?v=2"></script>
-<script src="shop.js?v=42"></script>
+<script src="shop.js?v=50"></script>
 </body>
 </html>

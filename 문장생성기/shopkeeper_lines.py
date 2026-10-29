@@ -8,7 +8,7 @@
   python shopkeeper_lines.py words              # 1단계 요청문(테마별 단어 60개)
   python shopkeeper_lines.py text  답1.json     # 2단계 요청문(초현실 문단)
   python shopkeeper_lines.py split 답2.txt      # 결과 저장 + 말풍선 후보 목록
-  python shopkeeper_lines.py accept 1 4 7       # 고른 후보를 ../static/shop/keeper_lines.json 에 더함
+  python shopkeeper_lines.py accept 1 4 7       # 고른 후보를 ../static/shop/dialogue.js 의 idle 목록에 더함
 """
 import json
 import os
@@ -21,7 +21,7 @@ sys.path.insert(0, HERE)
 import sentence as S  # noqa: E402
 
 RUN = os.path.join(HERE, 'output', 'shopkeeper_run.json')
-SHOP = os.path.join(HERE, '..', 'static', 'shop', 'keeper_lines.json')
+SHOP = os.path.join(HERE, '..', 'static', 'shop', 'dialogue.js')
 MIN_LEN, MAX_LEN = 8, 42  # 말풍선 한 줄(공백 포함)
 
 
@@ -78,17 +78,20 @@ def step_split(text_path):
 
 
 def step_accept(nums):
+    """고른 후보를 dialogue.js의 idle 목록(▼ idle 시작 ~ ▲ idle 끝 사이)에 더한다. 그 밖의 줄은 건드리지 않는다."""
     cands = load_run().get('candidates', [])
-    try:
-        data = json.load(open(SHOP, encoding='utf-8'))
-    except (OSError, json.JSONDecodeError):
-        data = {'lines': []}
+    text = open(SHOP, encoding='utf-8').read()
+    start, end = text.index('// ▼ idle 시작'), text.index('    // ▲ idle 끝')
+    body = text[start:end]
+    have = body
+    added = 0
     for n in nums:
         line = cands[int(n) - 1]
-        if line not in data['lines']:
-            data['lines'].append(line)
-    json.dump(data, open(SHOP, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    return f"keeper_lines.json: {len(data['lines'])}줄"
+        q = "'" + line.replace('\\', '\\\\').replace("'", "\\'") + "'"
+        if q not in have:
+            body += f"    {q},\n"; have += q; added += 1
+    open(SHOP, 'w', encoding='utf-8', newline='\n').write(text[:start] + body + text[end:])
+    return f"dialogue.js idle: {added}줄 더함"
 
 
 if __name__ == '__main__':
