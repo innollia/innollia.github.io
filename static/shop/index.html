@@ -8,24 +8,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dokdo&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shop.css?v=11">
+<link rel="preload" as="image" href="img/ui_bg.webp">
+<link rel="stylesheet" href="shop.css?v=27">
 </head>
 <body>
-<div class="bg-stripes" aria-hidden="true"></div>
+<!-- 생물이 벌린 입 속이 가게다. 배경 그림의 어두운 입 안에 진열대가 들어간다. -->
+<div class="scene" aria-hidden="true"></div>
 
-<header class="marquee">
-  <a class="back" href="/">&lt; 홈-페-지</a>
-  <div class="sign">
-    <span class="sign-small">어서오십쇼! 이길드에!</span>
-    <h1 class="sign-title">봉<span>봉</span>봉</h1>
-    <span class="sign-bulbs" aria-hidden="true"></span>
-  </div>
-</header>
-
-<section class="counter" aria-label="상점 주인">
-  <div id="keeper" aria-hidden="true"></div>
-  <div class="bubble" role="status" aria-live="polite"><p id="keeper-line"></p></div>
-</section>
+<div class="booth">
+  <header class="marquee">
+    <a class="back" href="/">&lt; 홈-페-지</a>
+    <h1 class="sign"><img src="img/ui_sign.webp" alt="봉봉봉" width="466" height="186"></h1>
+    <p class="sign-small">어서오십쇼! 이길드에!</p>
+  </header>
+  <section class="counter" aria-label="상점 주인">
+    <div class="bubble" role="status" aria-live="polite"><p id="keeper-line"></p></div>
+    <div id="keeper" aria-hidden="true"></div>
+  </section>
+</div>
 
 <div class="shop">
   <nav class="rail" id="rail" aria-label="진열대"></nav>
@@ -45,15 +45,16 @@
     <p class="detail-say" id="detail-say" role="status" aria-live="polite"></p>
     <div class="detail-body" id="detail-body"></div>
     <div class="detail-foot">
-      <div class="detail-price"><small id="detail-price-label">가격</small><b id="detail-price">0</b></div>
+      <div class="detail-price"><small id="detail-price-label">가격</small><b id="detail-price">0</b><small class="won" id="detail-won"></small></div>
       <button class="btn-buy" id="detail-buy">담기</button>
     </div>
   </div>
 </aside>
 
 <footer class="cartbar" id="cartbar">
+  <img class="cart-hand" src="img/ui_cart.webp" alt="" width="466" height="284">
   <ul class="cart-list" id="cart-list"></ul>
-  <div class="cart-sum"><small>합계 (후불)</small><b id="cart-total">0원</b></div>
+  <div class="cart-sum"><small>합계 (후불)</small><b id="cart-total">이빨 0개</b><small class="won" id="cart-won"></small></div>
   <button class="btn-order" id="btn-order" disabled>주문하기</button>
 </footer>
 
@@ -66,7 +67,7 @@
       <p class="order-total" id="order-total"></p>
       <p><button type="button" class="btn-sub" id="order-more">← 더 고르기</button></p>
     </div>
-    <div id="dm-user-box"><p><label for="dm-user">연락받을 디스코드 사용자명 (필수)</label></p><input type="text" id="dm-user" maxlength="40" placeholder="예) bibim_99" autocomplete="off" autocapitalize="none" spellcheck="false"><p class="tiny">디스코드 설정 &gt; 내 계정에 나오는 사용자명이에요(표시 이름 말고). 이놀아안이 여기로 DM해요.</p></div>
+    <div id="dm-user-box"><p><label for="dm-user">연락받을 디스코드 이름 (필수)</label></p><input type="text" id="dm-user" maxlength="40" placeholder="예) 비빔, bibim_99" autocomplete="off" spellcheck="false"><p class="tiny">서버 닉네임, 표시 이름, 사용자명 중 아무거나 적어 주세요. 조금 틀려도 찾아요.</p></div>
     <p><button type="button" class="btn-buy send-big" id="send-order">디스코드로 주문 보내기</button></p>
     <p class="tiny" id="send-result" role="status"></p>
     <p class="tiny" id="send-fail" hidden>그럴 땐 <a href="https://discord.com/users/823053384633417738" target="_blank" rel="noopener">이놀아안에게 DM</a>으로 주문번호와 원하는 걸 보내 주세요.</p>
@@ -76,7 +77,8 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="ordername.js?v=2"></script>
-<script src="shop.js?v=21"></script>
+<script src="shop.js?v=42"></script>
 </body>
 </html>

@@ -18,3 +18,13 @@ Thumbs.db
 
 # Claude Code 프로젝트 스킬(외부에서 받은 것)
 .claude/
+
+# 문장생성기: API 키와 빌드 산출물은 올리지 않는다
+문장생성기/.env
+문장생성기/build/
+문장생성기/dist/
+문장생성기/output/
+문장생성기/__pycache__/
+# 우리말샘에서 뽑은 큰 사전 파일은 parse_dictionary.py로 다시 만든다(CC BY-SA, 12MB)
+문장생성기/common_*.json
+문장생성기/AllNouns.js
