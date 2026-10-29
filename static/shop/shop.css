@@ -438,3 +438,4 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .stage.spreading .ring .card:hover .card-name{color:var(--yellow);border-color:var(--yellow)}
 .stage.spreading .ring{cursor:auto}
 .stage.spreading .ring-dots,.stage.spreading .ring-nav{visibility:hidden} /* 다 펼쳐 보일 땐 위치 줄이 필요 없다 */
+.note a{color:var(--mint)}
