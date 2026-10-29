@@ -10,7 +10,7 @@
 | 무엇 | 결정 |
 |---|---|
 | 이름 | 봉봉봉 |
-| 화폐 그림 | 치아(이빨). 가격 자체는 원화 |
+| 화폐 | 원화 그대로. 이빨 화폐는 비직관적이라 뺐다(사용자 판정) |
 | 화풍 | hwapongstuy의 `rain_world_graffiti`. 도트(픽셀아트)는 금지 |
 | 테마 시안 | `design/shop-theme/`의 시안 3장은 더 이상 참고하지 않는다. 그림 에셋은 시안과 무관하게 새로 그린다 |
 | 글꼴 | 제목은 Dokdo, 본문은 Gaegu 700 (Google Fonts) |
@@ -27,6 +27,8 @@ static/shop/
   index.html              뼈대: 간판, 주인 말풍선, 진열대, 상세 패널, 장바구니, 주문서(영수증)
   shop.css                전체 스타일. 색·글꼴은 :root 변수
   shop.js                 상품·가격·동작 전부 (아래 표)
+  dialogue.js             말풍선 대사 전부(사용자가 직접 고치는 파일). 헛소리(idle)는 문장생성기 accept가 더한다
+  img/                    art/의 그림을 여백 잘라 webp로 만든 것(층 그림 bg_*·jaw_*·load_*는 자르지 않음)
   supporters.json         똘라따무(후원자 이름 칸). 워크플로가 만든다. 손으로 고치지 말 것
   supporters_manual.json  계좌로 직접 받은 후원. 손으로 적는다
   carts/<id>.html|.js     PICO-8 웹 내보내기 결과 (bounce, curser2, squashy, train, eatkano)

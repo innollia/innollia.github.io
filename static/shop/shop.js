@@ -65,9 +65,6 @@ const USES = {
 };
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const won = n => n.toLocaleString('ko-KR') + '원';
-// 가게 화폐는 이빨. 1개 = 1,000원. 화면에는 이빨로 보이고, 입금 착오가 없게 원화를 옆에 작게 둔다. 디스코드 주문서는 원화.
-const TOOTH = 1000;
-const tw = n => `이빨 ${(n / TOOTH).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}개`;
 const $ = (s, r = document) => r.querySelector(s);
 const el = (tag, attrs = {}, kids = []) => {
   const n = document.createElement(tag);
@@ -86,6 +83,8 @@ const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, phy
 
 /* ── 그림: art/의 원본을 투명 여백만 잘라 img/*.webp로 둔다 ── */
 const IMG = k => `img/${k}.webp`;
+const SLOTS = ['ui_slot', 'ui_slot_pink', 'ui_slot_yellow', 'ui_slot_blue'];
+const sign = (k, text) => el('img', { src: IMG(`sign_${k}`), alt: text, class: 'sign-img' });
 const img = (k, cls = '') => el('img', { src: IMG(k), alt: '', class: cls, loading: 'lazy', decoding: 'async' });
 
 /* ── 상품 ── */
@@ -97,38 +96,29 @@ const CATS = [
 ];
 const ITEMS = [
   { id: 'game', cat: 'make', icon: 'game', c: '#7a5cff', name: '게임 제작', sub: '시간을 끌어서 퀄리티를 골라요', badge: ['간판', 'hot'],
-    priceText: '이빨 25개/시간~', wonText: '시간당 25,000원', kind: 'hours',
-    desc: '드래그로 작업 시간을 정하면 그만큼의 게임이 나와요.\n단계를 넘을 때마다 실제로 그 시간 들여 만든 게임을 보여 드려요.',
-    line: '시간 막대를 오른쪽으로 끌어 봐! 단계 넘을 때마다 잠깐 멈출 거야.' },
-  { id: 'web', cat: 'make', icon: 'web', c: '#4ab8ff', name: '웹사이트', sub: '최대 6시간 · 1만~10만', priceText: '이빨 10개~', wonText: '10,000원~', kind: 'web',
-    desc: '기념일 페이지, 소개 페이지, 작은 도구 사이트.\n6시간 안에 끝나는 크기만 받아요.',
-    line: '웹사이트는 6시간까지만!' },
-  { id: 'bot', cat: 'make', icon: 'bot', c: '#2fe0b0', name: '새 디스코드 봇', sub: '제작 + 서버비 포함 월 유지', priceText: '이빨 30개~', wonText: '30,000원~', kind: 'bot',
-    desc: '처음부터 우리 서버 전용 봇을 만들어요.\n제작비는 완성 후에 한 번, 서버비를 포함한 월 유지비는 매달 먼저.',
-    line: '봇은 만들고 끝이 아니야. 서버비랑 고장 수리까지 월 유지비에 들어 있어.' },
-  { id: 'read', cat: 'voice', icon: 'read', c: '#ff7ac0', name: '글 읽어주기', sub: '띄어쓰기 포함 글자당', priceText: '이빨 10~50개', wonText: '글자당 10~50원', kind: 'read', badge: ['시범가'],
-    desc: '보내 준 글을 제 목소리로 읽어 녹음해 드려요.\n띄어쓰기 포함 글자 수로 계산해요. 최소 이빨 1개(1,000원).',
-    line: '글을 붙여 넣으면 글자 수를 바로 세 줄게. 연기 등급도 골라 봐.' },
-  { id: 'song', cat: 'voice', icon: 'song', c: '#ffc93c', name: '노래 1곡', sub: '불러 드려요', priceText: '이빨 2개', wonText: '2,000원', kind: 'qty', price: 2000, unit: '곡',
-    desc: '듣고 싶은 노래를 불러서 녹음해 드려요.', field: '곡 제목 / 가수', line: '노래는 한 곡에 이빨 2개. 여러 곡이면 개수를 올려.' },
+    priceText: '25,000원/시간~', kind: 'hours',
+    desc: '드래그로 작업 시간을 정하면 그만큼의 게임이 나와요.\n단계를 넘을 때마다 실제로 그 시간 들여 만든 게임을 보여 드려요.' },
+  { id: 'web', cat: 'make', icon: 'web', c: '#4ab8ff', name: '웹사이트', sub: '최대 6시간 · 1만~10만', priceText: '10,000원~', kind: 'web',
+    desc: '기념일 페이지, 소개 페이지, 작은 도구 사이트.\n6시간 안에 끝나는 크기만 받아요.' },
+  { id: 'bot', cat: 'make', icon: 'bot', c: '#2fe0b0', name: '새 디스코드 봇', sub: '제작 + 서버비 포함 월 유지', priceText: '30,000원~', kind: 'bot',
+    desc: '처음부터 우리 서버 전용 봇을 만들어요.\n제작비는 완성 후에 한 번, 서버비를 포함한 월 유지비는 매달 먼저.' },
+  { id: 'read', cat: 'voice', icon: 'read', c: '#ff7ac0', name: '글 읽어주기', sub: '띄어쓰기 포함 글자당', priceText: '글자당 10~50원', kind: 'read', badge: ['시범가'],
+    desc: '보내 준 글을 제 목소리로 읽어 녹음해 드려요.\n띄어쓰기 포함 글자 수로 계산해요. 최소 1,000원.' },
+  { id: 'song', cat: 'voice', icon: 'song', c: '#ffc93c', name: '노래 1곡', sub: '불러 드려요', priceText: '2,000원', kind: 'qty', price: 2000, unit: '곡',
+    desc: '듣고 싶은 노래를 불러서 녹음해 드려요.', field: '곡 제목 / 가수' },
   { id: 'oracle', cat: 'brain', icon: 'oracle', c: '#7a5cff', name: '신탁', sub: '개인 고민 ~ 업무 자동화', priceText: '주고 싶은 만큼', kind: 'pwyw', badge: ['자율', 'free'],
-    desc: '개인 고민부터 회사 특정 업무 자동화까지 물어보세요.\n값은 답을 듣고 주고 싶은 만큼. 0원도 돼요.',
-    line: '신탁은 값이 없어. 들어 보고 마음에 들면 그때 내.' },
-  { id: 'research', cat: 'brain', icon: 'research', c: '#4ab8ff', name: '개빡센 조사', sub: '무지막지하게 마이너해도 OK', priceText: '이빨 10개', wonText: '10,000원', kind: 'text', price: 10000,
-    desc: 'AI한테 물어도 안 나오는 걸 끝까지 파서 정리해 드려요.\n마이너할수록 좋아요.', field: '무엇을 조사할까요?',
-    line: 'AI보다 내가 더 잘 파. 진짜 마이너한 거 들고 와 봐.' },
-  { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', name: 'X 대리 포스트', sub: '제 X에 대신 올려요', priceText: '이빨 1개', wonText: '1,000원', kind: 'qty', price: 1000, unit: '개',
-    desc: '하고 싶은 말을 제 X 계정에 대신 올려 드려요.\n(올리기 전에 제가 한 번 읽어요.)', field: '올릴 내용',
-    line: '내 X에 네 말을 올려 줄게. 이상한 건 안 올려 줌.' },
-  { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', name: 'ss0 DM 해금', sub: '다른 상품 사면 공짜', priceText: '이빨 5개', wonText: '5,000원', kind: 'dm',
-    desc: 'ss0 봇과 1:1 DM으로 대화할 수 있게 열어 드려요.\n장바구니에 다른 상품이 하나라도 있으면 무료.\n주문이 들어오면 이놀아안이 확인하고 직접 열어 줘요(조금 걸릴 수 있어요). 혼자 살 때 이빨 5개(5,000원)도 열린 뒤에 내요.',
-    line: '다른 거 하나만 사도 DM은 공짜로 열어 줘.' },
+    desc: '개인 고민부터 회사 특정 업무 자동화까지 물어보세요.\n값은 답을 듣고 주고 싶은 만큼. 0원도 돼요.' },
+  { id: 'research', cat: 'brain', icon: 'research', c: '#4ab8ff', name: '개빡센 조사', sub: '무지막지하게 마이너해도 OK', priceText: '10,000원', kind: 'text', price: 10000,
+    desc: 'AI한테 물어도 안 나오는 걸 끝까지 파서 정리해 드려요.\n마이너할수록 좋아요.', field: '무엇을 조사할까요?' },
+  { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', name: 'X 대리 포스트', sub: '제 X에 대신 올려요', priceText: '1,000원', kind: 'qty', price: 1000, unit: '개',
+    desc: '하고 싶은 말을 제 X 계정에 대신 올려 드려요.\n(올리기 전에 제가 한 번 읽어요.)', field: '올릴 내용' },
+  { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', name: 'ss0 DM 해금', sub: '다른 상품 사면 공짜', priceText: '5,000원', kind: 'dm',
+    desc: 'ss0 봇과 1:1 DM으로 대화할 수 있게 열어 드려요.\n장바구니에 다른 상품이 하나라도 있으면 무료.\n주문이 들어오면 이놀아안이 확인하고 직접 열어 줘요(조금 걸릴 수 있어요). 혼자 살 때 5,000원도 열린 뒤에 내요.' },
   { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', name: 'ss0 기능 추가', sub: '이놀아안이 검토 후 가격 책정', priceText: '검토 후 가격', kind: 'quote',
-    desc: 'ss0에 갖고 싶은 기능을 주문하세요.\n종류를 고르고 설명을 적으면, 제가 검토해서 가격을 정해 답장해요.',
-    line: '기능마다 품이 달라서 내가 보고 값을 매겨. 일단 적어서 줘!' },
-  { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', name: '동업자 되기', sub: 'PICO-8로 뭐라도 만들어 와', priceText: '이빨 0개 · 도전', kind: 'partner', badge: ['모집'],
+    desc: 'ss0에 갖고 싶은 기능을 주문하세요.\n종류를 고르고 설명을 적으면, 제가 검토해서 가격을 정해 답장해요.' },
+  { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', name: '동업자 되기', sub: 'PICO-8로 뭐라도 만들어 와', priceText: '0원 · 도전', kind: 'partner', badge: ['모집'],
     desc: '내 사업시도의 동료가 되고 싶다면, PICO-8 독학해서 뭐라도 작동하는 거 하나 가져와요. 검토해 줄게요.\n아래는 제가 PICO-8로 만든 것들이에요. 이 정도면 충분해요.',
-    field: '만든 게임 링크나 설명', line: 'PICO-8로 하나 만들어 와. 내 것도 해 보고 가.' },
+    field: '만든 게임 링크나 설명' },
   { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', name: '픽셀 프로필', sub: '디코 프사·이모티콘', soon: true },
   { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', name: '선물 게임', sub: '생일·기념일용 한 판짜리', soon: true },
   { id: 'aisetup', cat: 'soon', icon: 'setup', c: '#4ab8ff', name: 'AI 작업환경 세팅', sub: '내 컴퓨터에 클로드코드 깔고 길들이기', soon: true },
@@ -170,28 +160,16 @@ const CARTS = [
   { id: 'train', name: '트레인' },
   { id: 'eatkano', name: '잇 카노', label: 'carts/eatkano.p8.png' },
 ];
-const LINES = {
-  hello: '어서오십쇼! 봉봉봉이야. 시키는 거 다 해 줌. 단, 이빨은 받아.',
-  make: '제작소야. 게임은 시간 막대를 끌어서 사는 거야.',
-  voice: '목소리 코너. 내 목소리 공짜 아니다.',
-  brain: '머리 빌리는 곳. 신탁은 값을 네가 정해.',
-  ss0: 'ss0 봇 코너. DM 해금은 뭐든 하나 사면 공짜!',
-  soon: '아직 준비 중인 물건들. 먼저 찜하고 싶으면 DM 줘.',
-  hall: '여기 이름 올라간 사람들은 평생 단골이야.',
-  added: ['담았다! 더 볼래?', '좋은 선택이야.', '장바구니로 슝~', '그거 진짜 잘 골랐다.'],
-  order: '확인하고 "디스코드로 주문 보내기" 누르면 끝! 돈은 후불이야.',
-};
-
-/* ── 주인 헛소리 (문장생성기/shopkeeper_lines.py → keeper_lines.json) ──
-   정보를 알려야 하는 말(오류, 수정 완료, 시간 단계)은 그대로 두고, 분위기 말만 여기서 뽑는다. */
-let KEEPER = {};
-fetch('keeper_lines.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).then(j => { KEEPER = j || {}; }).catch(() => {});
-function babble(key, fallback) {
-  const pool = KEEPER[key]?.length ? KEEPER[key] : KEEPER.lines; // 상황별 줄이 없으면 공통 헛소리
-  return pool?.length ? pool[Math.floor(Math.random() * pool.length)] : fallback;
+/* ── 말풍선 대사: 전부 dialogue.js에 있다(사용자가 직접 고치는 파일) ──
+   T('키', { 이름: … })는 {이름} 자리를 채워 돌려준다. 배열이면 하나를 고른다. */
+const D = window.DIALOGUE || {};
+function T(key, vars = {}) {
+  let v = key.split('.').reduce((o, k) => o?.[k], D);
+  if (Array.isArray(v)) v = v[Math.floor(Math.random() * v.length)];
+  return String(v ?? '').replace(/\{([^}]+)\}/g, (m, k) => vars[k] ?? m);
 }
 let idleTimer;
-function poke() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!$('#checkout').open) say(babble('idle', '…')); poke(); }, 25000); }
+function poke() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!$('#checkout').open) say(T('idle')); poke(); }, 25000); }
 ['pointerdown', 'keydown'].forEach(t => addEventListener(t, poke, { passive: true }));
 
 /* ── 상태 ── */
@@ -199,15 +177,6 @@ const state = { cat: 'make', cart: [], item: null, draft: null };
 let seq = 0;
 
 /* ── 주인장 ── */
-const keeper = $('#keeper');
-const FACES = ['idle', 'talk', 'happy'];
-keeper.replaceChildren(...FACES.map(f => { const i = el('img', { src: IMG(`keeper_${f}`), alt: '', 'data-face': f }); i.hidden = f !== 'idle'; return i; }));
-let faceTimer;
-function face(f, ms) {
-  keeper.querySelectorAll('img').forEach(i => { i.hidden = i.dataset.face !== f; });
-  clearTimeout(faceTimer); if (ms) faceTimer = setTimeout(() => face('idle'), ms);
-}
-if (window.gsap && !REDUCED) gsap.to(keeper, { scaleY: .97, transformOrigin: '50% 100%', duration: 1.3, ease: 'sine.inOut', yoyo: true, repeat: -1 });
 let typeTimer;
 // 타자 효과 없이 바로 바꾼다(막대를 움직이는 동안)
 function sayNow(text) {
@@ -220,11 +189,8 @@ function say(text) {
   clearInterval(typeTimer);
   if (REDUCED) { p.textContent = text; return; }
   p.textContent = ''; let i = 0;
-  // 글자가 찍히는 동안 입을 여닫는다
   typeTimer = setInterval(() => {
     p.textContent = text.slice(0, ++i);
-    const happy = !keeper.querySelector('[data-face=happy]').hidden; // 웃는 중에는 입을 여닫지 않는다
-    if (!happy) face(i >= text.length || i % 4 >= 2 ? 'idle' : 'talk');
     if (i >= text.length) clearInterval(typeTimer);
   }, 28);
 }
@@ -234,7 +200,7 @@ function say(text) {
    끌어도 돌고, 옆 칸을 누르면 그 칸이 앞으로 오고, 앞에 온 칸을 누르면 열린다.
    ScrollTrigger가 없으면 예전처럼 범주별 격자로 보여 준다. */
 const SHELF = CATS.flatMap(c => ITEMS.filter(i => i.cat === c.id && !i.soon));
-const ring = { pos: 0, target: 0, cards: [], st: null, front: -1, vel: 0 };
+const ring = { pos: 0, target: 0, lap: 0, cards: [], st: null, front: -1, vel: 0 }; // lap: 끝에서 처음으로 넘어간 바퀴 수×n
 function selectTab(id) {
   state.cat = id;
   $('#rail').querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.cat === id)));
@@ -243,8 +209,8 @@ function renderRail() {
   const rail = $('#rail'); rail.replaceChildren();
   rail.setAttribute('role', 'tablist');
   for (const c of CATS) rail.append(el('button', { class: 'tab', role: 'tab', 'data-cat': c.id, 'aria-selected': String(c.id === state.cat),
-    onclick: () => { selectTab(c.id); say(babble(`cat_${c.id}`, LINES[c.id]));
-      if (ring.st) ringGo(SHELF.findIndex(i => i.cat === c.id));
+    onclick: () => { selectTab(c.id); say(T(`cat.${c.id}`));
+      if (ring.st) ringGo(nearest(SHELF.findIndex(i => i.cat === c.id)));
       else $(`#cat-${c.id}`)?.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); } },
     [c.name, el('small', { text: c.sub })]));
 }
@@ -265,56 +231,96 @@ function renderRing() {
   const shelf = $('#shelf'); shelf.replaceChildren();
   const wrap = el('div', { class: 'ring', role: 'listbox', 'aria-label': '상품 (←/→로 돌리기)', tabindex: '0' });
   ring.cards = SHELF.map((it, i) => {
-    const c = makeCard(it, () => { if (ring.moved) return; if (i === ring.front) chompThen(() => openDetail(it)); else ringGo(i); });
+    const c = makeCard(it, () => { if (ring.moved) return; if (i === ring.front) chompThen(() => openDetail(it)); else ringGo(nearest(i)); });
     c.setAttribute('role', 'option'); c.tabIndex = -1; wrap.append(c); return c;
   });
+  wrap.prepend(img('stage_tongue', 'tongue')); // 앞에 온 칸이 올라서는 혀
   const cat = el('h2', { class: 'ring-cat' }), catSub = el('p', { class: 'ring-catsub' });
   const fName = el('h3', { class: 'front-name' }), fDesc = el('p', { class: 'front-desc' });
-  const fBtn = el('button', { class: 'btn-buy pic front-open', 'aria-label': '열어 보기', text: '열어 보기', onclick: () => chompThen(() => openDetail(SHELF[ring.front])) });
-  const count = el('span', { class: 'ring-count' });
+  const fBtn = el('button', { class: 'btn-buy pic front-open', 'aria-label': '열어 보기', text: '열어 보기', onclick: () => chompThen(() => openDetail(SHELF[Math.max(0, ring.front)])) });
+  // 위치는 숫자 대신 상품 그림 줄로 보여 준다. 누르면 그 상품으로 돈다
+  const count = el('div', { class: 'ring-dots', role: 'tablist', 'aria-label': '상품 고르기' }, SHELF.map((it, i) =>
+    el('button', { class: 'ring-dot', 'aria-label': it.name, title: it.name, onclick: () => ringGo(nearest(i)) }, img(it.icon))));
+  const spread = el('button', { class: 'ring-spread', 'aria-expanded': 'false', text: '한눈에 보기', onclick: () => toggleSpread() });
   const prev = el('button', { class: 'ring-nav', 'aria-label': '이전 상품', text: '◀', onclick: () => ringGo(ring.front - 1) });
   const next = el('button', { class: 'ring-nav', 'aria-label': '다음 상품', text: '▶', onclick: () => ringGo(ring.front + 1) });
   const stage = el('section', { class: 'stage', id: 'stage' }, [
     el('div', { class: 'ring-head' }, [$('#rail'), cat, catSub]), // 범주 탭도 고정된 판 안에 둔다
     wrap,
     el('div', { class: 'front' }, [el('div', { class: 'front-text' }, [fName, fDesc]), fBtn]),
-    el('div', { class: 'ring-bar' }, [prev, count, next, el('span', { class: 'ring-hint', text: '스크롤하거나 끌어서 돌리기' })]),
+    el('div', { class: 'ring-bar' }, [prev, count, next, spread]),
+    buildSpread(),
   ]);
   shelf.append(stage);
-  ring.ui = { cat, catSub, fName, fDesc, count, wrap };
+  ring.ui = { cat, catSub, fName, fDesc, count, wrap, spread, stage };
 
   const n = SHELF.length;
   ring.st = ScrollTrigger.create({ trigger: stage, start: 'top top', end: () => '+=' + Math.round((n - 1) * innerHeight * .42), pin: true, pinSpacing: true,
-    onUpdate: self => { ring.target = self.progress * (n - 1); },
+    onUpdate: self => { ring.target = ring.lap + self.progress * (n - 1); },
     snap: { snapTo: 1 / (n - 1), duration: { min: .2, max: .6 }, delay: .08, ease: 'power2.inOut' } });
 
-  // 끌기: 손가락이 간 만큼 스크롤을 옮겨서 돌린다(스크롤과 같은 길을 쓰니 어긋나지 않는다)
-  let sx = 0, sy = 0, down = false;
-  wrap.addEventListener('pointerdown', e => { down = true; ring.moved = false; sx = e.clientX; sy = scrollY; });
-  addEventListener('pointermove', e => {
+  // 끌기: 누른 채 옆으로 밀면 원통만 돌리고(스크롤은 그대로), 놓으면 가장 가까운 칸으로 스크롤을 옮긴다.
+  // 끄는 동안 스크롤을 건드리면 멈출 때마다 칸 맞추기(snap)가 손 밑에서 원통을 끌어가서 따로 돈다.
+  let sx = 0, t0 = 0, down = false;
+  const end = () => {
+    if (!down) return; down = false;
+    if (ring.moved) ringGo(Math.round(ring.target) - ring.lap, true);
+    setTimeout(() => { ring.moved = false; }, 0); // 놓을 때 생기는 click이 칸을 열지 않게
+  };
+  wrap.addEventListener('dragstart', e => e.preventDefault()); // 그림을 끌어 가 버리면 놓은 걸 못 듣는다
+  wrap.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = true; ring.moved = false; sx = e.clientX; t0 = ring.target; });
+  wrap.addEventListener('pointermove', e => {
     if (!down) return;
+    if (e.pointerType === 'mouse' && !(e.buttons & 1)) return end(); // 창 밖에서 놓고 들어온 경우
     const dx = e.clientX - sx;
-    if (Math.abs(dx) > 6) ring.moved = true;
-    if (ring.moved) { const per = (ring.st.end - ring.st.start) / (n - 1); scrollTo(0, sy - dx / 180 * per); }
+    if (!ring.moved && Math.abs(dx) > 6) { ring.moved = true; wrap.setPointerCapture(e.pointerId); }
+    if (ring.moved) ring.target = t0 - dx / 180; // 끝을 넘어가면 처음으로 이어진다
   });
-  addEventListener('pointerup', () => { down = false; setTimeout(() => { ring.moved = false; }, 0); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => wrap.addEventListener(t, end));
   wrap.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') { e.preventDefault(); ringGo(ring.front + 1); }
     if (e.key === 'ArrowLeft') { e.preventDefault(); ringGo(ring.front - 1); }
     if (e.key === 'Home') { e.preventDefault(); ringGo(0); }
     if (e.key === 'End') { e.preventDefault(); ringGo(SHELF.length - 1); }
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(SHELF[ring.front]); }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(SHELF[Math.max(0, ring.front)]); }
   });
 
   // 처음엔 원통이 한 바퀴 반쯤 돌면서 들어온다
   ring.pos = REDUCED ? 0 : -n * .6;
   gsap.ticker.add(ringTick);
 }
-function ringGo(i) {
-  const n = SHELF.length; i = Math.max(0, Math.min(n - 1, i));
+// i: 이번 바퀴 안에서의 칸 번호. 11번째 다음(n)이나 1번째 앞(-1)이면 바퀴를 넘기고 스크롤을 반대쪽 끝으로 옮긴다.
+// 화면은 고정돼 있어 스크롤이 튀어도 보이지 않고, 원통은 한 칸만 돈다.
+function buildSpread() {
+  const grid = el('div', { class: 'spread', hidden: true }, CATS.map(c => el('section', { class: 'spread-cat' }, [
+    el('h3', {}, sign(c.id, c.name)),
+    el('div', { class: 'spread-row' }, SHELF.map((it, i) => it.cat !== c.id ? null : el('button', { class: 'spread-item', onclick: () => { toggleSpread(false); ringGo(nearest(i)); setTimeout(() => chompThen(() => openDetail(it)), REDUCED ? 0 : 350); } }, [
+      img(it.icon), el('b', { text: it.name }), el('small', { text: it.priceText })]))),
+  ])));
+  ring.spreadEl = grid;
+  return grid;
+}
+function toggleSpread(on = ring.spreadEl.hidden) {
+  const g = ring.spreadEl, u = ring.ui;
+  u.stage.classList.toggle('spreading', on); u.spread.setAttribute('aria-expanded', String(on));
+  u.spread.textContent = on ? '돌려 보기' : '한눈에 보기';
+  g.hidden = !on;
+  if (on && window.gsap && !REDUCED) gsap.from(g.querySelectorAll('.spread-item'), { scale: .4, rotate: () => gsap.utils.random(-25, 25), opacity: 0, y: 40, duration: .45, stagger: { each: .03, from: 'center' }, ease: 'back.out(1.7)' });
+}
+function ringGo(i, now) {
+  const n = SHELF.length;
   if (!ring.st) return;
+  while (i > n - 1) { ring.lap += n; i -= n; now = true; }
+  while (i < 0) { ring.lap -= n; i += n; now = true; }
+  ring.target = ring.lap + i;
   const y = ring.st.start + (ring.st.end - ring.st.start) * i / (n - 1);
-  scrollTo({ top: Math.round(y) + 1, behavior: REDUCED ? 'auto' : 'smooth' });
+  scrollTo({ top: Math.round(y) + 1, behavior: REDUCED || now ? 'auto' : 'smooth' }); // now: 끌기를 놓은 자리에서 바로(원통은 ringTick이 부드럽게 따라간다)
+}
+// 지금 앞 칸에서 i번 칸으로 가는 가까운 길(돌아가는 쪽이 짧으면 그쪽)
+function nearest(i) {
+  const n = SHELF.length, cur = Math.round(ring.target) - ring.lap;
+  let d = ((i - cur) % n + n) % n; if (d > n / 2) d -= n;
+  return cur + d;
 }
 function ringTick() {
   const n = ring.cards.length; if (!n) return;
@@ -337,7 +343,7 @@ function ringTick() {
     c.style.pointerEvents = Math.abs(d) > 2.5 ? 'none' : '';
   });
   ring.drawn = ring.pos; ring.W = W;
-  const f = Math.max(0, Math.min(n - 1, Math.round(ring.pos)));
+  const f = ((Math.round(ring.pos) % n) + n) % n;
   if (f !== ring.front) ringFront(f);
 }
 function ringFront(f) {
@@ -346,28 +352,67 @@ function ringFront(f) {
   const it = SHELF[f], c = CATS.find(x => x.id === it.cat), u = ring.ui;
   ring.cards.forEach((card, i) => { card.classList.toggle('is-front', i === f); card.setAttribute('aria-selected', String(i === f)); });
   u.wrap.setAttribute('aria-activedescendant', '');
-  u.cat.textContent = c.name; u.catSub.textContent = c.sub;
+  u.cat.replaceChildren(sign(c.id, c.name)); u.catSub.textContent = c.sub;
   u.fName.textContent = it.name; u.fDesc.textContent = `${it.sub}. ${it.desc.split('\n')[0]}`; // 무료 조건 같은 핵심이 sub에 있다
-  u.count.textContent = `${f + 1} / ${SHELF.length}`;
+  u.count.querySelectorAll('.ring-dot').forEach((d, i) => { d.classList.toggle('on', i === f); d.setAttribute('aria-selected', String(i === f)); });
   selectTab(it.cat);
   if (window.gsap && !REDUCED) gsap.fromTo([u.fName, u.fDesc], { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: .3, stagger: .05, ease: 'back.out(2)' });
-  if (prevCat && prevCat !== it.cat) { say(babble(`cat_${it.cat}`, LINES[it.cat])); if (window.gsap && !REDUCED) gsap.fromTo(u.cat, { scale: 1.4, rotate: -8 }, { scale: 1, rotate: 0, duration: .5, ease: 'elastic.out(1,.4)' }); }
+  if (prevCat && prevCat !== it.cat) { say(T(`cat.${it.cat}`)); if (window.gsap && !REDUCED) gsap.fromTo(u.cat, { scale: 1.4, rotate: -8 }, { scale: 1, rotate: 0, duration: .5, ease: 'elastic.out(1,.4)' }); }
 }
 function makeCard(it, onPick) {
   const card = el('button', { class: 'card' + (it.soon ? ' soon' : ''), style: `--c:${it.c}`, 'aria-disabled': it.soon ? 'true' : false,
-    onclick: () => it.soon ? (say(`${it.name}은(는) 아직 입고 전이야. 곧 들어와!`), wiggle(card)) : onPick ? onPick() : openDetail(it) }, [
+    onclick: () => it.soon ? (say(T('soonItem', { 이름: it.name })), wiggle(card)) : onPick ? onPick() : openDetail(it) }, [
     it.badge ? el('span', { class: 'badge ' + (it.badge[1] || ''), text: it.badge[0] }) : null,
     it.soon ? el('span', { class: 'stamp', text: '입고 예정' }) : null,
-    el('div', { class: 'card-art' }, [img('ui_slot', 'slot'), img(it.icon, 'icon')]),
+    el('div', { class: 'card-art' }, [img(SLOTS[ITEMS.indexOf(it) % SLOTS.length], 'slot'), img(it.icon, 'icon')]),
     el('div', { class: 'card-body' }, [el('div', { class: 'card-name', text: it.name }), el('div', { class: 'card-sub', text: it.sub }),
-      it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'tag-text', text: it.priceText }), it.wonText ? el('small', { text: it.wonText }) : null])]),
+      it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'tag-text', text: it.priceText })])]),
   ]);
+  // 마우스를 올리면 옆에 미리보기 카드가 뜬다(스팀 라이브러리처럼)
+  card.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') peek(it, card); });
+  card.addEventListener('pointerleave', unpeek);
   return card;
 }
+
+/* ── 미리보기 카드: 이름, 그림(게임은 실제 만든 게임 화면), 가격, 이런 거 해 줘요 ── */
+const peekEl = el('div', { class: 'peek', 'aria-hidden': 'true' });
+document.body.append(peekEl);
+let peekFor = null, peekTimer;
+function peek(it, card) {
+  if (detail.getAttribute('aria-hidden') === 'false' || $('#checkout').open) return;
+  peekFor = card; clearInterval(peekTimer);
+  // 게임은 실제로 만든 게임 화면을 돌아가며 보여 준다
+  const shots = it.id === 'game' ? tinGames.filter(g => TIN_HOURS[g.id] != null && g.shots?.length).map(g => g.shots[0]) : [];
+  const shot = shots[0];
+  const ex = USES[it.id]?.ex.slice(0, 3) || [];
+  peekEl.replaceChildren(
+    el('div', { class: 'peek-head', text: it.name }),
+    el('div', { class: 'peek-art' + (shot ? ' shot' : ''), style: shot ? `background-image:url(${shot})` : '' }, shot ? null : img(it.icon)),
+    el('div', { class: 'peek-body' }, [
+      el('p', { class: 'peek-cat', text: it.soon ? '입고 예정' : CATS.find(c => c.id === it.cat)?.name || '' }),
+      el('p', { class: 'peek-sub', text: it.sub }),
+      it.soon ? null : el('p', { class: 'peek-price' }, ['가격 ', el('b', { text: it.priceText }), ' (후불)']),
+      ex.length ? el('ul', { class: 'peek-ex' }, ex.map(x => el('li', { text: x[0] }))) : null,
+    ]));
+  // 칸 오른쪽에 띄우고, 자리가 없으면 왼쪽
+  const r = card.getBoundingClientRect(), w = 280, gap = 14;
+  const x = r.right + gap + w < innerWidth ? r.right + gap : Math.max(8, r.left - gap - w);
+  peekEl.style.left = x + 'px';
+  peekEl.style.top = Math.max(8, Math.min(innerHeight - peekEl.offsetHeight - 110, r.top)) + 'px';
+  if (window.gsap && !REDUCED) { gsap.killTweensOf(peekEl); gsap.fromTo(peekEl, { opacity: 0, x: x > r.left ? -10 : 10, scale: .96 }, { opacity: 1, x: 0, scale: 1, duration: .18, ease: 'power2.out' }); }
+  else peekEl.style.opacity = 1;
+  peekEl.classList.add('on');
+  if (shots.length > 1) { let k = 0; const art = peekEl.querySelector('.peek-art'); peekTimer = setInterval(() => { art.style.backgroundImage = `url(${shots[++k % shots.length]})`; }, 900); }
+}
+function unpeek() {
+  peekFor = null; clearInterval(peekTimer); peekEl.classList.remove('on');
+  if (window.gsap && !REDUCED) { gsap.killTweensOf(peekEl); gsap.to(peekEl, { opacity: 0, duration: .12 }); } else peekEl.style.opacity = 0;
+}
+addEventListener('scroll', () => { if (peekFor) unpeek(); }, { passive: true }); // 진열대가 돌면 칸이 움직이니 닫는다
 function renderExtras() {
-  const soon = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', { text: '입고 예정' }), el('p', { text: '곧 들어와요' })]),
+  const soon = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('soon', '입고 예정')), el('p', { text: '곧 들어와요' })]),
     el('div', { class: 'grid' }, ITEMS.filter(i => i.soon).map(it => makeCard(it)))]);
-  const hall = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', { text: '똘라따무' }), el('p', { text: '봉 신주해 를비소' })])]);
+  const hall = el('section', { class: 'extra' }, [el('div', { class: 'shelf-head' }, [el('h2', {}, sign('hall', '똘라따무')), el('p', { text: '봉 신주해 를비소' })])]);
   $('#extras').replaceChildren(soon, hall);
   renderHall(hall);
 }
@@ -383,7 +428,7 @@ async function playCart(c, player) {
     : el('div', { class: 'player-empty', text: `${c.name}\n카트리지 굽는 중...\n곧 여기서 바로 할 수 있어요` }));
   player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: '화면을 한 번 누르면 시작 · 방향키 + Z/X' })]));
   player.classList.add('on');
-  say(ok ? `${c.name}! 방향키랑 Z, X로 해 봐.` : `${c.name}은(는) 아직 웹용으로 굽는 중이야.`);
+  say(T(ok ? 'cartPlay' : 'cartBaking', { 이름: c.name }));
   if (window.gsap && !REDUCED) gsap.fromTo(frame, { scaleY: .02, filter: 'brightness(4)' }, { scaleY: 1, filter: 'brightness(1)', duration: .45, ease: 'expo.out' });
 }
 
@@ -405,6 +450,7 @@ const detail = $('#detail');
 const BACKDROP = ['.marquee', '.counter', '.shop', '.extras', '.cartbar'];
 let lastFocus = null;
 function openDetail(it, prev) {
+  unpeek();
   if (state.closing) { if (window.gsap) gsap.killTweensOf('.detail-panel'); state.closing = false; detail.style.pointerEvents = ''; }
   lastFocus = document.activeElement;
   state.item = it; state.draft = { note: prev?.note || '', prev }; state.editing = prev || null;
@@ -423,13 +469,12 @@ function openDetail(it, prev) {
   const uses = it.kind === 'read' ? null : USES[it.id]; // 낭독은 칸이 '읽을 글'이라 예시를 넣으면 값이 바뀐다
   if (uses) {
     const t = body.querySelector('textarea');
-    const box = el('div', { class: 'box' }, [el('h3', { text: uses.q }),
-      t ? el('p', { class: 'note', style: 'margin:0 0 8px', text: '누르면 아래 칸에 더해져요' }) : null]);
+    const box = el('div', { class: 'box' }, [el('h3', { text: uses.q })]);
     const add = x => {
       const line = x[0] + (x[1] ? ` — ${x[1]}` : '');
       if (!t.value.split('\n').includes(line)) { t.value = t.value.trim() ? `${t.value.trim()}\n${line}` : line; t.dispatchEvent(new Event('input')); } // 적어 둔 걸 지우지 않고 더한다
       t.focus(); t.setSelectionRange(t.value.length, t.value.length);
-      wiggle(t); say('아래 칸에 적어 뒀어. 수정해도 돼.');
+      wiggle(t); say(T('exampleAdded'));
     };
     // 적을 칸이 없는 상품(DM 해금)은 예시 칸 자체를 두지 않는다
     if (t) { box.append(el('div', { class: 'chips' }, uses.ex.map(x => el('button', { class: 'chip', onclick: () => add(x) }, [x[0], el('small', { text: x[1] })])))); body.prepend(box); }
@@ -438,7 +483,7 @@ function openDetail(it, prev) {
   detail.setAttribute('aria-hidden', 'false'); document.documentElement.classList.add('locked');
   BACKDROP.forEach(q => { $(q).inert = true; });
   $('.detail-panel').scrollTop = 0;
-  say(prev ? `담아 둔 걸 수정하는 중이야${prev.sum ? ` (지금 ${prev.sum})` : ''}. 바꾸고 "수정 완료" 눌러.` : babble(`item_${it.id}`, it.line));
+  say(prev ? (prev.sum ? T('editingNow', { 지금: prev.sum }) : T('editing')) : T(`item.${it.id}`));
   if (window.gsap && !REDUCED) {
     gsap.fromTo('.detail-slash', { opacity: 0 }, { opacity: 1, duration: .25 });
     gsap.fromTo('.detail-panel', { xPercent: 100, skewX: -8 }, { xPercent: 0, skewX: 0, duration: .5, ease: 'expo.out' });
@@ -456,7 +501,7 @@ function closeDetail() {
     detail.setAttribute('aria-hidden', 'true'); document.documentElement.classList.remove('locked'); detail.style.pointerEvents = ''; state.item = null; state.draft = null; state.editing = null; state.closing = false; state.backToOrder = false;
     if (back && state.cart.length) { openOrder(); return; }
     if (lastFocus?.isConnected) lastFocus.focus();
-    if (!$('#checkout').open) sayNow(LINES[state.cat] || LINES.hello);
+    if (!$('#checkout').open) sayNow(T(`cat.${state.cat}`) || T('hello'));
   };
   if (window.gsap && !REDUCED) { gsap.killTweensOf('.detail-panel'); gsap.to('.detail-panel', { xPercent: 100, duration: .3, ease: 'power3.in', onComplete: done }); } else done();
 }
@@ -467,13 +512,12 @@ addEventListener('keydown', e => { if (e.key !== 'Escape') return; if ($('#check
 function setPrice(value, label = '가격 (후불)', text) {
   state.draft.price = value;
   const b = $('#detail-price'); $('#detail-price-label').textContent = label;
-  $('#detail-won').textContent = text ? '' : won(value);
   b._tw?.kill(); // 앞선 숫자 애니메이션이 늦게 끝나며 옛 가격을 덮어쓰지 않게
   if (text) { b.textContent = text; return; }
   if (window.gsap && !REDUCED) {
     const o = { v: Number(b.dataset.v || 0) };
-    b._tw = gsap.to(o, { v: value, duration: .35, ease: 'power2.out', onUpdate: () => { b.textContent = tw(Math.round(o.v / TOOTH) * TOOTH); }, onComplete: () => { b.textContent = tw(value); } });
-  } else b.textContent = tw(value);
+    b._tw = gsap.to(o, { v: value, duration: .35, ease: 'power2.out', onUpdate: () => { b.textContent = won(Math.round(o.v / 100) * 100); }, onComplete: () => { b.textContent = won(value); } });
+  } else b.textContent = won(value);
   b.dataset.v = value;
 }
 function updatePrice() { const it = state.item, d = state.draft; PRICE[it.kind]?.(it, d); }
@@ -611,10 +655,10 @@ const BUILD = {
         return { head: `${h}시간 주문`, title: !g ? '' : n === h ? `딱 이 시간에 만든 게임: 「${g.name}」` : `참고: 「${g.name}」은 ${n}시간 걸렸어요`, desc: g?.blurb, shot: g?.shots?.[0] }; },
       onChange: (h, crossed) => {
         const g = gameAt(h), n = g && TIN_HOURS[g.id];
-        const line = !g ? `${h}시간.` : n === h ? `${h}시간이면 「${g.name}」 정도 나와.` : `${h}시간. 「${g.name}」(${n}시간)보다 조금 더 들어가.`;
+        const line = T(!g ? 'hours' : n === h ? 'hoursExact' : 'hoursMore', { 시간: h, 게임: g?.name, 걸린: n });
         if (crossed) say(line); else sayNow(line); // 말풍선이 옛 시간을 붙들고 있지 않게
         state.draft.hours = h;
-        brk.innerHTML = `시급 <b>${tw(RATE)}</b> + Claude <b>${tw(AI_RATE)}</b><br>× <b>${h}시간</b> = <b>${tw(h * HOUR)}</b> (${won(h * HOUR)})`;
+        brk.innerHTML = `시급 <b>${won(RATE)}</b> + Claude <b>${won(AI_RATE)}</b><br>× <b>${h}시간</b> = <b>${won(h * HOUR)}</b>`;
         updatePrice();
       } });
     body.append(el('div', { class: 'box' }, brk));
@@ -626,19 +670,19 @@ const BUILD = {
       card: h => { const s = at(h); return { head: h < 1 ? '30분' : `${h}시간`, title: s.title, desc: s.desc }; },
       onChange: (h, crossed) => {
         const s = at(h);
-        if (crossed) say(`${s.title}! ${tw(s.p)}.`);
+        if (crossed) say(T('webStep', { 단계: s.title, 가격: won(s.p) }));
         state.draft.hours = h; state.draft.webPrice = s.p; updatePrice();
       } });
     noteField(body, '무슨 사이트?', '목적, 들어갈 내용, 참고 사이트…');
   },
   read(body) {
     state.draft.tier = was(READ_TIERS) || READ_TIERS[1];
-    body.append(el('div', { class: 'box' }, [el('h3', { text: '연기 등급' }), chips(READ_TIERS.map(t => ({ ...t, sub: `천 자에 이빨 ${t.rate}개 · ${t.sub}` })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
+    body.append(el('div', { class: 'box' }, [el('h3', { text: '연기 등급' }), chips(READ_TIERS.map(t => ({ ...t, sub: `${t.rate}원/자 · ${t.sub}` })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
     const count = el('b', { text: '0' });
     const t = noteField(body, '읽을 글', '여기에 붙여 넣으면 글자 수를 세요');
     const recount = () => { state.draft.chars = [...t.value].filter(c => c !== '\n' && c !== '\r').length; count.textContent = state.draft.chars.toLocaleString(); updatePrice(); };
     t.addEventListener('input', recount);
-    body.append(el('p', { class: 'note' }, ['띄어쓰기 포함 ', count, '자 · 최소 이빨 1개 · 아직 시범가예요']));
+    body.append(el('p', { class: 'note' }, ['띄어쓰기 포함 ', count, '자 · 최소 1,000원 · 아직 시범가예요']));
     state.draft.chars = 0; if (t.value) recount();
   },
   qty(body, it) {
@@ -648,7 +692,7 @@ const BUILD = {
       if (window.gsap && !REDUCED) gsap.fromTo(n, { y: d > 0 ? -10 : 10 }, { y: 0, duration: .25, ease: 'back.out(3)' }); };
     body.append(el('div', { class: 'box' }, [el('h3', { text: '개수' }), el('div', { class: 'stepper' }, [
       el('button', { 'aria-label': '하나 빼기', text: '−', onclick: () => step(-1) }), n, el('button', { 'aria-label': '하나 더', text: '+', onclick: () => step(1) }),
-      el('span', { class: 'lbl', text: `${tw(it.price)} / ${it.unit}` })])]));
+      el('span', { class: 'lbl', text: `${won(it.price)} / ${it.unit}` })])]));
     noteField(body, it.field);
   },
   text(body, it) { noteField(body, it.field); },
@@ -662,7 +706,7 @@ const BUILD = {
     state.draft.amount = state.draft.prev?.price || 0;
     const input = el('input', { type: 'number', min: '0', step: '500', value: String(state.draft.amount), 'aria-label': '직접 입력', oninput: e => { state.draft.amount = Math.max(0, Number(e.target.value) || 0); e.target.closest('.box').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(Number(c.dataset.v) === state.draft.amount))); updatePrice(); } });
     body.append(el('div', { class: 'box' }, [el('h3', { text: '얼마 낼래요?' }),
-      chips([0, 1000, 5000, 10000, 30000].map(v => ({ id: v, name: tw(v), sub: v ? (v >= 10000 ? '감동받음' : '고마워요') : '일단 들어 볼게' })), state.draft.amount,
+      chips([0, 1000, 5000, 10000, 30000].map(v => ({ id: v, name: won(v), sub: v ? (v >= 10000 ? '감동받음' : '고마워요') : '일단 들어 볼게' })), state.draft.amount,
         o => { state.draft.amount = o.id; input.value = o.id; updatePrice(); }),
       el('p', { class: 'note', style: 'margin:10px 0 6px', text: '직접 입력' }), input]));
     noteField(body, '물어볼 것', '고민, 자동화하고 싶은 업무, 무엇이든');
@@ -681,7 +725,7 @@ const BUILD = {
   bot(body) {
     state.draft.tier = was(BOT_TIERS) || BOT_TIERS[0];
     body.append(el('div', { class: 'box' }, [el('h3', { text: '봇 크기' }),
-      chips(BOT_TIERS.map(t => ({ ...t, sub: `${tw(t.build)} + 월 ${tw(t.month)} · ${t.sub}` })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
+      chips(BOT_TIERS.map(t => ({ ...t, sub: `${won(t.build)} + 월 ${won(t.month)} · ${t.sub}` })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
     noteField(body, '어떤 봇?', '서버, 하고 싶은 일, 참고할 봇…');
     body.append(el('p', { class: 'note', text: '월 유지비에는 서버비와 고장 수리가 들어 있어요. 끊으면 봇도 쉬어요.' }));
   },
@@ -690,16 +734,16 @@ const otherInCart = () => state.cart.some(c => c.item.id !== 'dm');
 const PRICE = {
   hours: (it, d) => setPrice((d.hours || 1) * HOUR),
   web: (it, d) => setPrice(d.webPrice || 10000),
-  read: (it, d) => setPrice(d.chars ? Math.max(1000, d.chars * d.tier.rate) : 0, `${d.tier.name} · 천 자에 이빨 ${d.tier.rate}개`),
+  read: (it, d) => setPrice(d.chars ? Math.max(1000, d.chars * d.tier.rate) : 0, `${d.tier.name} · ${d.tier.rate}원/자`),
   qty: (it, d) => setPrice(it.price * d.qty),
   text: (it, d) => setPrice(it.price),
-  partner: () => setPrice(0, '도전장', '이빨 0개'),
+  partner: () => setPrice(0, '도전장', '0원'),
   pwyw: (it, d) => setPrice(d.amount, '주고 싶은 만큼'),
   dm: (it, d) => { const free = otherInCart(); const p = $('#dm-free');
     if (p) p.textContent = free ? '장바구니에 다른 상품이 있어서 무료예요!' : '다른 상품을 하나라도 담으면 무료가 돼요.';
     setPrice(free ? 0 : 5000, free ? '무료 해금' : '가격 (후불)'); },
   quote: () => setPrice(0, '이놀아안 검토 후 가격 책정', '견적 대기'),
-  bot: (it, d) => setPrice(d.tier.build, `제작비 (월 ${tw(d.tier.month)} 별도)`),
+  bot: (it, d) => setPrice(d.tier.build, `제작비 (월 ${won(d.tier.month)} 별도)`),
 };
 function summary(it, d) {
   switch (it.kind) {
@@ -719,14 +763,14 @@ $('#detail-buy').onclick = e => {
   if (!state.item || state.closing) return;
   state.draft.flush?.();
   const it = state.item, d = state.draft;
-  if (it.id === 'dm' && !state.editing && state.cart.some(c => c.item.id === 'dm')) { say('DM 해금은 이미 담겨 있어!'); closeDetail(); return; }
-  if (it.kind === 'read' && !d.chars) { say('읽을 글을 먼저 붙여 넣어 줘!'); wiggle($('#detail-body textarea')); return; }
-  if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) { say('뭘 원하는지 한 줄이라도 적어 줘!'); wiggle($('#detail-body textarea')); return; }
+  if (it.id === 'dm' && !state.editing && state.cart.some(c => c.item.id === 'dm')) { say(T('dmAlready')); closeDetail(); return; }
+  if (it.kind === 'read' && !d.chars) { say(T('needText')); wiggle($('#detail-body textarea')); return; }
+  if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) { say(T('needNote')); wiggle($('#detail-body textarea')); return; }
   const entry = { item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), hours: d.hours, monthly: it.kind === 'bot' ? d.tier.month : 0 };
   if (state.editing && state.cart.includes(state.editing)) {
-    Object.assign(state.editing, entry); say('수정했어. 주문서에 반영했어.');
+    Object.assign(state.editing, entry); say(T('edited'));
   }
-  else { state.cart.push({ key: ++seq, ...entry }); say(babble('added', LINES.added[seq % LINES.added.length])); face('happy', 2200); }
+  else { state.cart.push({ key: ++seq, ...entry }); say(T('added')); }
   flyCoin(e.currentTarget);
   renderCart();
   closeDetail();
@@ -735,7 +779,7 @@ function flyCoin(from) {
   if (!window.gsap || REDUCED) return;
   const a = from.getBoundingClientRect(), b = $('#btn-order').getBoundingClientRect();
   for (let i = 0; i < 5; i++) {
-    const c = img('tooth', 'fly'); c.loading = 'eager'; document.body.append(c); // 이빨이 날아간다
+    const c = img(`mote_${1 + (i % 4)}`, 'fly'); c.loading = 'eager'; document.body.append(c); // 담은 것이 장바구니로 날아간다
     gsap.set(c, { left: a.left + a.width / 2, top: a.top });
     gsap.timeline({ onComplete: () => c.remove() })
       .to(c, { left: b.left + 30 + gsap.utils.random(-20, 20), duration: .7, ease: 'power1.inOut', delay: i * .06 })
@@ -762,18 +806,18 @@ function loadCart() {
 function removeFromCart(c) {
   const at = state.cart.indexOf(c);
   state.cart = state.cart.filter(x => x !== c); renderCart();
-  if ($('#checkout').open) { if (state.cart.length) renderOrder(); else { $('#checkout').close(); say('장바구니를 비웠어. 다시 골라 봐!'); } }
-  toast(`${c.item.name}${c.sum ? ` ${c.sum}` : ''} 뺐어요`, '되돌리기', () => { state.cart.splice(Math.min(at, state.cart.length), 0, c); renderCart(); if ($('#checkout').open) renderOrder(); say('되돌렸어.'); });
+  if ($('#checkout').open) { if (state.cart.length) renderOrder(); else { $('#checkout').close(); say(T('cartEmptied')); } }
+  toast(`${c.item.name}${c.sum ? ` ${c.sum}` : ''} 뺐어요`, '되돌리기', () => { state.cart.splice(Math.min(at, state.cart.length), 0, c); renderCart(); if ($('#checkout').open) renderOrder(); say(T('undone')); });
 }
 function renderCart() {
   const list = $('#cart-list'); list.replaceChildren();
   if (!state.cart.length) list.append(el('li', { class: 'cart-empty', style: 'border:0;background:none', text: '비어 있어요. 마음에 드는 걸 골라 봐요!' }));
   for (const c of state.cart) list.append(el('li', {}, [
     el('button', { class: 'cart-open', title: c.item.kind === 'dm' ? '주문서 보기' : '수정', onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, [c.item.name, c.sum ? el('small', { text: ` ${c.sum}` }) : null,
-      el('small', { text: ` ${c.item.kind === 'quote' ? '견적' : tw(priced(c))}` })]),
+      el('small', { text: ` ${c.item.kind === 'quote' ? '견적' : won(priced(c))}` })]),
     el('button', { 'aria-label': `${c.item.name} 빼기`, text: '✕', onclick: () => removeFromCart(c) })]));
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
-  $('#cart-total').textContent = tw(total); $('#cart-won').textContent = won(total);
+  $('#cart-total').textContent = won(total);
   $('#btn-order').disabled = !state.cart.length;
   $('#btn-order').textContent = state.cart.length ? `주문하기 (${state.cart.length})` : '주문하기';
   saveCart();
@@ -819,17 +863,17 @@ function renderOrder() {
     if (note) note.value = c.note;
     ul.append(el('li', {}, [
       el('div', { class: 'oi-head' }, [el('b', { text: c.item.name }), c.sum ? el('span', { text: c.sum }) : null,
-        el('span', { class: 'oi-price', text: c.item.kind === 'quote' ? '견적' : tw(priced(c)) }),
+        el('span', { class: 'oi-price', text: c.item.kind === 'quote' ? '견적' : won(priced(c)) }),
         c.item.kind === 'dm' ? null : el('button', { type: 'button', class: 'oi-del', text: '수정', onclick: () => { $('#checkout').close(); openDetail(c.item, c); state.backToOrder = true; } }),
         el('button', { type: 'button', class: 'oi-del', 'aria-label': `${c.item.name} 빼기`, text: '빼기', onclick: () => removeFromCart(c) })]),
       note]));
   }
   const total = state.cart.reduce((s, c) => s + priced(c), 0), monthly = state.cart.reduce((s, c) => s + c.monthly, 0);
-  $('#order-total').textContent = `합계 ${tw(total)} = ${won(total)}` + (monthly ? ` + 월 ${tw(monthly)}(${won(monthly)})` : '') + ' (후불)';
+  $('#order-total').textContent = `합계 ${won(total)}` + (monthly ? ` + 월 ${won(monthly)}` : '') + ' (후불)';
   refreshOrder();
 }
 function openOrder() {
-  if (!state.cart.length) { say('장바구니가 비어 있어. 먼저 하나 골라 봐!'); wiggle($('#btn-order')); return; }
+  if (!state.cart.length) { say(T('cartEmpty')); wiggle($('#btn-order')); return; }
   const dlg = $('#checkout');
   if (!dlg.open) {
     $('#order-code').textContent = orderCode();
@@ -839,7 +883,7 @@ function openOrder() {
     $('#send-fail').hidden = true;
     dlg.showModal();
     dlg.scrollTop = 0;
-    say(babble('order', LINES.order));
+    say(T('order'));
     if (window.gsap && !REDUCED) gsap.fromTo('.checkout-inner', { yPercent: -60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: .6, ease: 'bounce.out' });
   }
   renderOrder();
@@ -848,7 +892,7 @@ $('#btn-order').onclick = openOrder;
 $('#checkout-close').onclick = () => $('#checkout').close();
 // 주문서 바깥(어두운 곳)을 누르면 닫힌다
 $('#checkout').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
-$('#order-more').onclick = () => { $('#checkout').close(); say('더 골라 봐. 담은 건 장바구니에 그대로 있어.'); };
+$('#order-more').onclick = () => { $('#checkout').close(); say(T('more')); };
 $('#dm-user').oninput = () => { try { localStorage.setItem(DMUSER_KEY, $('#dm-user').value.trim()); } catch {} refreshOrder(); };
 // 포럼 채널 웹후크로 주문마다 스레드를 하나 연다. 그 스레드가 손님과 조율하는 자리다.
 $('#send-order').onclick = async () => {
@@ -866,7 +910,7 @@ $('#send-order').onclick = async () => {
     btn.dataset.sent = '1'; btn.textContent = '보냈어요 ✓';
     $('#order-edit').inert = true; $('#dm-user').disabled = true;
     out.textContent = `주문이 들어갔어요! 이놀아안이 "${dmUser}"님을 찾아 DM 줄게요. 거기서 같이 조율해요.`;
-    say('주문 들어왔다! DM으로 연락할게.');
+    say(T('sent'));
     state.cart = []; renderCart(); newOrderCode();
   } catch {
     btn.disabled = false;
@@ -892,7 +936,7 @@ function toast(msg, action, onAction) {
 
 /* ── 덧붙는 효과: 그림 파일이 img/에 있을 때만 켠다(그림 세션이 만드는 중) ── */
 // 그림이 img/에 들어오면 이름을 여기에 더한다(없는 파일을 찾느라 404를 내지 않게)
-const FX_FILES = new Set([]);
+const FX_FILES = new Set(['jaw_top', 'jaw_bottom', 'drool_1', 'drool_2', 'drool_3', 'mote_1', 'mote_2', 'mote_3', 'mote_4']);
 const has = k => Promise.resolve(FX_FILES.has(k));
 const FX = {};
 // 상품을 열 때 입이 쾅 다물렸다 열린다
@@ -900,14 +944,14 @@ function chompThen(go) {
   if (!FX.jaw || REDUCED || !window.gsap) return go();
   const top = img('jaw_top', 'jaw jaw-top'), bot = img('jaw_bottom', 'jaw jaw-bot');
   top.loading = bot.loading = 'eager'; document.body.append(top, bot);
+  // body를 흔들면 transform이 남아 fixed 요소(아래 막대·배경)의 기준이 body로 바뀌고 화면이 무너진다. 턱만 흔든다
   gsap.timeline({ onComplete: () => { top.remove(); bot.remove(); } })
-    .fromTo(top, { yPercent: -100 }, { yPercent: 0, duration: .22, ease: 'power3.in' })
-    .fromTo(bot, { yPercent: 100 }, { yPercent: 0, duration: .22, ease: 'power3.in' }, '<')
-    .to('body', { x: 6, duration: .04, yoyo: true, repeat: 3 })
+    .fromTo(top, { yPercent: -100 }, { yPercent: 0, duration: .16, ease: 'power3.in' })
+    .fromTo(bot, { yPercent: 100 }, { yPercent: 0, duration: .16, ease: 'power3.in' }, '<')
+    .to([top, bot], { x: 8, duration: .035, yoyo: true, repeat: 3 })
     .add(go)
-    .to(top, { yPercent: -100, duration: .45, ease: 'expo.out' }, '+=.05')
-    .to(bot, { yPercent: 100, duration: .45, ease: 'expo.out' }, '<')
-    .set('body', { x: 0 });
+    .to(top, { yPercent: -100, duration: .35, ease: 'expo.out' })
+    .to(bot, { yPercent: 100, duration: .35, ease: 'expo.out' }, '<');
 }
 // 윗입술에서 침이 떨어진다
 function drool() {
@@ -928,26 +972,22 @@ function motes() {
     gsap.to(m, { x: () => gsap.utils.random(-80, 80), y: () => gsap.utils.random(-60, 60), rotation: () => gsap.utils.random(-90, 90), duration: () => gsap.utils.random(5, 9), ease: 'sine.inOut', repeat: -1, repeatRefresh: true, yoyo: true });
   }
 }
-// 두꺼비가 가끔 눈을 깜빡이고, 오래 가만있으면 존다
-function blink() {
-  const idle = keeper.querySelector('[data-face=idle]');
-  if (idle && !idle.hidden) { face('blink', 140); }
-  setTimeout(blink, 2200 + Math.random() * 3500);
-}
 (async () => {
   if (REDUCED || !window.gsap) return;
-  const [jaw, dr, mo, bl, sl] = await Promise.all(['jaw_top', 'drool_1', 'mote_1', 'keeper_blink', 'keeper_sleep'].map(has));
+  const [jaw, dr, mo] = await Promise.all(['jaw_top', 'drool_1', 'mote_1'].map(has));
   FX.jaw = jaw && await has('jaw_bottom');
   if (dr) setTimeout(drool, 1500);
   if (mo) motes();
-  for (const [ok, f] of [[bl, 'blink'], [sl, 'sleep']]) if (ok) { const i = el('img', { src: IMG(`keeper_${f}`), alt: '', 'data-face': f }); i.hidden = true; keeper.append(i); }
-  if (bl) setTimeout(blink, 2000);
-  if (sl) { let t; const nap = () => { clearTimeout(t); t = setTimeout(() => { if (!$('#checkout').open) face('sleep'); }, 40000); }; ['pointermove', 'keydown', 'scroll'].forEach(e => addEventListener(e, () => { if (!keeper.querySelector('[data-face=sleep]').hidden) face('idle'); nap(); }, { passive: true })); nap(); }
 })();
+
+const DOODLES = [[1, 52, 14, -8], [2, 78, 10, 12], [3, 64, 40, -4], [4, 90, 46, 6], [5, 46, 30, 10], [6, 70, 64, -12], [7, 56, 58, 4], [8, 84, 28, -6]];
+$('.doodles').replaceChildren(...DOODLES.map(([n, x, y, r]) => { const d = img(`doodle_${n}`, 'doodle'); d.style.cssText = `left:${x}%;top:${y}%;transform:rotate(${r}deg)`; return d; }));
+// 로딩: 입이 열리는 세 장. 스크립트가 없어도 CSS가 알아서 걷어 낸다
+{ const L = $('#loader img'); if (L && !REDUCED) [2, 3].forEach((n, i) => setTimeout(() => { L.src = IMG(`load_${n}`); }, 220 * (i + 1))); }
 
 /* ── 시작 ── */
 loadCart(); renderRail(); renderShelf(); renderExtras(); renderCart();
-setTimeout(() => say(babble('hello', LINES.hello)), 600); poke();
+setTimeout(() => say(T('hello')), 600); poke();
 if (window.gsap && !REDUCED) {
   gsap.from('.sign', { y: -120, rotate: -12, duration: .9, ease: 'bounce.out' });
   gsap.from('.counter', { x: -60, opacity: 0, duration: .5, delay: .3 });
@@ -956,7 +996,8 @@ if (window.gsap && !REDUCED) {
 // 마우스를 따라 입 속이 살짝 출렁인다. 벽은 멀리, 주인은 가까이 있어서 반대로 움직인다
 if (window.gsap && !REDUCED && matchMedia('(pointer: fine)').matches) {
   const q = (t, p) => gsap.quickTo(t, p, { duration: .9, ease: 'power3.out' });
-  const bx = q('.scene', 'x'), by = q('.scene', 'y'), kx = q('#keeper', 'x'), gx = q('.sign', 'x');
-  addEventListener('pointermove', e => { const mx = e.clientX / innerWidth - .5, my = e.clientY / innerHeight - .5; bx(-mx * 22); by(-my * 14); kx(mx * 10); gx(mx * 6); }, { passive: true });
+  const LAYERS = [['.l-wall', 4], ['.doodles', 8], ['.l-green', 12], ['.l-yellow', 16], ['.l-lower', 18], ['.l-upper', 24]].map(([sel, d]) => [q(sel, 'x'), q(sel, 'y'), d]);
+  const gx = q('.sign', 'x');
+  addEventListener('pointermove', e => { const mx = e.clientX / innerWidth - .5, my = e.clientY / innerHeight - .5; LAYERS.forEach(([x, y, d]) => { x(-mx * d); y(-my * d * .6); }); gx(mx * 6); }, { passive: true });
 }
 })();
