@@ -1,7 +1,7 @@
 /* 봉봉봉 — 생물이 벌린 입 속 가게. 그림은 레인월드 벽 낙서풍(art/README.md).
    색은 그림에서 따 왔다: 어두운 벽, 분홍 입, 크림 이빨, 민트·노랑 생물. */
 :root{
-  --wall:#282826;--wall2:#33322e;--wall3:#403e38;--ink:#151413;
+  --wall:#2b2b28;--wall2:#33322e;--wall3:#403e38;--ink:#151413;
   --cream:#f2e6c9;--cream2:#e3d4ae;--pink:#f47c7a;--pink2:#d65c5e;--gum:#b8505a;
   --mint:#8ccb9d;--mint2:#5fa877;--yellow:#e2b33c;--blood:#a8323a;
   --muted:#a49d8e;--text:#f2e6c9;
@@ -325,11 +325,11 @@ html.locked{overscroll-behavior:none}
 /* 배경 층: 다섯 장을 같은 크기·자리로 겹친다 */
 .scene{background:var(--wall)}
 .scene .l{position:absolute;inset:0;background:left bottom/cover no-repeat}
-.l-wall{background-image:url("img/bg_wall.webp")!important}
-.l-green{background-image:url("img/bg_green.webp")!important}
-.l-yellow{background-image:url("img/bg_yellow.webp")!important}
-.l-lower{background-image:url("img/bg_lower.webp")!important}
-.l-upper{background-image:url("img/bg_upper.webp")!important}
+.l-wall{background-image:url("img/bg3_wall.webp")!important}
+.l-green{background-image:url("img/bg3_green.webp")!important}
+.l-yellow{background-image:url("img/bg3_yellow.webp")!important}
+.l-lower{background-image:url("img/bg3_lower.webp")!important}
+.l-upper{background-image:url("img/bg3_upper.webp")!important}
 .doodles .doodle{position:absolute;width:clamp(48px,6vw,96px);height:auto;opacity:.45}
 @media (max-width:900px){.scene .l{background-position:12% bottom}.doodles{display:none}}
 
