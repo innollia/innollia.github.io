@@ -466,3 +466,23 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
   .cart-list{order:0;flex-basis:auto;height:50px;margin-top:-24px}
   .cart-list li .cart-open{width:46px;height:46px}
 }
+
+/* 진열대 가격표가 잘리지 않게, 간판 딱지는 크고 또렷하게 */
+.ring .card .card-price .tag-text{font-size:17px;letter-spacing:-.5px;overflow:visible;text-overflow:clip}
+.ring .card .card-price{padding-right:19%}
+.badge{font-size:20px;padding:4px 12px;transform:rotate(-4deg);background:var(--ink)!important;color:var(--yellow);border-color:var(--yellow);text-shadow:none;letter-spacing:1px}
+.badge.hot{color:#ff8a96;border-color:#ff8a96}
+.badge.free{color:var(--mint);border-color:var(--mint)}
+/* 장바구니 더미는 손 옆에 겹겹이 */
+.cart-list li .cart-open{width:56px;height:56px}
+
+/* AI 제작 할인 딱지, 정가 줄긋기, 일시품절 */
+.sale-sticker{position:absolute;top:-4px;right:-2px;z-index:3;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);font:22px/1 var(--disp);padding:6px 8px;border-radius:50%;transform:rotate(10deg);box-shadow:0 3px 0 var(--ink)}
+.card-price .tag-was{display:block;font-size:12px;color:#7a6f5c;text-decoration-thickness:2px;line-height:1}
+.price-was{margin-left:8px;color:var(--muted);text-decoration-thickness:2px}
+.card.sold .card-art,.card.sold .card-price{filter:grayscale(1) brightness(.7)}
+.stamp.sold-stamp{background:var(--ink);color:#ff8a96;border-color:#ff8a96}
+.ring .card:not(.is-front) .sale-sticker{opacity:0}
+.stage.spreading .ring .card .sale-sticker{opacity:1}
+/* 창이 낮으면 진열대가 줄고 올라가니 밑에 깔린 혀도 따라간다 */
+.ring .tongue{top:calc(58% + var(--cy,0px));width:calc(clamp(210px,24vw,330px) * var(--fit,1))}

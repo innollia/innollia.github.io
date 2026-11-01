@@ -27,6 +27,7 @@ static/shop/
   index.html              뼈대: 간판, 주인 말풍선, 진열대, 상세 패널, 장바구니, 주문서(영수증)
   shop.css                전체 스타일. 색·글꼴은 :root 변수
   shop.js                 상품·가격·동작 전부 (아래 표)
+  stock.js                재고·가격판(시급, AI 할인율, 일시품절, 고정 가격). 관제 패널이 window.STOCK의 JSON만 고친다
   dialogue.js             사이트의 글 전부(사용자가 직접 고치는 파일). 1부 말풍선 대사, 2부 화면 글(상품 이름·설명·버튼·안내·주문서).
                           헛소리(idle)는 문장생성기 accept가 더한다. shop.js에는 값(가격·시간)만 남기고 글은 두지 않는다
   oracle.js               신탁 점술 답 185줄(dialogue.js 다음에 읽힌다)
