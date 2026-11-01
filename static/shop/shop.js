@@ -2,7 +2,15 @@
 (() => {
 'use strict';
 
-const RATE = 20000, AI_RATE = 5000, HOUR = RATE + AI_RATE;
+// 시급·할인·품절·고정 가격은 stock.js(관제 패널이 고친다)에서 온다
+const STOCK = window.STOCK || {};
+const RATE = STOCK.labor ?? 13000, AI_RATE = STOCK.aiHour ?? 5000, HOUR = RATE + AI_RATE;
+const SALE = (STOCK.aiSale ?? 0) / 100, AI_ITEMS = new Set(STOCK.aiItems || []), SOLD = new Set(STOCK.soldOut || []);
+const DM_PRICE = STOCK.price?.dm ?? 5000;
+// 웹사이트 구간·봇 제작비는 시간당 25,000원 기준으로 짠 값이라 지금 시간당 값에 맞춰 1,000원 단위로 줄이거나 늘린다
+const scaled = v => Math.round(v * HOUR / 25000 / 1000) * 1000;
+// AI로 만드는 상품이면 할인한 값(100원 단위)
+const deal = (it, v) => AI_ITEMS.has(it.id) && SALE ? Math.round(v * (1 - SALE) / 100) * 100 : v;
 /* 주문을 받을 디스코드 포럼 채널의 웹후크 주소. 비어 있으면 "복사 → DM"으로만 받는다. */
 const DISCORD = { webhook: 'https://discord.com/api/webhooks/1564973701697507438/F-r_V9ZolGjywsiOHrfTN3xceXLt4WQWqPn-IjKzQMYLayQOe9R3kWP5OcMqx8qYHpbY', guild: '1533421689558270152' }; // 주문 포럼은 이놀아안 개인 서버. 손님은 못 들어가니 링크를 주지 않는다
 
@@ -50,7 +58,8 @@ if (!REDUCED) {
   FRAMED.forEach(k => [2, 3].forEach(i => { new Image().src = IMG(`${k}_f${i}`); })); // 미리 받아 두어 깜빡이지 않게
   setInterval(() => {
     if (!FRAMED.size || document.hidden) return; tick++;
-    document.querySelectorAll('img[data-icon]').forEach((m, j) => { const k = m.dataset.icon; if (FRAMED.has(k)) m.src = IMG(`${k}_f${SEQ[(tick + j) % 4]}`); });
+    // 움직이는 건 진열대 맨 앞 칸과 열어 본 상품 창의 그림뿐. 나머지는 f1에 멈춰 있어야 앞 칸이 눈에 띈다
+    document.querySelectorAll('.ring .card.is-front img[data-icon], #detail img[data-icon]').forEach((m, j) => { const k = m.dataset.icon; if (FRAMED.has(k)) m.src = IMG(`${k}_f${SEQ[(tick + j) % 4]}`); });
   }, 143);
 }
 const sign = (k, text) => el('img', { src: IMG(`sign_${k}`), alt: text, class: 'sign-img' });
@@ -64,11 +73,11 @@ const ITEMS = [
   { id: 'web', cat: 'make', icon: 'web', c: '#4ab8ff', kind: 'web' },
   { id: 'bot', cat: 'make', icon: 'bot', c: '#2fe0b0', kind: 'bot' },
   { id: 'read', cat: 'voice', icon: 'read', c: '#ff7ac0', kind: 'read' },
-  { id: 'song', cat: 'voice', icon: 'song', c: '#ffc93c', kind: 'qty', price: 2000 },
+  { id: 'song', cat: 'voice', icon: 'song', c: '#ffc93c', kind: 'qty', price: STOCK.price?.song ?? 2000 },
   { id: 'oracle', cat: 'brain', icon: 'oracle', c: '#7a5cff', badgeStyle: 'free', kind: 'pwyw' },
-  { id: 'research', cat: 'brain', icon: 'research', c: '#4ab8ff', kind: 'text', price: 10000 },
-  { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', kind: 'qty', price: 1000 },
-  { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', kind: 'dm' },
+  { id: 'research', cat: 'brain', icon: 'research', c: '#4ab8ff', kind: 'text', price: STOCK.price?.research ?? 10000 },
+  { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', kind: 'qty', price: STOCK.price?.xpost ?? 1000 },
+  { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', badgeStyle: 'free', kind: 'dm' },
   { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', kind: 'quote' },
   { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', kind: 'partner' },
   { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', soon: true },
@@ -80,14 +89,22 @@ const ITEMS = [
 ];
 ITEMS.forEach(it => { const g = D.goods?.[it.id] || {};
   Object.assign(it, { name: g.name || it.id, sub: g.sub || '', priceText: g.price || '', desc: g.desc || '', field: g.field || '', hint: g.hint || '', unit: g.unit || '',
-    badge: g.badge ? [g.badge, it.badgeStyle || ''] : null }); });
+    badge: g.badge ? [g.badge, it.badgeStyle || ''] : null, sold: SOLD.has(it.id), sale: AI_ITEMS.has(it.id) && SALE > 0 }); });
 // 상품별 예시 칸("이걸로 뭐 할 건데?")
 const USES = Object.fromEntries(ITEMS.filter(it => D.goods?.[it.id]?.ask).map(it => [it.id, { q: D.goods[it.id].ask, ex: D.goods[it.id].examples || [] }]));
 const named = (list, key) => list.map(o => ({ ...o, name: o.id, sub: '', ...pick(`detail.${key}.${o.id}`) }));
 const WEB_STEPS = [[.5, 10000], [1, 20000], [2, 35000], [3, 50000], [4, 65000], [5, 80000], [6, 100000]]
-  .map(([h, p], i) => ({ h, p, title: '', desc: '', ...D.detail?.webSteps?.[i] }));
+  .map(([h, p], i) => ({ h, p: scaled(p), title: '', desc: '', ...D.detail?.webSteps?.[i] }));
 const READ_TIERS = named([{ id: 'plain', rate: 10 }, { id: 'base', rate: 20 }, { id: 'act', rate: 35 }, { id: 'soul', rate: 50 }], 'readTiers');
-const BOT_TIERS = named([{ id: 'mini', build: 30000, month: 3000 }, { id: 'work', build: 80000, month: 7000 }, { id: 'soul', build: 150000, month: 15000 }], 'botTiers');
+const BOT_TIERS = named([{ id: 'mini', build: 30000, month: 3000 }, { id: 'work', build: 80000, month: 7000 }, { id: 'soul', build: 150000, month: 15000 }], 'botTiers')
+  .map(t => ({ ...t, build: scaled(t.build) })); // 월 유지비는 서버비라 시급을 따르지 않는다
+// 값이 숫자로 정해지는 상품은 가격표 글을 숫자에서 만든다(dialogue.js의 price는 나머지 상품에만 쓰인다)
+{ const first = { hours: HOUR, web: WEB_STEPS[0].p, bot: BOT_TIERS[0].build };
+  ITEMS.forEach(it => { const g = D.goods?.[it.id] || {};
+    if (first[it.kind] != null) { const v = first[it.kind]; it.listText = T(it.kind === 'hours' ? 'detail.perHour' : 'detail.from', { 가격: won(v) }); it.priceText = T(it.kind === 'hours' ? 'detail.perHour' : 'detail.from', { 가격: won(deal(it, v)) }); }
+    else if (it.price != null) it.priceText = won(it.price);
+    else if (it.kind === 'dm') it.priceText = won(DM_PRICE);
+    if (!it.sale) it.listText = ''; }); }
 const FEAT_KINDS = named([{ id: 'cmd' }, { id: 'data' }, { id: 'ui' }, { id: 'ai' }, { id: 'mem' }], 'featKinds');
 const CARTS = ['bounce', 'curser2', 'squashy', 'train', 'eatkano'].map(id => ({ id, name: pick(`detail.carts.${id}`) || id }));
 let idleTimer;
@@ -252,21 +269,28 @@ function nearest(i) {
   return cur + d;
 }
 function ringTick() {
+  document.querySelectorAll('.ring .card:not(.is-front) img[data-icon]').forEach(m => { const k = m.dataset.icon; if (FRAMED.has(k) && !m.src.endsWith(`${k}_f1.webp`)) m.src = IMG(`${k}_f1`); });
   const n = ring.cards.length; if (!n) return;
   // 멈춰 있으면 다시 그리지 않는다(앞 칸의 둥실거림은 CSS가 한다)
-  if (ring.pos === ring.target && Math.abs(ring.vel) < 1e-4 && ring.drawn === ring.pos && ring.mixDrawn === ring.mix && ring.W === ring.ui.wrap.clientWidth) return;
+  if (ring.pos === ring.target && Math.abs(ring.vel) < 1e-4 && ring.drawn === ring.pos && ring.mixDrawn === ring.mix && ring.W === ring.ui.wrap.clientWidth && ring.H === ring.ui.wrap.clientHeight) return;
   const before = ring.pos;
   ring.pos += (ring.target - ring.pos) * (REDUCED ? 1 : .12);
   if (Math.abs(ring.target - ring.pos) < .0005) ring.pos = ring.target;
   ring.vel = ring.vel * .8 + (ring.pos - before) * .2;
   // 반쯤 보이는 원통: 앞 칸은 크게, 옆 칸은 비스듬히 물러나고, 너무 뒤로 간 칸은 사라진다
   const W = ring.ui.wrap.clientWidth, Rx = W * .52, Rz = 760, step = .82;
+  // 칸 가운데가 높이 52%에 있으니, 커진 앞 칸의 아래 끝(가격표)이 판 안에 들어오는 만큼만 키운다
+  // 판은 최소 높이 때문에 설명판 밑으로 들어갈 수 있어서, 설명판 윗변까지만 쓴다
+  const H = ring.ui.wrap.clientHeight, room = Math.min(H, ring.ui.front.getBoundingClientRect().top - ring.ui.wrap.getBoundingClientRect().top),
+    ch = ring.cards[0].offsetHeight || 1, fit = Math.max(.5, Math.min(1, (room - 12) / (ch * 1.32))),
+    cy = Math.min(0, room / 2 - H * .52); // 남은 자리의 한가운데로 올린다
+  ring.ui.wrap.style.setProperty('--cy', cy.toFixed(1) + 'px'); ring.ui.wrap.style.setProperty('--fit', fit.toFixed(3)); // 앞 칸 밑 혀도 같이
   if (ring.mix > 0 && ring.layoutW !== W) { ring.layout = spreadLayout(); ring.layoutW = W; }
   ring.cards.forEach((c, i) => {
     let d = ((i - ring.pos) % n + n) % n; if (d > n / 2) d -= n; // 원통이라 뒤쪽 칸은 왼편으로 돌아 나온다
     const a = Math.max(-2.4, Math.min(2.4, d * step)), depth = (1 - Math.cos(a)) / 2; // 0 = 맨 앞, 1 = 맨 뒤
-    let p = { x: Math.sin(a) * Rx, y: -depth * 70, z: (Math.cos(a) - 1) * Rz, ry: a * .55, rz: -ring.vel * 40,
-      sc: 1 + (1 - Math.min(1, Math.abs(d))) * .32, // 앞에 오면 크게 튀어나온다
+    let p = { x: Math.sin(a) * Rx, y: cy - depth * 70, z: (Math.cos(a) - 1) * Rz, ry: a * .55, rz: -ring.vel * 40,
+      sc: (1 + (1 - Math.min(1, Math.abs(d))) * .32) * fit, // 앞에 오면 크게 튀어나온다
       op: Math.max(0, Math.min(1 - depth * .7, 3.2 - Math.abs(d))), br: 1 - depth * .55, zi: 100 - Math.round(depth * 100), pe: Math.abs(d) > 2.5 ? 'none' : '' };
     if (ring.mix > 0 && ring.layout) {
       const k = Math.max(0, Math.min(1, ring.mix * 1.5 - i / n * .5)), q = ring.layout[i], L = (u, v) => u + (v - u) * k; // 칸마다 조금씩 늦게
@@ -283,7 +307,7 @@ function ringTick() {
   const hide = Math.max(0, 1 - ring.mix * 2.5);
   ring.ui.front.style.opacity = ring.ui.bar.style.opacity = hide.toFixed(2);
   ring.ui.front.style.pointerEvents = ring.ui.bar.style.pointerEvents = hide < .5 ? 'none' : '';
-  ring.drawn = ring.pos; ring.mixDrawn = ring.mix; ring.W = W;
+  ring.drawn = ring.pos; ring.mixDrawn = ring.mix; ring.W = W; ring.H = H;
   const f = ((Math.round(ring.pos) % n) + n) % n;
   if (f !== ring.front) ringFront(f);
 }
@@ -301,13 +325,14 @@ function ringFront(f) {
   if (prevCat && prevCat !== it.cat) { say(T(`cat.${it.cat}`)); if (window.gsap && !REDUCED) gsap.fromTo(u.cat, { scale: 1.4, rotate: -8 }, { scale: 1, rotate: 0, duration: .5, ease: 'elastic.out(1,.4)' }); }
 }
 function makeCard(it, onPick) {
-  const card = el('button', { class: 'card' + (it.soon ? ' soon' : ''), style: `--c:${it.c}`, 'aria-disabled': it.soon ? 'true' : false,
+  const card = el('button', { class: 'card' + (it.soon ? ' soon' : '') + (it.sold ? ' sold' : ''), style: `--c:${it.c}`, 'aria-disabled': it.soon ? 'true' : false,
     onclick: () => it.soon ? (say(T('soonItem', { 이름: it.name })), wiggle(card)) : onPick ? onPick() : openDetail(it) }, [
     it.badge ? el('span', { class: 'badge ' + (it.badge[1] || ''), text: it.badge[0] }) : null,
-    it.soon ? el('span', { class: 'stamp', text: T('shelf.soonStamp') }) : null,
-    el('div', { class: 'card-art' }, [img(SLOTS[ITEMS.indexOf(it) % SLOTS.length], 'slot'), icon(it.icon, 'icon')]),
+    it.soon ? el('span', { class: 'stamp', text: T('shelf.soonStamp') }) : it.sold ? el('span', { class: 'stamp sold-stamp', text: T('shelf.soldStamp') }) : null,
+    el('div', { class: 'card-art' }, [img(SLOTS[ITEMS.indexOf(it) % SLOTS.length], 'slot'), icon(it.icon, 'icon'),
+      it.sale && !it.soon ? el('span', { class: 'sale-sticker', text: T('shelf.saleSticker', { 할인: Math.round(SALE * 100) }) }) : null]),
     el('div', { class: 'card-body' }, [el('div', { class: 'card-name', text: it.name }), el('div', { class: 'card-sub', text: it.sub }),
-      it.soon ? null : el('div', { class: 'card-price' }, [el('span', { class: 'tag-text', text: it.priceText })])]),
+      it.soon ? null : el('div', { class: 'card-price' }, [it.listText ? el('s', { class: 'tag-was', text: it.listText }) : null, el('span', { class: 'tag-text', text: it.priceText })])]),
   ]);
   // 마우스를 올리면 옆에 미리보기 카드가 뜬다(스팀 라이브러리처럼)
   card.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') peek(it, card); });
@@ -398,7 +423,8 @@ function openDetail(it, prev) {
   const already = it.id === 'dm' && !prev && state.cart.some(c => c.item.id === 'dm');
   $('#detail-buy').textContent = prev ? T('detail.editDone') : already ? T('detail.already') : T('detail.buy');
   $('#detail-buy').classList.toggle('pic', !prev && !already); // 그림 버튼에 "사기"가 그려져 있다
-  $('#detail-buy').disabled = already;
+  $('#detail-buy').disabled = already || it.sold;
+  if (it.sold && !prev) { $('#detail-buy').textContent = T('detail.soldOut'); $('#detail-buy').classList.remove('pic'); }
   $('#detail-say').textContent = '';
   $('#detail-cat').textContent = CATS.find(c => c.id === it.cat).name;
   $('#detail-title').textContent = it.name;
@@ -450,9 +476,9 @@ $('#detail-close').onclick = closeDetail;
 $('.detail-slash').onclick = closeDetail;
 addEventListener('keydown', e => { if (e.key !== 'Escape') return; if ($('#checkout').open) $('#checkout').close(); else closeDetail(); });
 
-function setPrice(value, label = T('detail.price'), text) {
+function setPrice(value, label = T('detail.price'), text, list) {
   state.draft.price = value;
-  const b = $('#detail-price'); $('#detail-price-label').textContent = label;
+  const b = $('#detail-price'); $('#detail-price-label').replaceChildren(label, list && list !== value ? el('s', { class: 'price-was', text: won(list) }) : '');
   b._tw?.kill(); // 앞선 숫자 애니메이션이 늦게 끝나며 옛 가격을 덮어쓰지 않게
   if (text) { b.textContent = text; return; }
   if (window.gsap && !REDUCED) {
@@ -600,7 +626,7 @@ const BUILD = {
         const line = T(!g ? 'hours' : n === h ? 'hoursExact' : 'hoursMore', { 시간: h, 게임: g?.name, 걸린: n });
         if (crossed) say(line); else sayNow(line); // 말풍선이 옛 시간을 붙들고 있지 않게
         state.draft.hours = h;
-        brk.innerHTML = T('detail.gameBreakdown', { 시급: won(RATE), AI: won(AI_RATE), 시간: h, 합계: won(h * HOUR) });
+        brk.innerHTML = T(it.sale ? 'detail.gameBreakdownSale' : 'detail.gameBreakdown', { 시급: won(RATE), AI: won(AI_RATE), 시간: h, 정가: won(h * HOUR), 할인: Math.round(SALE * 100), 합계: won(deal(it, h * HOUR)) });
         updatePrice();
       } });
     body.append(el('div', { class: 'box' }, brk));
@@ -612,7 +638,7 @@ const BUILD = {
       card: h => { const s = at(h); return { head: h < 1 ? T('detail.halfHour') : T('detail.hoursN', { 시간: h }), title: s.title, desc: s.desc }; },
       onChange: (h, crossed) => {
         const s = at(h);
-        if (crossed) say(T('webStep', { 단계: s.title, 가격: won(s.p) }));
+        if (crossed) say(T('webStep', { 단계: s.title, 가격: won(deal(it, s.p)) }));
         state.draft.hours = h; state.draft.webPrice = s.p; updatePrice();
       } });
     noteField(body, it.field, it.hint);
@@ -668,15 +694,15 @@ const BUILD = {
   bot(body, it) {
     state.draft.tier = was(BOT_TIERS) || BOT_TIERS[0];
     body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.botTierTitle') }),
-      chips(BOT_TIERS.map(t => ({ ...t, sub: T('detail.botTierSub', { 제작비: won(t.build), 월: won(t.month), 설명: t.sub }) })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
+      chips(BOT_TIERS.map(t => ({ ...t, sub: T('detail.botTierSub', { 제작비: won(deal(it, t.build)), 월: won(t.month), 설명: t.sub }) })), state.draft.tier.id, t => { state.draft.tier = t; updatePrice(); })]));
     noteField(body, it.field, it.hint);
     body.append(el('p', { class: 'note', text: T('detail.botNote') }));
   },
 };
 const otherInCart = () => state.cart.some(c => c.item.id !== 'dm');
 const PRICE = {
-  hours: (it, d) => setPrice((d.hours || 1) * HOUR),
-  web: (it, d) => setPrice(d.webPrice || 10000),
+  hours: (it, d) => { const v = (d.hours || 1) * HOUR; setPrice(deal(it, v), undefined, undefined, v); },
+  web: (it, d) => { const v = d.webPrice || WEB_STEPS[0].p; setPrice(deal(it, v), undefined, undefined, v); },
   read: (it, d) => setPrice(d.chars ? Math.max(1000, d.chars * d.tier.rate) : 0, T('detail.readPrice', { 등급: d.tier.name, 값: d.tier.rate })),
   qty: (it, d) => setPrice(it.price * d.qty),
   text: (it, d) => setPrice(it.price),
@@ -684,9 +710,9 @@ const PRICE = {
   pwyw: (it, d) => setPrice(d.amount, T('detail.payPrice')),
   dm: (it, d) => { const free = otherInCart(); const p = $('#dm-free');
     if (p) p.textContent = T(free ? 'detail.dmFreeYes' : 'detail.dmFreeNo');
-    setPrice(free ? 0 : 5000, T(free ? 'detail.dmFreePrice' : 'detail.price')); },
+    setPrice(free ? 0 : DM_PRICE, T(free ? 'detail.dmFreePrice' : 'detail.price')); },
   quote: () => setPrice(0, T('detail.featPrice'), T('detail.featWait')),
-  bot: (it, d) => setPrice(d.tier.build, T('detail.botPrice', { 월: won(d.tier.month) })),
+  bot: (it, d) => setPrice(deal(it, d.tier.build), T('detail.botPrice', { 월: won(d.tier.month) }), undefined, d.tier.build),
 };
 function summary(it, d) {
   switch (it.kind) {
@@ -747,12 +773,12 @@ function burst(n) {
 }
 // 더미 속 자리: 바닥부터 한 줄에 몇 개씩 엇갈려 쌓인다(같은 칸은 늘 같은 자리)
 function pileSpot(i) {
-  const cols = 5, row = Math.floor(i / cols), col = i % cols, j = ((i * 53) % 11) - 5;
-  return { x: (col + .5 + (row % 2) * .5) / (cols + .5) * 100 + j * .5, y: row * 22 + Math.abs(j), r: ((i * 37) % 31) - 15 };
+  const cols = 6, row = Math.floor(i / cols), col = i % cols, j = ((i * 53) % 11) - 5;
+  return { x: 30 + col * 34 + (row % 2) * 17 + j, y: row * 20 + Math.abs(j) * .6, r: ((i * 37) % 31) - 15 };
 }
 
 /* ── 장바구니 (새로고침해도 남게 localStorage에 둔다) ── */
-function priced(c) { return c.item.id === 'dm' ? (state.cart.some(x => x.item.id !== 'dm') ? 0 : 5000) : c.price; }
+function priced(c) { return c.item.id === 'dm' ? (state.cart.some(x => x.item.id !== 'dm') ? 0 : DM_PRICE) : c.price; }
 const CART_KEY = 'bongbongbong-cart';
 function saveCart() {
   try { localStorage.setItem(CART_KEY, JSON.stringify(state.cart.map(c => ({ id: c.item.id, price: c.price, sum: c.sum, note: c.note, hours: c.hours, monthly: c.monthly })))); } catch {}
@@ -761,7 +787,10 @@ function loadCart() {
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch {}
   for (const s of Array.isArray(saved) ? saved : []) {
-    const item = ITEMS.find(i => i.id === s.id && !i.soon);
+    const item = ITEMS.find(i => i.id === s.id && !i.soon && !i.sold);
+    // 시급·할인이 바뀌었을 수 있으니 시간으로 값이 정해지는 상품은 다시 계산한다
+    if (item?.kind === 'hours' && s.hours) s.price = deal(item, s.hours * HOUR);
+    if (item?.kind === 'web' && s.hours) s.price = deal(item, (WEB_STEPS.find(w => w.h === s.hours) || WEB_STEPS[0]).p);
     if (item) state.cart.push({ key: ++seq, item, price: s.price || 0, sum: s.sum || '', note: s.note || '', hours: s.hours, monthly: s.monthly || 0 });
   }
 }
@@ -778,7 +807,7 @@ function renderCart() {
   // 담은 것은 목록이 아니라 더미로 쌓인다. 그림을 누르면 고치고, 주문하기를 누르면 주문서에서 다 볼 수 있다
   state.cart.forEach((c, i) => { const p = pileSpot(i);
     const label = `${c.item.name}${c.sum ? ` ${c.sum}` : ''} · ${c.item.kind === 'quote' ? T('cart.quote') : won(priced(c))}`;
-    list.append(el('li', { 'data-key': c.key, style: `left:${p.x}%;bottom:${p.y}px;--r:${p.r}deg;z-index:${10 + i}` }, [
+    list.append(el('li', { 'data-key': c.key, style: `left:${p.x}px;bottom:${p.y}px;--r:${p.r}deg;z-index:${10 + i}` }, [
       el('button', { class: 'cart-open', title: label, 'aria-label': label, onclick: () => c.item.kind === 'dm' ? openOrder() : openDetail(c.item, c) }, icon(c.item.icon))])); });
   const total = state.cart.reduce((s, c) => s + priced(c), 0);
   $('#cart-total').textContent = won(total);
@@ -852,7 +881,19 @@ function openOrder() {
   }
   renderOrder();
 }
-$('#btn-order').onclick = openOrder;
+$('#btn-order').onclick = () => {
+  const pics = [...document.querySelectorAll('#cart-list li img')], btn = $('#btn-order');
+  if (!state.cart.length || $('#checkout').open || !window.gsap || REDUCED) return openOrder();
+  const b = btn.getBoundingClientRect(); btn.disabled = true;
+  const tl = gsap.timeline({ onComplete: () => { gsap.set(pics, { clearProps: 'all' }); btn.disabled = false; openOrder(); } });
+  pics.forEach((m, i) => { const r = m.getBoundingClientRect();
+    const dx = b.left + b.width / 2 - (r.left + r.width / 2), dy = b.top + b.height / 2 - (r.top + r.height / 2);
+    tl.to(m, { y: -50, scale: 1.2, rotation: '+=180', duration: .16, ease: 'power2.out' }, i * .06)
+      .to(m, { x: dx, y: dy, scale: .2, rotation: '+=200', duration: .28, ease: 'power2.in' }, i * .06 + .16)
+      .to(btn, { scaleX: 1.18, scaleY: .82, duration: .05, yoyo: true, repeat: 1 }, i * .06 + .42); });
+  tl.to(btn, { scale: 1.3, rotation: -6, duration: .12 }).to(btn, { scale: 1, rotation: 0, duration: .4, ease: 'elastic.out(1,.35)' })
+    .add(() => burst(btn), '<');
+};
 $('#checkout-close').onclick = () => $('#checkout').close();
 // 주문서 바깥(어두운 곳)을 누르면 닫힌다
 $('#checkout').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
