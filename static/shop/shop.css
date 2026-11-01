@@ -5,8 +5,10 @@
   --cream:#f2e6c9;--cream2:#e3d4ae;--pink:#f47c7a;--pink2:#d65c5e;--gum:#b8505a;
   --mint:#8ccb9d;--mint2:#5fa877;--yellow:#e2b33c;--blood:#a8323a;
   --muted:#a49d8e;--text:#f2e6c9;
+  /* 글자 위계(작은 것부터): 고운돋움 = 설명·안내(14px 이상) / 주아 = 이름·단추·딱지·값 / 독도 = 26px 넘는 큰 제목만 */
   --disp:"Dokdo","Malgun Gothic",sans-serif;
-  --body:"Gaegu","Malgun Gothic",sans-serif;
+  --label:"Jua","Malgun Gothic",sans-serif;
+  --body:"Gowun Dodum","Malgun Gothic",sans-serif;
   /* 손으로 그린 덩어리 모양. 네모 칸 대신 쓴다 */
   --blob:22px 30px 18px 34px / 28px 18px 32px 20px;
   --blob2:30px 18px 34px 22px / 20px 32px 18px 28px;
@@ -15,7 +17,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
-body{background:var(--wall);color:var(--text);font:700 18px/1.45 var(--body);min-height:100vh;overflow-x:hidden;padding-bottom:120px}
+body{background:var(--wall);color:var(--text);font:400 18px/1.5 var(--body);min-height:100vh;overflow-x:hidden;padding-bottom:120px}
 button{font:inherit;color:inherit;cursor:pointer}
 img{max-width:100%}
 :focus-visible{outline:3px dashed var(--yellow);outline-offset:4px}
@@ -31,7 +33,7 @@ img{max-width:100%}
 .back:hover{color:var(--yellow)}
 .sign{margin:2px 0 0;line-height:0;width:min(100%,300px);transform:rotate(-3deg);filter:drop-shadow(0 5px 0 rgba(0,0,0,.35))}
 .sign img{width:100%;height:auto}
-.sign-small{margin:0 0 0 14px;font:22px var(--disp);color:var(--ink);background:var(--yellow);padding:0 12px;border-radius:var(--blob2);transform:rotate(2deg)}
+.sign-small{margin:0 0 0 14px;font:19px var(--label);color:var(--ink);background:var(--yellow);padding:0 12px;border-radius:var(--blob2);transform:rotate(2deg)}
 
 .counter{position:relative;display:flex;flex-direction:column;align-items:flex-start}
 #keeper{position:relative;width:min(100%,250px);aspect-ratio:440/466;margin-left:6px;filter:drop-shadow(0 8px 0 rgba(0,0,0,.3))}
@@ -44,7 +46,7 @@ img{max-width:100%}
 .shop,.extras{margin-left:calc(var(--booth) + 12px);margin-right:clamp(16px,15vw,260px);padding:0 12px}
 .shop{padding-top:18px}
 .rail{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;padding:10px 0;background:linear-gradient(var(--wall) 75%,transparent)}
-.tab{border:3px solid var(--ink);background:var(--wall3);color:var(--cream);padding:6px 16px;font:21px/1.1 var(--disp);border-radius:var(--blob);box-shadow:0 4px 0 var(--ink);transition:transform .12s}
+.tab{border:3px solid var(--ink);background:var(--wall3);color:var(--cream);padding:6px 16px;font:18px/1.1 var(--label);border-radius:var(--blob);box-shadow:0 4px 0 var(--ink);transition:transform .12s}
 .tab small{display:none}
 .tab:hover{transform:translateY(-2px) rotate(-1deg)}
 .tab[aria-selected=true]{background:var(--pink);color:var(--ink)}
@@ -65,19 +67,19 @@ img{max-width:100%}
 .card:hover .card-art .icon{transform:translateX(-50%) translateY(-8px) rotate(-4deg) scale(1.06)}
 .card:active .card-art .icon{transform:translateX(-50%) scale(.95)}
 .card-body{padding:2px 4px 0;display:flex;flex-direction:column;gap:2px;flex:1}
-.card-name{font:24px/1.1 var(--disp);color:var(--cream);text-shadow:2px 2px 0 var(--ink)}
+.card-name{font:20px/1.1 var(--label);color:var(--cream);text-shadow:2px 2px 0 var(--ink)}
 .card-sub{font-size:14px;color:var(--muted);flex:1}
 /* 가격표: 끝에 얼굴 달린 크림 판. 글자는 판 가운데 */
 .card-price{position:relative;margin-top:6px;width:94%;aspect-ratio:466/150;background:url("img/ui_tag.webp") center/100% auto no-repeat;display:flex;flex-direction:column;justify-content:center;padding:0 22% 0 9%;color:var(--ink);line-height:1.05}
-.card-price .tag-text{font:21px/1 var(--disp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-price small{font-size:12px;color:#5b5446;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.badge{position:absolute;top:2px;left:0;z-index:2;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);font:17px/1 var(--disp);padding:3px 10px;border-radius:var(--blob2);transform:rotate(-6deg)}
+.card-price .tag-text{font:18px/1 var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-price small{font-size:14px;color:#5b5446;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{position:absolute;top:2px;left:0;z-index:2;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);font:14px/1 var(--label);padding:3px 10px;border-radius:var(--blob2);transform:rotate(-6deg)}
 .badge.hot{background:var(--pink)}
 .badge.free{background:var(--mint)}
 .card.soon{cursor:default}
 .card.soon .card-art,.card.soon .card-name{filter:grayscale(.9) brightness(.7)}
 .card.soon:hover .card-art .icon{transform:translateX(-50%)}
-.stamp{position:absolute;top:30%;right:4px;z-index:2;transform:rotate(12deg);border:3px solid var(--blood);color:var(--blood);background:var(--cream);font:19px var(--disp);padding:0 8px;border-radius:var(--blob)}
+.stamp{position:absolute;top:30%;right:4px;z-index:2;transform:rotate(12deg);border:3px solid var(--blood);color:var(--blood);background:var(--cream);font:16px var(--label);padding:0 8px;border-radius:var(--blob)}
 
 /* ── 상세 패널: 오른쪽에서 혀처럼 나온다 ── */
 .detail{position:fixed;inset:0;z-index:40;display:grid;justify-items:end;pointer-events:none;visibility:hidden}
@@ -96,9 +98,9 @@ img{max-width:100%}
 .detail-say:empty{display:none}
 .detail-body{display:flex;flex-direction:column;gap:14px}
 .detail-foot{position:fixed;z-index:5;bottom:0;right:0;width:min(640px,100%);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 22px 12px 34px;background:var(--wall);border-top:4px solid var(--ink)}
-.detail-price small{display:block;color:var(--muted);font-size:13px}
+.detail-price small{display:block;color:var(--muted);font-size:14px}
 .detail-price b{display:block;font:32px/1.05 var(--disp);color:var(--yellow)}
-.detail-price .won{font-size:13px;color:var(--cream2)}
+.detail-price .won{font-size:14px;color:var(--cream2)}
 
 .btn-buy,.btn-order{border:4px solid var(--ink);background:var(--pink);color:var(--ink);font:26px/1 var(--disp);padding:10px 26px;border-radius:var(--blob);box-shadow:0 5px 0 var(--ink);transition:transform .1s,box-shadow .1s}
 .btn-buy:hover:not(:disabled),.btn-order:hover:not(:disabled){transform:translateY(-2px) rotate(-1deg);box-shadow:0 7px 0 var(--ink)}
@@ -110,18 +112,18 @@ img{max-width:100%}
 .btn-buy.pic:active{box-shadow:none;transform:translateY(2px) scale(.96)}
 
 .box{background:var(--wall3);border:3px solid var(--ink);border-radius:var(--blob);padding:14px}
-.box h3{margin:0 0 8px;font:400 23px var(--disp);color:var(--yellow)}
+.box h3{margin:0 0 8px;font:400 20px var(--label);color:var(--yellow)}
 .lbl{font-size:14px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:3px solid var(--ink);background:var(--cream);color:var(--ink);border-radius:var(--blob2);padding:8px 12px;font-size:15px;box-shadow:0 3px 0 var(--ink);text-align:left}
-.chip small{display:block;font-size:12px;color:#6a6252}
+.chip small{display:block;font-size:14px;color:#6a6252}
 .chip[aria-pressed=true]{background:var(--mint);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
-textarea,input[type=text],input[type=number]{width:100%;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:10px 12px;font:700 16px var(--body)}
+textarea,input[type=text],input[type=number]{width:100%;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:10px 12px;font:400 16px var(--body)}
 textarea{min-height:120px;resize:vertical}
 .stepper{display:flex;align-items:center;gap:10px}
 .stepper button{width:46px;height:46px;border:3px solid var(--ink);background:var(--cream);color:var(--ink);border-radius:var(--blob);font-size:22px;box-shadow:0 3px 0 var(--ink)}
 .stepper b{font:30px var(--disp);min-width:44px;text-align:center}
-.note{font-size:13px;color:var(--muted);margin:0}
+.note{font-size:14px;color:var(--muted);margin:0}
 .uses-list{margin:0;padding-left:20px}
 .breakdown{font:17px/1.8 var(--body);color:var(--muted);margin:0}
 .breakdown b{color:var(--cream)}
@@ -139,10 +141,10 @@ textarea{min-height:120px;resize:vertical}
 .tb-knob:active{cursor:grabbing}
 .tb-card{position:absolute;top:0;width:min(300px,100%);display:flex;gap:10px;align-items:center;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:var(--blob);padding:8px;min-height:110px;box-shadow:0 4px 0 var(--ink)}
 .tc-shot{flex:none;width:120px;aspect-ratio:16/10;border-radius:10px;border:2px solid var(--ink);background:#000 center/cover}
-.tc-head{display:block;font:400 24px/1 var(--disp)}
+.tc-head{display:block;font:400 20px/1 var(--label)}
 .tc-title{font-size:14px}
-.tc-desc{margin:2px 0 0;font-size:12px;color:#5b5446}
-.tb-hint{text-align:center;margin:0;font-size:13px;color:var(--muted)}
+.tc-desc{margin:2px 0 0;font-size:14px;color:#5b5446}
+.tb-hint{text-align:center;margin:0;font-size:14px;color:var(--muted)}
 
 /* ── 동업자: PICO-8 게임 ── */
 .player{display:none;margin-top:14px}
@@ -157,11 +159,11 @@ textarea{min-height:120px;resize:vertical}
 .extra .grid{margin-top:6px}
 .hall{display:grid;gap:10px;margin-top:8px}
 .hall-row{display:flex;align-items:center;gap:12px;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:var(--blob);padding:8px 14px;box-shadow:0 4px 0 var(--ink)}
-.hall-row b{font:23px var(--disp)}
-.hall-row .rank{font:22px var(--disp);color:var(--blood);width:34px}
+.hall-row b{font:20px var(--label)}
+.hall-row .rank{font:19px var(--label);color:var(--blood);width:34px}
 .hall-row .amt{margin-left:auto}
 .hall-empty{margin:0;color:var(--cream);background:var(--wall3);border:3px dashed var(--muted);border-radius:var(--blob);padding:12px 16px}
-.bmc{display:block;text-align:center;border:3px solid var(--ink);background:var(--yellow);color:var(--ink);border-radius:var(--blob2);padding:8px;font:22px var(--disp);text-decoration:none;box-shadow:0 4px 0 var(--ink)}
+.bmc{display:block;text-align:center;border:3px solid var(--ink);background:var(--yellow);color:var(--ink);border-radius:var(--blob2);padding:8px;font:19px var(--label);text-decoration:none;box-shadow:0 4px 0 var(--ink)}
 
 /* ── 장바구니: 혀 위에 놓인 손 ── */
 .cartbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;gap:14px;padding:10px 20px 12px 12px;background:var(--pink);color:var(--ink);border-top:5px solid var(--ink);border-radius:40px 40px 0 0/24px 24px 0 0}
@@ -169,11 +171,11 @@ textarea{min-height:120px;resize:vertical}
 .cart-list{flex:1;display:flex;gap:8px;overflow-x:auto;list-style:none;margin:0;padding:4px 2px;scrollbar-width:thin}
 .cart-list li{flex:none;display:flex;align-items:center;gap:6px;background:var(--cream);border:3px solid var(--ink);border-radius:var(--blob2);padding:3px 4px 3px 10px;font-size:15px}
 .cart-list li small{margin-left:4px;color:#5b5446}
-.cart-list li button{border:0;background:var(--ink);color:var(--cream);border-radius:10px;min-width:32px;min-height:32px;font-size:12px;line-height:1}
+.cart-list li button{border:0;background:var(--ink);color:var(--cream);border-radius:10px;min-width:32px;min-height:32px;font-size:14px;line-height:1}
 .cart-list li .cart-open{width:auto;height:auto;min-width:0;min-height:0;background:none;color:inherit;font-size:15px;border-radius:0;white-space:nowrap;padding:0;text-decoration:underline dotted}
 .cart-empty{color:var(--ink);font-size:15px;opacity:.75}
 .cart-sum{text-align:right;line-height:1.1}
-.cart-sum small{display:block;font-size:12px;color:#5a2126}
+.cart-sum small{display:block;font-size:14px;color:#5a2126}
 .cart-sum b{font:28px/1 var(--disp)}
 .cart-sum .won{color:#5a2126}
 .btn-order{background:var(--cream)}
@@ -196,12 +198,12 @@ textarea{min-height:120px;resize:vertical}
 .oi-del{border:3px solid var(--ink);background:var(--cream2);border-radius:var(--blob);padding:2px 10px;min-height:32px;color:var(--ink)}
 .order-items textarea{margin-top:6px;font-size:15px;min-height:0;background:#fff}
 .order-total{margin:4px 0;font-size:19px}
-.btn-sub{display:inline-block;border:3px solid var(--ink);background:var(--mint);color:var(--ink);border-radius:var(--blob);padding:4px 14px;font:20px var(--disp);text-decoration:none;box-shadow:0 3px 0 var(--ink)}
+.btn-sub{display:inline-block;border:3px solid var(--ink);background:var(--mint);color:var(--ink);border-radius:var(--blob);padding:4px 14px;font:17px var(--label);text-decoration:none;box-shadow:0 3px 0 var(--ink)}
 #dm-user-box label{font-size:17px}
 #dm-user{background:#fff}
 .send-big{width:100%;font-size:26px;padding:14px}
 #send-order:disabled{opacity:.5;cursor:not-allowed;background:var(--cream2);color:#6a6252}
-.tiny{font-size:13px;color:#5b5446;margin:8px 0 0}
+.tiny{font-size:14px;color:#5b5446;margin:8px 0 0}
 .tiny a{color:var(--blood)}
 
 .toast{position:fixed;left:50%;top:16px;transform:translate(-50%,40px);opacity:0;z-index:60;background:var(--ink);color:var(--yellow);border:3px solid var(--yellow);border-radius:var(--blob);padding:8px 16px;font-size:16px;pointer-events:none}
@@ -384,7 +386,7 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .peek-art img{max-width:62%;max-height:120px;filter:drop-shadow(0 5px 0 rgba(0,0,0,.4))}
 .peek-body{padding:10px 14px 12px;font-size:15px;line-height:1.4}
 .peek-body p{margin:0}
-.peek-cat{color:var(--mint);font-size:13px}
+.peek-cat{color:var(--mint);font-size:14px}
 .peek-sub{color:var(--cream2)}
 .peek-price{margin-top:6px!important;color:var(--muted)}
 .peek-price b{color:var(--cream);font-size:17px}
@@ -399,7 +401,7 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .ring-dot img{width:100%;height:100%;object-fit:contain;pointer-events:none}
 .ring-dot:hover{opacity:.8;filter:none}
 .ring-dot.on{opacity:1;filter:none;transform:scale(1.45) translateY(-3px)}
-.ring-spread{flex:none;border:3px solid var(--ink);background:var(--mint);color:var(--ink);border-radius:var(--blob2);padding:6px 14px;font:20px var(--disp);box-shadow:0 4px 0 var(--ink)}
+.ring-spread{flex:none;border:3px solid var(--ink);background:var(--mint);color:var(--ink);border-radius:var(--blob2);padding:6px 14px;font:17px var(--label);box-shadow:0 4px 0 var(--ink)}
 .ring-spread[aria-expanded=true]{background:var(--yellow)}
 
 /* 한눈에 보기: 원통을 접고 범주별로 다 펼친다 */
@@ -412,8 +414,8 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .spread-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;border:3px solid var(--ink);background:var(--wall3);color:var(--cream);border-radius:var(--blob2);box-shadow:0 4px 0 var(--ink);transition:transform .15s,background .15s}
 .spread-item:hover{transform:translateY(-3px) rotate(-2deg);background:var(--wall2)}
 .spread-item img{height:62px;width:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 3px 0 rgba(0,0,0,.4))}
-.spread-item b{font:400 21px/1.1 var(--disp);text-align:center}
-.spread-item small{font-size:13px;color:var(--yellow)}
+.spread-item b{font:400 18px/1.1 var(--label);text-align:center}
+.spread-item small{font-size:14px;color:var(--yellow)}
 @media (max-width:900px){.ring-dot{width:24px;height:24px}.spread{top:96px;bottom:60px}.spread-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
 /* 크림 주문서 위 크림 글자 팻말이 보이게 검은 테두리 */
 .checkout h2 .sign-img{filter:drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink)) drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink)) drop-shadow(3px 4px 0 var(--ink))}
@@ -477,8 +479,8 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .cart-list li .cart-open{width:56px;height:56px}
 
 /* AI 제작 할인 딱지, 정가 줄긋기, 일시품절 */
-.sale-sticker{position:absolute;top:-4px;right:-2px;z-index:3;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);font:22px/1 var(--disp);padding:6px 8px;border-radius:50%;transform:rotate(10deg);box-shadow:0 3px 0 var(--ink)}
-.card-price .tag-was{display:block;font-size:12px;color:#7a6f5c;text-decoration-thickness:2px;line-height:1}
+.sale-sticker{position:absolute;top:-4px;right:-2px;z-index:3;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);font:19px/1 var(--label);padding:6px 8px;border-radius:50%;transform:rotate(10deg);box-shadow:0 3px 0 var(--ink)}
+.card-price .tag-was{display:block;font-size:12.5px;color:#7a6f5c;text-decoration-thickness:2px;line-height:1}
 .price-was{margin-left:8px;color:var(--muted);text-decoration-thickness:2px}
 .card.sold .card-art,.card.sold .card-price{filter:grayscale(1) brightness(.7)}
 .stamp.sold-stamp{background:var(--ink);color:#ff8a96;border-color:#ff8a96}
@@ -486,3 +488,15 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .stage.spreading .ring .card .sale-sticker{opacity:1}
 /* 창이 낮으면 진열대가 줄고 올라가니 밑에 깔린 혀도 따라간다 */
 .ring .tongue{top:calc(58% + var(--cy,0px));width:calc(clamp(210px,24vw,330px) * var(--fit,1))}
+
+/* ── 글자 위계 ── */
+/* 예시 칸·고르기 칸: 제목은 주아, 풀이는 고운돋움 */
+.chip{font:17px/1.25 var(--label);letter-spacing:.2px}
+.chip small{font:14px/1.35 var(--body);color:#4f4839;margin-top:3px}
+/* 설명판·상세 설명은 읽는 글이라 고운돋움 그대로, 줄 간격만 넉넉히 */
+.front-desc,#detail-desc,.box p{line-height:1.55}
+/* 작은 안내는 흐린 색이라 대비를 조금 올린다 */
+.note,.tb-hint{color:#c2baa9}
+.tiny{color:#4f4839}
+/* 값표 안의 줄그은 정가는 너무 작아 겹친다. 할인은 -50% 딱지가, 정가는 상세 창이 보여 준다 */
+.card-price .tag-was{display:none}
