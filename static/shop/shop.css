@@ -500,6 +500,6 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .tiny{color:#4f4839}
 /* 값표 안의 줄그은 정가는 너무 작아 겹친다. 할인은 -50% 딱지가, 정가는 상세 창이 보여 준다 */
 .card-price .tag-was{display:none}
-/* 진열대 이름표는 주아로 조금 작게, 길면 칸 밖으로 조금 나가도 한 줄로(…로 자르지 않는다) */
-.ring .card .card-name{font:21px/1.1 var(--label);white-space:nowrap;max-width:none;overflow:visible}
-@media (max-width:900px){.ring .card .card-name,.ring .card.is-front .card-name{font-size:18px}}
+/* 진열대 이름표는 독도 그대로, 길면 칸 밖으로 조금 나가도 한 줄로(…로 자르지 않는다) */
+.ring .card .card-name{white-space:nowrap;max-width:none;overflow:visible}
+
