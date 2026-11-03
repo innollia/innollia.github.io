@@ -5,10 +5,10 @@
   --cream:#f2e6c9;--cream2:#e3d4ae;--pink:#f47c7a;--pink2:#d65c5e;--gum:#b8505a;
   --mint:#8ccb9d;--mint2:#5fa877;--yellow:#e2b33c;--blood:#a8323a;
   --muted:#a49d8e;--text:#f2e6c9;
-  /* 글자 위계(작은 것부터): 고운돋움 = 설명·안내(14px 이상) / 주아 = 이름·단추·딱지·값 / 독도 = 26px 넘는 큰 제목만 */
+  /* 글자 위계(작은 것부터): 푸어스토리 = 설명·안내(14px 이상) / 주아 = 이름·단추·딱지·값 / 독도 = 26px 넘는 큰 제목만. 셋 다 장난스럽게 */
   --disp:"Dokdo","Malgun Gothic",sans-serif;
   --label:"Jua","Malgun Gothic",sans-serif;
-  --body:"Gowun Dodum","Malgun Gothic",sans-serif;
+  --body:"Poor Story","Malgun Gothic",sans-serif;
   /* 손으로 그린 덩어리 모양. 네모 칸 대신 쓴다 */
   --blob:22px 30px 18px 34px / 28px 18px 32px 20px;
   --blob2:30px 18px 34px 22px / 20px 32px 18px 28px;
@@ -500,3 +500,6 @@ html{scrollbar-gutter:stable} /* 창을 열어 스크롤을 잠가도 폭이 바
 .tiny{color:#4f4839}
 /* 값표 안의 줄그은 정가는 너무 작아 겹친다. 할인은 -50% 딱지가, 정가는 상세 창이 보여 준다 */
 .card-price .tag-was{display:none}
+/* 진열대 이름표는 주아로 조금 작게, 길면 칸 밖으로 조금 나가도 한 줄로(…로 자르지 않는다) */
+.ring .card .card-name{font:21px/1.1 var(--label);white-space:nowrap;max-width:none;overflow:visible}
+@media (max-width:900px){.ring .card .card-name,.ring .card.is-front .card-name{font-size:18px}}
