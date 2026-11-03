@@ -166,8 +166,8 @@ window.DIALOGUE = {
         ['서버 노동요', '다 같이 작업할 때'],
       ],
       field: '곡 제목 / 가수', hint: '' },
-    oracle: { name: '신탁', sub: '개인 고민 ~ 업무 자동화', price: '주고 싶은 만큼', badge: '자율',
-      desc: '값은 답을 듣고 주고 싶은 만큼. 0원도 돼요.',
+    oracle: { name: '신탁', sub: '개인 고민 ~ 업무 자동화', price: '원하는데로', badge: '자율',
+      desc: '값은 답을 듣고 주고 싶은 만큼.',
       ask: '무엇을 물어볼까?', examples: [
         ['진로 고민', '이 길 계속 가도 될까'],
         ['업무 자동화', '매주 하는 엑셀 정리, AI로 없앨 수 있을까'],
@@ -195,7 +195,7 @@ window.DIALOGUE = {
       desc: '이놀아안이 확인하고 직접 열어 줘요. 혼자 살 땐 5,000원, 열린 뒤에 내요.',
       // DM 해금은 적는 칸이 없어서 예시 칸이 나오지 않는다(미리보기 카드에만 쓰인다)
       ask: 'ss0랑 DM으로 뭐 할 건데?', examples: [
-        ['1:1 고민 상담', '서버에선 못 하는 얘기'],
+        ['마법소녀', '부트로더'],
         ['개인 메모 비서', '떠오른 걸 던지면 정리해서 보관'],
       ] },
     ss0feat: { name: 'ss0 기능 추가', sub: '이놀아안이 검토 후 가격 책정', price: '검토 후 가격',
@@ -212,8 +212,8 @@ window.DIALOGUE = {
       field: '만든 게임 링크나 설명', hint: 'itch.io 링크, .p8 파일 위치, 무슨 게임인지' },
     // 입고 예정(아직 못 사는 것)
     pix: { name: '픽셀 프로필', sub: '디코 프사·이모티콘' },
-    giftgame: { name: '선물 게임', sub: '생일·기념일용 한 판짜리' },
-    aisetup: { name: 'AI 작업환경 세팅', sub: '내 컴퓨터에 클로드코드 깔고 길들이기' },
+    giftgame: { name: '선물 게임', sub: '생일·기념일용 이상한거' },
+    aisetup: { name: 'AI 작업환경 세팅', sub: '내 컴퓨터에 딸깍뭉텡이 깔고 키우기' },
     playtest: { name: '플레이테스트', sub: '버그·재미 리포트' },
     trpg: { name: 'TRPG 캐릭터 패키지', sub: '과거사·능력·시트' },
     theme: { name: '개인 등장 테마', sub: '8비트 BGM 루프' },
@@ -279,18 +279,18 @@ window.DIALOGUE = {
     payTitle: '얼마 낼래요?',
     payZero: '일단 들어 볼게',
     paySmall: '고마워요',      // 1만 원보다 적을 때
-    payBig: '감동받음',        // 1만 원 이상
+    payBig: '끼룩끼룩',        // 1만 원 이상
     payInput: '직접 입력',
     payPrice: '주고 싶은 만큼',
     paySum: '자율',
-    oracleCredit: '말풍선 점술 답 출처: C. Gilman 『Oracles from the Poets』(공유 저작물), {링크} (CC BY 4.0) 번역',
+    oracleCredit: '출처: C. Gilman 『Oracles from the Poets』, {링크} (CC BY 4.0)',
 
     // ss0 DM 해금
     dmFreeTitle: '무료 조건',
-    dmFreeYes: '장바구니에 다른 상품이 있어서 무료예요!',
-    dmFreeNo: '다른 상품을 하나라도 담으면 무료가 돼요.',
+    dmFreeYes: '서비스입니다.',
+    dmFreeNo: '엘렐렐레 레렐레렐 엘레레렐레레.',
     dmHowTitle: '열리면 이렇게 돼요',
-    dmHow: 'ss0에게 DM으로 그냥 말 걸면 대화가 돼요. 횟수 제한은 없어요.\n명령어·버튼·제어판은 못 써요. 대화만 돼요.\n열리기 전에 DM을 보내면 "해금된 분만 이용할 수 있어요"라고 답해요.',
+    dmHow: 'ss0에게 DM으로 말 걸면 바로 대화가 돼요. 횟수 제한도 없어요.\n대화에 필요한 제어판 기능도 DM에서 같이 열려요.',
     dmFreePrice: '무료 해금',
 
     // ss0 기능 추가
