@@ -421,7 +421,7 @@ function openDetail(it, prev) {
   lastFocus = document.activeElement;
   state.item = it; state.draft = { note: prev?.note || '', prev }; state.editing = prev || null;
   const already = it.id === 'dm' && !prev && state.cart.some(c => c.item.id === 'dm');
-  $('#detail-buy').textContent = prev ? T('detail.editDone') : already ? T('detail.already') : T('detail.buy');
+  $('#detail-buy').textContent = prev ? T('detail.close') : already ? T('detail.already') : T('detail.buy');
   $('#detail-buy').classList.toggle('pic', !prev && !already); // 그림 버튼에 "사기"가 그려져 있다
   $('#detail-buy').disabled = already || it.sold;
   if (it.sold && !prev) { $('#detail-buy').textContent = T('detail.soldOut'); $('#detail-buy').classList.remove('pic'); }
@@ -487,9 +487,22 @@ function setPrice(value, label = T('detail.price'), text, list) {
   } else b.textContent = won(value);
   b.dataset.v = value;
 }
-function updatePrice() { const it = state.item, d = state.draft; PRICE[it.kind]?.(it, d); }
+function updatePrice() { const it = state.item, d = state.draft; PRICE[it.kind]?.(it, d); autoSave(); }
+// 장바구니에 넣을 한 줄. 빠진 게 있으면 그 이유(말풍선 키)를 돌려준다
+function entryOf(it, d) {
+  if (it.kind === 'read' && !d.chars) return 'needText';
+  if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) return 'needNote';
+  return { item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), hours: d.hours, monthly: it.kind === 'bot' ? d.tier.month : 0 };
+}
+// 담아 둔 걸 고치는 중이면 바꾸는 대로 장바구니에 바로 반영한다(따로 누를 단추가 없다)
+function autoSave() {
+  const c = state.editing, d = state.draft;
+  if (!c || !state.cart.includes(c) || !d || state.closing) return;
+  const e = entryOf(state.item, d); if (typeof e === 'string') return; // 비운 채로는 옛 내용을 지키고 있는다
+  Object.assign(c, e); renderCart();
+}
 function noteField(body, label, ph = '') {
-  const t = el('textarea', { placeholder: ph, oninput: e => { state.draft.note = e.target.value; } });
+  const t = el('textarea', { placeholder: ph, oninput: e => { state.draft.note = e.target.value; autoSave(); } });
   t.value = state.draft.note;
   body.append(el('label', { class: 'box' }, [el('h3', { text: label }), t]));
   return t;
@@ -733,13 +746,10 @@ $('#detail-buy').onclick = e => {
   state.draft.flush?.();
   const it = state.item, d = state.draft;
   if (it.id === 'dm' && !state.editing && state.cart.some(c => c.item.id === 'dm')) { say(T('dmAlready')); closeDetail(); return; }
-  if (it.kind === 'read' && !d.chars) { say(T('needText')); wiggle($('#detail-body textarea')); return; }
-  if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) { say(T('needNote')); wiggle($('#detail-body textarea')); return; }
-  const entry = { item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), hours: d.hours, monthly: it.kind === 'bot' ? d.tier.month : 0 };
-  if (state.editing && state.cart.includes(state.editing)) {
-    Object.assign(state.editing, entry); say(T('edited'));
-  }
-  else { state.cart.push({ key: ++seq, ...entry }); say(T('added')); }
+  if (state.editing && state.cart.includes(state.editing)) { autoSave(); say(T('edited')); closeDetail(); return; } // 고친 건 이미 들어가 있다
+  const entry = entryOf(it, d);
+  if (typeof entry === 'string') { say(T(entry)); wiggle($('#detail-body textarea')); return; }
+  state.cart.push({ key: ++seq, ...entry }); say(T('added'));
   const fresh = !state.editing && state.cart[state.cart.length - 1];
   renderCart();
   if (fresh) flyIn(fresh, e.currentTarget);
