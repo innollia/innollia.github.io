@@ -1,0 +1,47 @@
+{{ define "main" }}
+<article class="post gallery">
+  <header class="page-header"><h1 class="page-title">{{ .Title }}</h1></header>
+  {{- $groups := site.Data.gallery -}}
+  {{- if $groups }}
+  <p>{{ .Description }}</p>
+  <nav class="g-toc">
+    {{- range $groups }}<a href="#{{ .id }}">{{ .name }} <small>{{ len .items }}</small></a>{{ end -}}
+  </nav>
+  {{- range $groups }}
+  <section id="{{ .id }}">
+    <h2>{{ .name }} <small>{{ .root }} · {{ len .items }}장</small></h2>
+    {{ with .desc }}<p>{{ . }}</p>{{ end }}
+    <div class="g-grid">
+      {{- range .items }}
+      <a href="/gallery-img/{{ .full }}" title="{{ .path }}/{{ .name }}"><img src="/gallery-img/{{ .thumb }}" alt="{{ .name }}" width="{{ .w }}" height="{{ .h }}" loading="lazy"></a>
+      {{- end }}
+    </div>
+  </section>
+  {{- end }}
+  {{- else }}
+  <p>그림을 들여오는 중입니다.</p>
+  {{- end }}
+</article>
+<dialog id="g-view"><img alt=""><p></p></dialog>
+<style>
+.g-toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:1em 0}
+.g-toc small,.gallery h2 small{opacity:.65;font-weight:400;font-size:.75em}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.g-grid a{display:flex;align-items:center;justify-content:center;aspect-ratio:1;background:#0003;overflow:hidden}
+.g-grid img{width:100%;height:100%;object-fit:contain;margin:0;border:0}
+#g-view{max-width:96vw;max-height:96vh;padding:8px;background:#111;color:#ddd;border:0}
+#g-view::backdrop{background:#000c}
+#g-view img{display:block;max-width:calc(96vw - 16px);max-height:calc(96vh - 60px);margin:0 auto}
+#g-view p{margin:6px 0 0;font-size:13px;word-break:break-all}
+</style>
+<script>
+(() => {
+  const v = document.getElementById('g-view'), img = v.querySelector('img'), cap = v.querySelector('p');
+  document.querySelector('.gallery').addEventListener('click', e => {
+    const a = e.target.closest('.g-grid a'); if (!a) return;
+    e.preventDefault(); img.src = a.href; cap.textContent = a.title; v.showModal();
+  });
+  v.addEventListener('click', () => v.close());
+})();
+</script>
+{{ end }}

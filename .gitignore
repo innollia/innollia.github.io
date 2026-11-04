@@ -3,6 +3,10 @@
 /resources/_gen/
 .hugo_build.lock
 
+# 갤러리: 배포 때 hwapongstuy에서 만든다(tools/build_gallery.py)
+/static/gallery-img/
+/data/gallery.json
+
 # 로컬 임시/작업 파일
 temp_page.html
 parsed_lore.txt
