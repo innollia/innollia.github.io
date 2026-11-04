@@ -4,7 +4,8 @@
 입력: static/chronicle/data.json (2026-09-27에 굳힌 739편)
 결과: 같은 파일에 새 메모를 더해 덮어쓴다. 노션은 읽기만 한다.
 
-노션의 `블로그` 칸이 공개/봉인인 메모만 들어간다. 빈칸은 비공개다.
+기본은 공개다. 노션의 `블로그` 칸이 봉인/비공개면 그대로 따른다.
+DEFAULT_FROM 앞의 글은 칸에 표시한 것만 들어간다.
 규칙과 이유는 docs/chronicle-notion.md에 있다.
 """
 import hashlib, json, os, re, sys, time, urllib.error, urllib.request
@@ -17,10 +18,12 @@ LEDGER_ID = '71a71dc7-ed3b-4ea0-a8a9-baac564af728'
 RECORD_ID = '014d0ac7-ed2c-4aff-8e55-2991b58af391'
 API = 'https://api.notion.com/v1'
 NOTION_VERSION = '2026-03-11'
-PUBLIC, SEALED = '공개', '봉인'
+PUBLIC, SEALED, PRIVATE = '공개', '봉인', '비공개'
 RETRIES = 6
 # 스냅샷에 든 마지막 메모의 다음 날. 이 앞의 글은 스냅샷이 맡으므로 다시 넣지 않는다
 CUTOFF = '2026-09-27T00:00'
+# 기본 공개로 바꾼 날. 이 앞의 글은 공개를 전제로 쓰지 않았으므로 표시가 있어야 나간다
+DEFAULT_FROM = '2026-11-05T00:00'
 KST = timezone(timedelta(hours=9))
 TOPIC = {'공부': '공부·지식', '입시': '공부·지식', '자기이해': '생각', '질문': '생각', '아이디어': '생각', '생활': '일상'}
 # 서명이 든 주소는 공개 페이지에 남기지 않는다
@@ -56,13 +59,14 @@ def combine(prop, block):
 
 
 def visibility(record, ledgers):
-    """기록의 칸이 먼저, 비었으면 판의 칸을 따른다. 어느 쪽도 아니면 비공개"""
-    if record['blog'] in (PUBLIC, SEALED):
+    """기록의 칸이 먼저, 비었으면 판의 칸을 따른다. 둘 다 비면 DEFAULT_FROM부터 공개"""
+    if record['blog'] in (PUBLIC, SEALED, PRIVATE):
         return record['blog']
     marks = [ledgers[i]['blog'] for i in record['ledgers'] if i in ledgers]
-    if SEALED in marks:
-        return SEALED
-    return PUBLIC if PUBLIC in marks else None
+    for mark in (PRIVATE, SEALED, PUBLIC):
+        if mark in marks:
+            return mark
+    return PUBLIC if to_kst(record['when']) >= DEFAULT_FROM else PRIVATE
 
 
 def entry_for(record, ledgers, text):
@@ -86,7 +90,7 @@ def entry_for(record, ledgers, text):
 
 
 def wanted(record, ledgers):
-    return (visibility(record, ledgers) and not record['archived'] and record['status'] != 'deleted_on_discord'
+    return (visibility(record, ledgers) != PRIVATE and not record['archived'] and record['status'] != 'deleted_on_discord'
             and to_kst(record['when']) >= CUTOFF)
 
 
