@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
   repository_dispatch: # hwapongstuy에 그림이 올라오면 다시 배포한다
     types: [gallery]
+  schedule: # 쇠판의 새 메모를 연대기에 들인다
+    - cron: '17 */6 * * *'
 permissions:
   contents: read
   pages: write
@@ -113,6 +115,11 @@ jobs:
           git clone --depth 1 "https://x-access-token:${GALLERY_TOKEN}@github.com/innollia/hwapongstuy.git" "${{ runner.temp }}/hwapongstuy"
           pip install --quiet pillow
           python3 tools/build_gallery.py "${{ runner.temp }}/hwapongstuy"
+
+      - name: Add new memos to chronicle
+        env:
+          CHRONICLE_NOTION_TOKEN: ${{ secrets.CHRONICLE_NOTION_TOKEN }}
+        run: python3 tools/build_chronicle.py
 
       - name: Cache restore
         id: cache-restore
