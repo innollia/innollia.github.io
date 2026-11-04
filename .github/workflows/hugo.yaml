@@ -4,6 +4,8 @@ on:
     branches:
       - main
   workflow_dispatch:
+  repository_dispatch: # hwapongstuy에 그림이 올라오면 다시 배포한다
+    types: [gallery]
 permissions:
   contents: read
   pages: write
@@ -102,6 +104,15 @@ jobs:
             echo "Installing Node.js dependencies..."
             npm ci
           fi
+
+      - name: Build gallery from hwapongstuy
+        env:
+          GALLERY_TOKEN: ${{ secrets.GALLERY_TOKEN }}
+        run: |
+          if [[ -z "${GALLERY_TOKEN}" ]]; then echo "GALLERY_TOKEN 없음: 갤러리는 빈 채로 둔다"; exit 0; fi
+          git clone --depth 1 "https://x-access-token:${GALLERY_TOKEN}@github.com/innollia/hwapongstuy.git" "${{ runner.temp }}/hwapongstuy"
+          pip install --quiet pillow
+          python3 tools/build_gallery.py "${{ runner.temp }}/hwapongstuy"
 
       - name: Cache restore
         id: cache-restore
