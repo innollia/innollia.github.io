@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent))
-from build_chronicle import PUBLIC, RETRIES, SEALED, clean, combine, merge, read_record, request, to_kst
+from build_chronicle import PRIVATE, PUBLIC, RETRIES, SEALED, clean, combine, merge, read_record, request, to_kst
 
 
 def base():
@@ -27,8 +27,22 @@ def build(*records, ledgers=LEDGERS, body=lambda r: ''):
 
 
 class Gate(unittest.TestCase):
-    def test_blank_stays_private(self):
+    def test_blank_before_default_stays_private(self):
         self.assertEqual(len(build(record(blog=''))['entries']), 1)
+
+    def test_blank_is_public_from_default(self):
+        got = build(record(blog='', when='2026-11-04T15:00:00.000Z'))
+        self.assertEqual(got['entries'][-1]['bd'], '본문')
+
+    def test_date_only_counts_from_default(self):
+        self.assertEqual(len(build(record(blog='', when='2026-11-05'))['entries']), 2)
+
+    def test_private_mark_beats_default(self):
+        self.assertEqual(len(build(record(blog=PRIVATE, when='2026-11-05T01:00:00.000Z'))['entries']), 1)
+
+    def test_private_board_beats_default(self):
+        got = build(record(blog='', when='2026-11-05T01:00:00.000Z'), ledgers={'L': dict(LEDGERS['L'], blog=PRIVATE)})
+        self.assertEqual(len(got['entries']), 1)
 
     def test_unknown_value_stays_private(self):
         self.assertEqual(len(build(record(blog='공개할까'))['entries']), 1)
