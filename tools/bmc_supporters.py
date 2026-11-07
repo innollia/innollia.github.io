@@ -5,6 +5,7 @@ GitHub Actions(.github/workflows/supporters.yml)가 몇 시간마다 돌린다. 
 """
 import json
 import os
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -13,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "static/shop/supporters.json"
 MANUAL = ROOT / "static/shop/supporters_manual.json"
 API = "https://developers.buymeacoffee.com/api/v1/supporters"
+CREDIT = re.compile(r"SD-[A-Z0-9]{6}")
 
 
 def fetch_bmc(token):
@@ -22,7 +24,8 @@ def fetch_bmc(token):
         with urllib.request.urlopen(req, timeout=30) as r:
             page = json.load(r)
         for s in page.get("data", []):
-            if s.get("is_refunded"):
+            # strudel 딸깍이 크레딧 구매(메모에 SD-코드)는 후원이 아니다
+            if s.get("is_refunded") or CREDIT.search(s.get("support_note") or ""):
                 continue
             public = str(s.get("support_visibility", 1)) == "1"
             name = (s.get("supporter_name") or "").strip()
