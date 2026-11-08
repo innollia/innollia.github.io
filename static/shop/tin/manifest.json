@@ -100,6 +100,8 @@
     "genre": "3D 구르기 액션",
     "blurb": "신전석이 바다로 굴러간다. 부술수록 커지지만 커질수록 느려져서, 쪼개고 던지며 속도를 되찾는다.",
     "shots": [
+      "tin/shrinestone/wide.webp",
+      "tin/shrinestone/02.webp",
       "tin/shrinestone/01.webp"
     ],
     "play": "https://innollia.github.io/pai-games/games/shrine_stone/web/?lang=ko",
@@ -111,6 +113,8 @@
     "genre": "배달 경주",
     "blurb": "라이벌 배달부 셋과 종이 공예 마을을 달리며 소포를 가장 많이 부치면 이긴다. 너무 앞서 달리면 우체통을 지나친다.",
     "shots": [
+      "tin/off_screen/wide.webp",
+      "tin/off_screen/02.webp",
       "tin/off_screen/01.webp"
     ],
     "play": "https://innollia.github.io/pai-games/games/off_screen/web/?lang=ko",
@@ -133,6 +137,8 @@
     "genre": "행성 비행 배달",
     "blurb": "달리는 속도와 뛰는 순간이 그대로 비행 궤도가 된다. 작은 행성 사이를 진짜 중력으로 날아 소포를 나른다.",
     "shots": [
+      "tin/little_courier/wide.webp",
+      "tin/little_courier/02.webp",
       "tin/little_courier/01.webp"
     ],
     "play": "https://innollia.github.io/pai-games/games/tiny_planet/web/?lang=ko",
@@ -144,6 +150,7 @@
     "genre": "속도 게임 시험판 모음",
     "blurb": "슬랩잼 #2 '속도' 주제로 만든 시험판 모음. 과속 플랫포머, 압축 스프링을 포함해 여러 판을 메뉴에서 골라 한다.",
     "shots": [
+      "tin/speed_tofu/wide.webp",
       "tin/speed_tofu/01.webp"
     ],
     "play": "https://innollia.github.io/pai-games/games/speed_tofu/web/",

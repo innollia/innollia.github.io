@@ -44,7 +44,7 @@ const el = (tag, attrs = {}, kids = []) => {
 
 /* ── TINProject 게임별 들인 시간. 사용자가 알려 주면 채운다: { game_id: 시간 } ── */
 // 실제로 들인 시간(사용자가 알려 줌). 여기 있는 게임만 시간 막대의 동그라미가 된다.
-const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, physics_puzzle_platformer: 14, guineastar: 20, platformer: 26, pixel_arena: 28, fleshpit: 70 };
+const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, physics_puzzle_platformer: 14, little_courier: 13, guineastar: 20, platformer: 26, pixel_arena: 28, off_screen: 33, shrinestone: 40, speed_tofu: 45, fleshpit: 70 };
 
 /* ── 그림: art/의 원본을 투명 여백만 잘라 img/*.webp로 둔다 ── */
 const IMG = k => `img/${k}.webp`;
