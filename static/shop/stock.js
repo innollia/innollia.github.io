@@ -8,10 +8,10 @@
 //  price    정해진 값 상품의 가격(원)
 // 상품 id: game web bot read song oracle research xpost dm ss0feat partner
 window.STOCK = {
-  "labor": 13000,
+  "labor": 16000,
   "aiHour": 5000,
   "aiSale": 50,
   "aiItems": ["game", "web", "bot", "ss0feat"],
   "soldOut": [],
-  "price": { "song": 2000, "research": 10000, "xpost": 1000, "dm": 5000 }
+  "price": {"song": 2000, "research": 10000, "xpost": 1000, "dm": 5000}
 };
