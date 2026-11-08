@@ -95,6 +95,12 @@ img{max-width:100%}
 .detail-head h2{margin:0;font:400 38px/1.05 var(--disp);color:var(--cream);text-shadow:3px 3px 0 var(--ink)}
 .detail-desc{color:var(--cream2);margin:14px 0 12px;white-space:pre-line}
 .detail-say{margin:0 0 14px;min-height:1.4em;color:var(--ink);background:var(--cream);border:3px solid var(--ink);border-radius:var(--blob2);padding:6px 12px}
+/* 그림 그리기: 커미션 담당 캐릭터와 말풍선 */
+.artist{display:flex;align-items:center;gap:12px}
+.artist-img{width:110px;height:110px;object-fit:contain;flex:none;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.artist-bubble{flex:1;color:var(--ink);background:var(--cream);border:3px solid var(--ink);border-radius:var(--blob2);padding:6px 12px}
+.artist-bubble b{display:block;font-size:.85em;opacity:.7}
+.artist-bubble p{margin:2px 0 0}
 .detail-say:empty{display:none}
 .detail-body{display:flex;flex-direction:column;gap:14px}
 .detail-foot{position:fixed;z-index:5;bottom:0;right:0;width:min(640px,100%);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 22px 12px 34px;background:var(--wall);border-top:4px solid var(--ink)}

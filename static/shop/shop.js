@@ -5,6 +5,8 @@
 // 시급·할인·품절·고정 가격은 stock.js(관제 패널이 고친다)에서 온다
 const STOCK = window.STOCK || {};
 const RATE = STOCK.labor ?? 13000, AI_RATE = STOCK.aiHour ?? 5000, HOUR = RATE + AI_RATE;
+const DRAW_HOUR = RATE * 2; // 그림 그리기는 시급의 두 배(시간당). labor를 바꾸면 따라 바뀐다
+const DRAW_STEPS = [1, 2, 3, 4, 5, 6, 7, 8];
 const SALE = (STOCK.aiSale ?? 0) / 100, AI_ITEMS = new Set(STOCK.aiItems || []), SOLD = new Set(STOCK.soldOut || []);
 const DM_PRICE = STOCK.price?.dm ?? 5000;
 // 웹사이트 구간·봇 제작비는 시간당 25,000원 기준으로 짠 값이라 지금 시간당 값에 맞춰 1,000원 단위로 줄이거나 늘린다
@@ -52,7 +54,8 @@ const SLOTS = ['ui_slot', 'ui_slot_pink', 'ui_slot_yellow', 'ui_slot_blue'];
 // 상품 아이콘. 프레임 그림(<이름>_f1~3)이 있으면 아래 FRAMED에 이름을 더해 움직이게 한다
 const FRAMED = new Set(['game', 'web', 'bot', 'read', 'song', 'oracle', 'research', 'xpost', 'key', 'gear', 'partner', 'face', 'gift', 'setup', 'playtest', 'dice', 'theme']);
 // 움직이는 아이콘은 멈춘 때에도 f1을 쓴다(정지 그림과 크기가 조금 달라 바꿀 때 튀지 않게)
-const icon = (k, cls = '') => { const m = img(FRAMED.has(k) ? `${k}_f1` : k, cls); m.dataset.icon = k; return m; };
+const icon = (k, cls = '') => { if (!k) return null; // 그림이 아직 없는 상품(그림 그리기)은 아이콘 없이
+  const m = img(FRAMED.has(k) ? `${k}_f1` : k, cls); m.dataset.icon = k; return m; };
 if (!REDUCED) {
   const SEQ = [1, 2, 3, 2]; let tick = 0; // 1초에 7장쯤, 칸마다 박자를 어긋나게
   FRAMED.forEach(k => [2, 3].forEach(i => { new Image().src = IMG(`${k}_f${i}`); })); // 미리 받아 두어 깜빡이지 않게
@@ -79,6 +82,7 @@ const ITEMS = [
   { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', kind: 'qty', price: STOCK.price?.xpost ?? 1000 },
   { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', badgeStyle: 'free', kind: 'dm' },
   { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', kind: 'quote' },
+  { id: 'draw', cat: 'make', icon: null, c: '#ffc93c', kind: 'draw' }, // 상품 그림은 아직 없음
   { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', kind: 'partner' },
   { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', soon: true },
   { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', soon: true, hidden: true }, // hidden: 입고 예정 칸에도 안 보임
@@ -99,9 +103,9 @@ const READ_TIERS = named([{ id: 'plain', rate: 10 }, { id: 'base', rate: 20 }, {
 const BOT_TIERS = named([{ id: 'mini', build: 30000, month: 3000 }, { id: 'work', build: 80000, month: 7000 }, { id: 'soul', build: 150000, month: 15000 }], 'botTiers')
   .map(t => ({ ...t, build: scaled(t.build) })); // 월 유지비는 서버비라 시급을 따르지 않는다
 // 값이 숫자로 정해지는 상품은 가격표 글을 숫자에서 만든다(dialogue.js의 price는 나머지 상품에만 쓰인다)
-{ const first = { hours: HOUR, web: WEB_STEPS[0].p, bot: BOT_TIERS[0].build };
+{ const first = { hours: HOUR, draw: DRAW_HOUR, web: WEB_STEPS[0].p, bot: BOT_TIERS[0].build };
   ITEMS.forEach(it => { const g = D.goods?.[it.id] || {};
-    if (first[it.kind] != null) { const v = first[it.kind]; it.listText = T(it.kind === 'hours' ? 'detail.perHour' : 'detail.from', { 가격: won(v) }); it.priceText = T(it.kind === 'hours' ? 'detail.perHour' : 'detail.from', { 가격: won(deal(it, v)) }); }
+    if (first[it.kind] != null) { const v = first[it.kind]; it.listText = T(['hours', 'draw'].includes(it.kind) ? 'detail.perHour' : 'detail.from', { 가격: won(v) }); it.priceText = T(['hours', 'draw'].includes(it.kind) ? 'detail.perHour' : 'detail.from', { 가격: won(deal(it, v)) }); }
     else if (it.price != null) it.priceText = won(it.price);
     else if (it.kind === 'dm') it.priceText = won(DM_PRICE);
     if (!it.sale) it.listText = ''; }); }
@@ -431,7 +435,7 @@ function openDetail(it, prev) {
   $('#detail-title').textContent = it.name;
   $('#detail-desc').textContent = it.desc; $('#detail-desc').hidden = !it.desc;
   detail.style.setProperty('--c', it.c);
-  $('#detail-icon').replaceChildren(icon(it.icon));
+  $('#detail-icon').replaceChildren(...[icon(it.icon)].filter(Boolean));
   const body = $('#detail-body'); body.replaceChildren();
   BUILD[it.kind](body, it);
   const uses = it.kind === 'read' ? null : USES[it.id]; // 낭독은 칸이 '읽을 글'이라 예시를 넣으면 값이 바뀐다
@@ -492,7 +496,7 @@ function updatePrice() { const it = state.item, d = state.draft; PRICE[it.kind]?
 // 장바구니에 넣을 한 줄. 빠진 게 있으면 그 이유(말풍선 키)를 돌려준다
 function entryOf(it, d) {
   if (it.kind === 'read' && !d.chars) return 'needText';
-  if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner') && !d.note.trim()) return 'needNote';
+  if ((it.kind === 'quote' || it.kind === 'text' || it.kind === 'partner' || it.kind === 'draw') && !d.note.trim()) return 'needNote';
   return { item: it, price: d.price, sum: summary(it, d), note: d.note.trim(), hours: d.hours, monthly: it.kind === 'bot' ? d.tier.month : 0 };
 }
 // 담아 둔 걸 고치는 중이면 바꾸는 대로 장바구니에 바로 반영한다(따로 누를 단추가 없다)
@@ -706,6 +710,17 @@ const BUILD = {
     body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.dmFreeTitle') }), el('p', { style: 'margin:0', id: 'dm-free' })]),
       el('div', { class: 'box' }, [el('h3', { text: T('detail.dmHowTitle') }), el('p', { style: 'margin:0;white-space:pre-line', text: T('detail.dmHow') })]));
   },
+  draw(body, it) {
+    // 그림 커미션 담당 캐릭터가 따로 맞는다(상점 주인 말풍선처럼)
+    const line = el('p', { text: T('detail.artistHello') });
+    body.append(el('div', { class: 'box artist' }, [el('img', { src: IMG('artist'), alt: T('detail.artistName'), class: 'artist-img' }),
+      el('div', { class: 'artist-bubble' }, [el('b', { text: T('detail.artistName') }), line])]));
+    timeBar(body, { steps: DRAW_STEPS, min: 1, max: 8, scale: 'lin', start: state.draft.prev?.hours || 1, fmt: h => h + 'h',
+      card: h => ({ head: T('detail.hoursN', { 시간: h }), title: won(h * DRAW_HOUR) }),
+      onChange: (h, crossed) => { if (crossed) line.textContent = T('detail.artistHours', { 시간: h, 가격: won(h * DRAW_HOUR) });
+        state.draft.hours = h; updatePrice(); } });
+    noteField(body, it.field, it.hint);
+  },
   quote(body, it) {
     state.draft.kindSel = was(FEAT_KINDS) || FEAT_KINDS[0];
     body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.featTitle') }), chips(FEAT_KINDS, state.draft.kindSel.id, k => { state.draft.kindSel = k; })]));
@@ -722,6 +737,7 @@ const BUILD = {
 };
 const otherInCart = () => state.cart.some(c => c.item.id !== 'dm');
 const PRICE = {
+  draw: (it, d) => setPrice((d.hours || 1) * DRAW_HOUR),
   hours: (it, d) => { const v = (d.hours || 1) * HOUR; setPrice(deal(it, v), undefined, undefined, v); },
   web: (it, d) => { const v = d.webPrice || WEB_STEPS[0].p; setPrice(deal(it, v), undefined, undefined, v); },
   read: (it, d) => setPrice(d.chars ? Math.max(1000, d.chars * d.tier.rate) : 0, T('detail.readPrice', { 등급: d.tier.name, 값: d.tier.rate })),
@@ -737,7 +753,7 @@ const PRICE = {
 };
 function summary(it, d) {
   switch (it.kind) {
-    case 'hours': return T('detail.hoursN', { 시간: d.hours });
+    case 'hours': case 'draw': return T('detail.hoursN', { 시간: d.hours });
     case 'web': return d.hours < 1 ? T('detail.halfHour') : T('detail.hoursN', { 시간: d.hours });
     case 'read': return T('detail.readSum', { 등급: d.tier.name, 글자: (d.chars || 0).toLocaleString() });
     case 'qty': return `${d.qty}${it.unit}`;
@@ -809,6 +825,7 @@ function loadCart() {
     // 시급·할인이 바뀌었을 수 있으니 시간으로 값이 정해지는 상품은 다시 계산한다
     if (item?.kind === 'hours' && s.hours) s.price = deal(item, s.hours * HOUR);
     if (item?.kind === 'web' && s.hours) s.price = deal(item, (WEB_STEPS.find(w => w.h === s.hours) || WEB_STEPS[0]).p);
+    if (item?.kind === 'draw' && s.hours) s.price = s.hours * DRAW_HOUR; // 시급이 바뀌었으면 담아 둔 그림 값도 따라간다
     if (item) state.cart.push({ key: ++seq, item, price: s.price || 0, sum: s.sum || '', note: s.note || '', hours: s.hours, monthly: s.monthly || 0 });
   }
 }
