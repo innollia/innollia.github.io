@@ -394,6 +394,7 @@ async function playCart(c, player) {
   const url = c.url || `carts/${c.id}.html`;
   let ok = false;
   try { ok = (await fetch(url, { method: 'HEAD' })).ok; } catch {}
+  if (!player.isConnected || detail.getAttribute('aria-hidden') === 'true') return; // 확인하는 사이 패널을 닫았다
   const frame = el('div', { class: 'player-frame', style: c.aspect ? `aspect-ratio:${c.aspect};width:min(100%, calc(78vh * ${c.aspect}))` : '' }, ok
     ? el('iframe', { src: url, title: c.name, allow: 'autoplay; fullscreen; gamepad', loading: 'lazy' })
     : el('div', { class: 'player-empty', text: T('detail.cartBaking', { 이름: c.name }) }));
@@ -463,9 +464,11 @@ function openDetail(it, prev) {
   }
   setTimeout(() => $('#detail-close').focus(), 50);
 }
+function stopPlayers() { detail.querySelectorAll('.player').forEach(p => { p.replaceChildren(); p.classList.remove('on'); }); }
 function closeDetail() {
   if (detail.getAttribute('aria-hidden') === 'true' || state.closing) return;
   state.closing = true; $('#detail-buy').disabled = true; // 닫히는 동안 두 번 담기지 않게
+  stopPlayers(); // 패널은 밀려날 뿐 남아 있어서, 게임 iframe을 치우지 않으면 소리가 계속 난다
   BACKDROP.forEach(q => { $(q).inert = false; });
   detail.style.pointerEvents = 'none';
   const done = () => {
