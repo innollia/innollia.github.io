@@ -48,6 +48,7 @@ window.DIALOGUE = {
   webStep: '{단계}! {가격}.',
   // 동업자: PICO-8 게임
   cartPlay: '이정도 수준으로 만들어도 되니까 도전하렴.',
+  webGamePlay: '{이름}, 여기서 바로 돼.',
   cartBaking: '{이름}은(는) 아직 웹용으로 굽는 중이야.',
 
   // 왼쪽 위 간판을 눌렀을 때 / 빨리 다섯 번 눌러서 입이 물었을 때
@@ -272,6 +273,8 @@ window.DIALOGUE = {
     cartTry: '눌러서 해 보기',
     cartBaking: '{이름}\n카트리지 굽는 중...\n곧 여기서 바로 할 수 있어요',
     cartBar: '화면을 한 번 누르면 시작 · 방향키 + Z/X',
+    webGamesTitle: '바로 해 보기',
+    webGameBar: '처음 여는 데 몇 초 걸려요',
     partnerPrice: '도전장',
     partnerZero: '0원',
 

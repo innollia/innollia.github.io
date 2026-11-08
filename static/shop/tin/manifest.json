@@ -82,5 +82,60 @@
       "tin/fleshpit/02.png",
       "tin/fleshpit/03.webp"
     ]
+  },
+  {
+    "id": "one_more_meal",
+    "name": "한 끼의 무게 (One More Meal)",
+    "genre": "2D 생존 이야기",
+    "blurb": "소매치기 아버지가 기다리는 아들을 위해 하루 한 끼를 버는 2D 생존 이야기.",
+    "shots": [
+      "tin/one_more_meal/01.webp"
+    ],
+    "play": "https://innollia.github.io/pai-games/games/robberfather/",
+    "aspect": "16/9"
+  },
+  {
+    "id": "shrinestone",
+    "name": "굴러라 신전석",
+    "genre": "3D 구르기 액션",
+    "blurb": "신전석이 바다로 굴러간다. 부술수록 커지지만 커질수록 느려져서, 쪼개고 던지며 속도를 되찾는다.",
+    "shots": [
+      "tin/shrinestone/01.webp"
+    ],
+    "play": "https://innollia.github.io/pai-games/games/shrine_stone/web/?lang=ko",
+    "aspect": "9/16"
+  },
+  {
+    "id": "off_screen",
+    "name": "화면 밖 경주",
+    "genre": "배달 경주",
+    "blurb": "라이벌 배달부 셋과 종이 공예 마을을 달리며 소포를 가장 많이 부치면 이긴다. 너무 앞서 달리면 우체통을 지나친다.",
+    "shots": [
+      "tin/off_screen/01.webp"
+    ],
+    "play": "https://innollia.github.io/pai-games/games/off_screen/web/?lang=ko",
+    "aspect": "9/16"
+  },
+  {
+    "id": "blade_path",
+    "name": "일격의 길",
+    "genre": "칼싸움 반응",
+    "blurb": "칼끝을 보고 막고, 열린 틈을 베는 일대일 칼싸움. 갈수록 센 검객이 나오고 번 돈으로 강해진다.",
+    "shots": [
+      "tin/blade_path/01.webp"
+    ],
+    "play": "https://innollia.github.io/pai-games/games/blade_path/web/?lang=ko",
+    "aspect": "9/16"
+  },
+  {
+    "id": "little_courier",
+    "name": "어린 배달부",
+    "genre": "행성 비행 배달",
+    "blurb": "달리는 속도와 뛰는 순간이 그대로 비행 궤도가 된다. 작은 행성 사이를 진짜 중력으로 날아 소포를 나른다.",
+    "shots": [
+      "tin/little_courier/01.webp"
+    ],
+    "play": "https://innollia.github.io/pai-games/games/tiny_planet/web/?lang=ko",
+    "aspect": "9/16"
   }
 ]

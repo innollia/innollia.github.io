@@ -385,16 +385,17 @@ function renderExtras() {
 function wiggle(n) { if (window.gsap && !REDUCED) gsap.fromTo(n, { x: -6 }, { x: 0, duration: .4, ease: 'elastic.out(1,.3)' }); }
 
 /* ── 동업자 되기: 내 PICO-8 게임 ── */
+// c.url이 있으면 그 주소(웹 게임), 없으면 PICO-8 카트. c.aspect는 화면 비율(기본 1)
 async function playCart(c, player) {
-  const url = `carts/${c.id}.html`;
+  const url = c.url || `carts/${c.id}.html`;
   let ok = false;
   try { ok = (await fetch(url, { method: 'HEAD' })).ok; } catch {}
-  const frame = el('div', { class: 'player-frame' }, ok
+  const frame = el('div', { class: 'player-frame', style: c.aspect ? `aspect-ratio:${c.aspect};width:min(100%, calc(78vh * ${c.aspect}))` : '' }, ok
     ? el('iframe', { src: url, title: c.name, allow: 'autoplay; fullscreen; gamepad', loading: 'lazy' })
     : el('div', { class: 'player-empty', text: T('detail.cartBaking', { 이름: c.name }) }));
-  player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: T('detail.cartBar') })]));
+  player.replaceChildren(frame, el('div', { class: 'player-bar' }, [el('span', { text: `▶ ${c.name}` }), el('span', { text: T(c.url ? 'detail.webGameBar' : 'detail.cartBar') })]));
   player.classList.add('on');
-  say(T(ok ? 'cartPlay' : 'cartBaking', { 이름: c.name }));
+  say(T(!ok ? 'cartBaking' : c.url ? 'webGamePlay' : 'cartPlay', { 이름: c.name }));
   if (window.gsap && !REDUCED) gsap.fromTo(frame, { scaleY: .02, filter: 'brightness(4)' }, { scaleY: 1, filter: 'brightness(1)', duration: .45, ease: 'expo.out' });
 }
 
@@ -643,6 +644,13 @@ const BUILD = {
         updatePrice();
       } });
     body.append(el('div', { class: 'box' }, brk));
+    // 웹에서 바로 되는 게임(manifest의 play 주소)
+    const playable = tinGames.filter(g => g.play);
+    if (playable.length) {
+      const player = el('div', { class: 'player' });
+      body.append(el('div', { class: 'box' }, [el('h3', { text: T('detail.webGamesTitle') }),
+        chips(playable.map(g => ({ id: g.id, name: g.name, sub: g.genre })), null, o => { const g = playable.find(x => x.id === o.id); playCart({ id: g.id, name: g.name, url: g.play, aspect: g.aspect }, player); }), player]));
+    }
     noteField(body, it.field, it.hint);
   },
   web(body, it) {
