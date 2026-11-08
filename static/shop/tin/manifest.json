@@ -137,5 +137,16 @@
     ],
     "play": "https://innollia.github.io/pai-games/games/tiny_planet/web/?lang=ko",
     "aspect": "9/16"
+  },
+  {
+    "id": "speed_tofu",
+    "name": "SPEED 두부 (과속 플랫포머·압축 스프링 외)",
+    "genre": "속도 게임 시험판 모음",
+    "blurb": "슬랩잼 #2 '속도' 주제로 만든 시험판 모음. 과속 플랫포머, 압축 스프링을 포함해 여러 판을 메뉴에서 골라 한다.",
+    "shots": [
+      "tin/speed_tofu/01.webp"
+    ],
+    "play": "https://innollia.github.io/pai-games/games/speed_tofu/web/",
+    "aspect": "9/16"
   }
 ]
