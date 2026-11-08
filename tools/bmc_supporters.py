@@ -14,7 +14,43 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "static/shop/supporters.json"
 MANUAL = ROOT / "static/shop/supporters_manual.json"
 API = "https://developers.buymeacoffee.com/api/v1/supporters"
-CREDIT = re.compile(r"SD-[A-Z0-9]{6}")
+# olmuse 크레딧 구매 코드: 예전 SD-XXXXXX(하이픈·공백 빠짐 허용)와 단어 코드(형용사-명사-명사, 예 brave-otter-lamp).
+# 단어장은 rainbowloadsilsep/deploy/credits/words_en.txt 의 사본이다(단어장을 바꾸면 이것도 같이 바꾼다).
+CREDIT = re.compile(r"(?<![A-Za-z0-9])SD[\s\-_]*[A-Za-z0-9]{3}[\s\-]?[A-Za-z0-9]{3}(?![A-Za-z0-9])", re.IGNORECASE)
+WORDS_FILE = Path(__file__).with_name("olmuse_code_words.txt")
+
+
+def code_words():
+    out, part = {}, None
+    for line in WORDS_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line.startswith("["):
+            part = out.setdefault(line.strip("[]"), set())
+        elif line and not line.startswith("#") and part is not None:
+            part.update(line.split())
+    return out.get("adjectives", set()), out.get("nouns", set())
+
+
+ADJ, NOUN = code_words()
+
+
+def has_credit_code(note):
+    """메모에 olmuse 결제 코드가 있는가. 단어 코드는 공백·하이픈·대소문자·붙여 쓰기와 상관없이 알아본다."""
+    if CREDIT.search(note):
+        return True
+    tokens = re.findall(r"[a-z]+", note.lower())
+    joined, edges, at = "".join(tokens), {0}, 0
+    for t in tokens:  # 코드는 낱말 경계에서 시작하고 끝난다(붙여 쓴 것은 허용)
+        at += len(t)
+        edges.add(at)
+    for i in sorted(edges):
+        for a in (w for w in ADJ if joined.startswith(w, i)):
+            j = i + len(a)
+            for n1 in (w for w in NOUN if joined.startswith(w, j)):
+                k = j + len(n1)
+                if any(joined.startswith(n2, k) and k + len(n2) in edges for n2 in NOUN):
+                    return True
+    return False
 
 
 def fetch_bmc(token):
@@ -24,8 +60,8 @@ def fetch_bmc(token):
         with urllib.request.urlopen(req, timeout=30) as r:
             page = json.load(r)
         for s in page.get("data", []):
-            # strudel 딸깍이 크레딧 구매(메모에 SD-코드)는 후원이 아니다
-            if s.get("is_refunded") or CREDIT.search(s.get("support_note") or ""):
+            # olmuse 크레딧 구매(메모에 결제 코드)는 후원이 아니다
+            if s.get("is_refunded") or has_credit_code(s.get("support_note") or ""):
                 continue
             public = str(s.get("support_visibility", 1)) == "1"
             name = (s.get("supporter_name") or "").strip()
