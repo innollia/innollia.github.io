@@ -10,7 +10,7 @@
 window.STOCK = {
   "labor": 16000,
   "aiHour": 5000,
-  "aiSale": 50,
+  "aiSale": 30,
   "aiItems": ["game", "web", "bot", "ss0feat"],
   "soldOut": [],
   "price": {"song": 2000, "research": 10000, "xpost": 1000, "dm": 5000}
