@@ -52,7 +52,7 @@ const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, phy
 const IMG = k => `img/${k}.webp`;
 const SLOTS = ['ui_slot', 'ui_slot_pink', 'ui_slot_yellow', 'ui_slot_blue'];
 // 상품 아이콘. 프레임 그림(<이름>_f1~3)이 있으면 아래 FRAMED에 이름을 더해 움직이게 한다
-const FRAMED = new Set(['game', 'web', 'bot', 'read', 'song', 'oracle', 'research', 'xpost', 'key', 'gear', 'partner', 'face', 'gift', 'setup', 'playtest', 'dice', 'theme']);
+const FRAMED = new Set(['game', 'web', 'bot', 'read', 'song', 'oracle', 'research', 'xpost', 'key', 'gear', 'partner', 'face', 'gift', 'setup', 'playtest', 'dice', 'theme', 'artist']);
 // 움직이는 아이콘은 멈춘 때에도 f1을 쓴다(정지 그림과 크기가 조금 달라 바꿀 때 튀지 않게)
 const icon = (k, cls = '') => { if (!k) return null; // 그림이 아직 없는 상품(그림 그리기)은 아이콘 없이
   const m = img(FRAMED.has(k) ? `${k}_f1` : k, cls); m.dataset.icon = k; return m; };
@@ -82,7 +82,7 @@ const ITEMS = [
   { id: 'xpost', cat: 'brain', icon: 'xpost', c: '#ffffff', kind: 'qty', price: STOCK.price?.xpost ?? 1000 },
   { id: 'dm', cat: 'ss0', icon: 'key', c: '#ffc93c', badgeStyle: 'free', kind: 'dm' },
   { id: 'ss0feat', cat: 'ss0', icon: 'gear', c: '#2fe0b0', kind: 'quote' },
-  { id: 'draw', cat: 'make', icon: null, c: '#ffc93c', kind: 'draw' }, // 상품 그림은 아직 없음
+  { id: 'draw', cat: 'make', icon: 'artist', c: '#ffc93c', kind: 'draw' }, // 그림 커미션 담당(덜 그려진 놈)이 곧 상품 그림
   { id: 'partner', cat: 'make', icon: 'partner', c: '#ff7ac0', kind: 'partner' },
   { id: 'pix', cat: 'soon', icon: 'face', c: '#ff7ac0', soon: true },
   { id: 'giftgame', cat: 'soon', icon: 'gift', c: '#ff2e4d', soon: true, hidden: true }, // hidden: 입고 예정 칸에도 안 보임
@@ -436,7 +436,7 @@ function openDetail(it, prev) {
   $('#detail-title').textContent = it.name;
   $('#detail-desc').textContent = it.desc; $('#detail-desc').hidden = !it.desc;
   detail.style.setProperty('--c', it.c);
-  $('#detail-icon').replaceChildren(...[icon(it.icon)].filter(Boolean));
+  $('#detail-icon').replaceChildren(...[it.kind === 'draw' ? null : icon(it.icon)].filter(Boolean)); // 그림 그리기는 아래 담당 캐릭터 칸에 같은 그림이 있어서 머리에는 안 둔다
   const body = $('#detail-body'); body.replaceChildren();
   BUILD[it.kind](body, it);
   const uses = it.kind === 'read' ? null : USES[it.id]; // 낭독은 칸이 '읽을 글'이라 예시를 넣으면 값이 바뀐다
@@ -716,7 +716,7 @@ const BUILD = {
   draw(body, it) {
     // 그림 커미션 담당 캐릭터가 따로 맞는다(상점 주인 말풍선처럼)
     const line = el('p', { text: T('detail.artistHello') });
-    body.append(el('div', { class: 'box artist' }, [el('img', { src: IMG('artist'), alt: T('detail.artistName'), class: 'artist-img' }),
+    body.append(el('div', { class: 'box artist' }, [icon('artist', 'artist-img'),
       el('div', { class: 'artist-bubble' }, [el('b', { text: T('detail.artistName') }), line])]));
     timeBar(body, { steps: DRAW_STEPS, min: 1, max: 8, scale: 'lin', start: state.draft.prev?.hours || 1, fmt: h => h + 'h',
       card: h => ({ head: T('detail.hoursN', { 시간: h }), title: won(h * DRAW_HOUR) }),
