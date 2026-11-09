@@ -49,7 +49,9 @@ const el = (tag, attrs = {}, kids = []) => {
 const TIN_HOURS = { mage_arcana: 1, stone_story_rpg: 3, stacking_descent: 8, physics_puzzle_platformer: 14, little_courier: 13, guineastar: 20, platformer: 26, pixel_arena: 28, off_screen: 33, shrinestone: 40, speed_tofu: 45, fleshpit: 70 };
 
 /* ── 그림: art/의 원본을 투명 여백만 잘라 img/*.webp로 둔다 ── */
-const IMG = k => `img/${k}.webp`;
+// 그림 커미션 담당(덜 그려진 놈)은 머리가 넷(a~d)이라 상점을 열 때마다 하나를 고른다
+const ARTIST = 'artist_' + 'abcd'[Math.floor(Math.random() * 4)];
+const IMG = k => `img/${k.replace(/^artist(?=_f|$)/, ARTIST)}.webp`;
 const SLOTS = ['ui_slot', 'ui_slot_pink', 'ui_slot_yellow', 'ui_slot_blue'];
 // 상품 아이콘. 프레임 그림(<이름>_f1~3)이 있으면 아래 FRAMED에 이름을 더해 움직이게 한다
 const FRAMED = new Set(['game', 'web', 'bot', 'read', 'song', 'oracle', 'research', 'xpost', 'key', 'gear', 'partner', 'face', 'gift', 'setup', 'playtest', 'dice', 'theme', 'artist']);
@@ -273,7 +275,7 @@ function nearest(i) {
   return cur + d;
 }
 function ringTick() {
-  document.querySelectorAll('.ring .card:not(.is-front) img[data-icon]').forEach(m => { const k = m.dataset.icon; if (FRAMED.has(k) && !m.src.endsWith(`${k}_f1.webp`)) m.src = IMG(`${k}_f1`); });
+  document.querySelectorAll('.ring .card:not(.is-front) img[data-icon]').forEach(m => { const k = m.dataset.icon; if (FRAMED.has(k) && !m.src.endsWith(IMG(`${k}_f1`))) m.src = IMG(`${k}_f1`); });
   const n = ring.cards.length; if (!n) return;
   // 멈춰 있으면 다시 그리지 않는다(앞 칸의 둥실거림은 CSS가 한다)
   if (ring.pos === ring.target && Math.abs(ring.vel) < 1e-4 && ring.drawn === ring.pos && ring.mixDrawn === ring.mix && ring.W === ring.ui.wrap.clientWidth && ring.H === ring.ui.wrap.clientHeight) return;
