@@ -11,6 +11,35 @@ In practice, 19 Claude Code sessions ran together on code, art, sound, and resea
 
 A cutting is a way to propagate a plant: you cut a branch, stick it in the ground, and grow it into a new plant. In an unfinished game that shipped with its fun cut away under deadline pressure, you go back into that past, graft the cut combat rules onto the branch to revive them, and complete the director's cut. The genre is 2D roguelike.
 
+### 1-1 The FigJam Board on Thursday and Friday
+
+My thinking on Thursday and Friday about how to read "director's cut" is left on a FigJam board. Counting what my school friends put up and what I wrote, there are about 40.
+
+This is how I understood the director's cut.
+A director's cut is a version where the director puts back scenes cut from the theatrical cut. Scenes get cut because of censorship and lack of time. What the director cuts is the part that catches the eye. For a developer, a cut feature is the cut scene of a director's cut. A theatrical cut can also be a C-grade that got sloppy because of time and budget. Raising it to B-grade is the director's cut. A director's cut can also be worse than the theatrical cut. A director's cut sometimes changes the ending from happy to sad (the theatrical cut is happy for mass appeal). I look through the eyes of someone inside the edited world, not from the director's seat. One test: if the game still works when you call it by another name, like "the importance of choice" (선택의 중요성), it is not a director's cut game.
+
+I also write down what I thought of and dropped.
+I dropped the whole film-set line. A game where the director and staff give orders from off screen, a game where you cut the ground with scissors and move it so the hero reaches the goal, a story about the youngest staff member being chased on a film set, fighting outside the camera, and so on. I dropped them because of my own rule: if a trace of film is left, it is out.
+For the story about kidnapping actors to make a director's cut, I dropped the film traces and kept only the skeleton. You bring back companions who got cut, one per region.
+I took out the battle you have to lose at the first gate.
+A puzzle where you switch between the regular cut and the director's cut with a button (a path blocked by water in the regular cut is not there in the director's cut) was a separate game, so I dropped it.
+A cut-and-paste game where you tear pieces out of magazines to bring a picture back was also a separate game, so I dropped it.
+A two-player co-op where one person drives and the other erases obstacles in another world, I judged too hard to build.
+For a metagame that turns this meeting itself into a game (a minigame for each idea we left out), someone pointed out that it does not come together into one picture.
+I also dropped putting AI inside the game (stages you pass only if the AI is convinced, NPCs you talk with through AI).
+Of the three non-film meanings the AI meeting came up with (Director = board director and Cut = budget cut, Director = guide and Cut = shortcut and pruning, bending the direction of a rolling boulder), I kept only the guide idea, and then that also lost to the whiteboard idea.
+
+What was left was "a roguelike where the combat rules keep changing" (전투 규칙이 계속 바뀌는 로그라이크) and "go to the past, make a different choice, and compare both sides" (과거로 가서 다른 선택을 하고 양쪽을 비교한다). The censorship story on the board went into the plan as one of the reasons for cutting.
+
+### 1-2 A Cold
+
+From Friday night through all of Saturday I was sick with a cold. I could not work properly. I gave the AI work with a foggy head.
+On Sunday I looked, and the AI had used up my usage quota anyway, and what it had made was a pile of crap that did not understand my request at all.
+I fixed it and fixed it again. I fixed it until dawn.
+At night I gave it long jobs and took a short nap. I got up once more before dawn and did a review.
+Then I went to school. High school. In the morning, during breaks, and in the bathroom during class, I worked somehow.
+I submitted before 10 a.m. on Monday.
+
 ## 2 The Game
 Here is how one run goes. When you start the game, release build v1.0 comes up and it ends in 40 seconds. The end credits roll, then a corner of the paper tears and a map opens. The hero is a cutting branch. At junctions you pick up half of a rule letter and graft it onto the branch.
 
