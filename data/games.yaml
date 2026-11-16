@@ -1,0 +1,9 @@
+# 게임 목록. 위에 있을수록 먼저 보인다. 게임 파일은 static/games/<slug>/index.html
+# - slug: 주소 이름(/games/<slug>/)
+#   title: 이름
+#   desc: 한 줄 소개
+#   thumb: 목록 그림(static/games/<slug>/ 안 파일 이름, 없으면 빼기)
+- slug: jijeok
+  title: 지적 하나 더
+  desc: 고어 블랙코미디 미니게임. 도구를 골라 지적을 하나씩 처리한다. 피가 나옵니다.
+  thumb: thumb.webp
