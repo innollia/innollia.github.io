@@ -1,0 +1,27 @@
+{{ define "main" }}
+<article class="post games">
+  <header class="page-header"><h1 class="page-title">{{ .Title }}</h1></header>
+  <p>{{ .Description }}</p>
+  {{- with site.Data.games }}
+  <div class="game-list">
+    {{- range . }}
+    {{- $dir := printf "/games/%s/" .slug }}
+    <a class="game-card" href="{{ $dir }}">
+      {{- with .thumb }}<img src="{{ $dir }}{{ . }}" alt="" loading="lazy">{{ end }}
+      <strong>{{ .title }}</strong>
+      {{- with .desc }}<span>{{ . }}</span>{{ end }}
+    </a>
+    {{- end }}
+  </div>
+  {{- else }}
+  <p>첫 게임을 올리는 중입니다.</p>
+  {{- end }}
+</article>
+<style>
+.game-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:1em}
+.game-card{display:flex;flex-direction:column;gap:6px;padding:10px;border:2px solid currentColor;text-decoration:none}
+.game-card img{width:100%;aspect-ratio:16/10;object-fit:cover;margin:0;border:0;background:#0003}
+.game-card strong{font-size:1.15em}
+.game-card span{opacity:.8;font-size:.9em}
+</style>
+{{ end }}
