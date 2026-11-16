@@ -5,6 +5,10 @@
 #   thumb: 목록 그림(static/games/<slug>/ 안 파일 이름, 없으면 빼기)
 #   hidden: true  잔인하거나 선정적인 게임. 목록에 안 나오고 주소를 아는 사람만 들어온다.
 #                 게임 index.html의 <head>에도 <meta name="robots" content="noindex, nofollow">를 넣는다
+- slug: still-raining
+  title: still raining
+  desc: 비가 그치지 않는 학교 복도에서 시작하는 1인칭 드림코어 걷기 게임(PICO-8). 화살표로 걷고, 폰은 화면 아래 단추로.
+  thumb: thumb.webp
 - slug: binder
   title: 100장 — 투명 포켓 바인더
   desc: 학습지 100장을 책상 위 링바인더에 하나씩 끼워 정리한다. 종이에 이름도 적을 수 있다.
