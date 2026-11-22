@@ -17,7 +17,7 @@ from pathlib import Path
 DATA = Path('static/chronicle/data.json')
 IMG_DIR = Path('static/chronicle/img/dc')
 # 그림은 사람이 보고 통과시킨 것만 싣는다(복구 키 화면이 나간 일 뒤로, 2026-11-22). 한 줄에 그림 이름 하나
-IMG_OK = Path('data/chronicle_images_ok.txt')
+IMG_OK = Path('tools/chronicle_images_ok.txt')
 IMG_SIDE = 1000
 LEDGER_ID = '71a71dc7-ed3b-4ea0-a8a9-baac564af728'
 RECORD_ID = '014d0ac7-ed2c-4aff-8e55-2991b58af391'
