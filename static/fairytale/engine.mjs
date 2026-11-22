@@ -1,54 +1,13 @@
-// Client-side fairy tale Markov Chain & Propp 8-stage Markov Chain engine + provenance matcher.
+// Pure client-side Fairy Tale Markov Chain engine + phrase provenance index.
 
 const BOS = "\u0002";
 const EOS = "\u0003";
 
-export const PROPP_BEATS = [
-  { code: "alpha", name_ko: "초기 상황" },
-  { code: "A_or_a", name_ko: "가해 또는 결핍" },
-  { code: "B_C_up", name_ko: "중개와 출발" },
-  { code: "D_E", name_ko: "증여자의 시험과 반응" },
-  { code: "F", name_ko: "주술적 도구 획득" },
-  { code: "H", name_ko: "투쟁" },
-  { code: "I_K", name_ko: "승리와 결핍 해소" },
-  { code: "down_W", name_ko: "귀환과 보상" },
+const KO_JOSA_LIST = [
+  "에서는", "으로는", "에게는", "한테서", "까지는", "부터는",
+  "에서", "으로", "에게", "한테", "까지", "부터", "처럼", "보다", "마저", "조차",
+  "은", "는", "이", "가", "을", "를", "의", "에", "로", "와", "과", "도", "만",
 ];
-
-const KO_BEAT_RULES = {
-  alpha: [[0.0, 0.16], ["옛날", "어느", "살고", "살았", "마을", "나라", "임금", "공주", "왕자", "형제", "딸", "아들", "나무꾼", "가난한", "부자"]],
-  A_or_a: [[0.1, 0.35], ["어느 날", "갑자기", "마녀", "늑대", "호랑이", "도깨비", "거인", "빼앗", "사라졌", "잡아", "울었", "슬퍼", "저주", "병", "가뭄", "욕심", "괴물", "죽었"]],
-  B_C_up: [[0.2, 0.48], ["떠났", "길을", "찾아", "나섰", "결심", "걸어", "숲", "산", "강", "바다", "여행", "멀리", "출발", "향해"]],
-  D_E: [[0.32, 0.62], ["노인", "할머니", "할아버지", "물었", "부탁", "도와", "빵", "물", "나누", "친절", "시험", "대답", "약속", "만났"]],
-  F: [[0.42, 0.72], ["주었", "건네", "마법", "요술", "황금", "보물", "반지", "검", "피리", "거울", "날개", "지팡이", "새", "말", "여우", "선물", "비밀", "힘"]],
-  H: [[0.55, 0.85], ["싸웠", "싸움", "공격", "소리쳤", "불", "어둠", "칼", "던졌", "달려", "도망", "위험", "무서운", "용", "마녀", "성", "문", "열었"]],
-  I_K: [[0.68, 0.93], ["이겼", "물리", "풀렸", "되찾", "살아났", "구했", "깨어났", "무너", "사라졌", "도망쳤", "기뻐", "기뻤", "마침내", "드디어"]],
-  down_W: [[0.82, 1.0], ["돌아", "집으로", "결혼", "잔치", "행복", "오래오래", "잘 살았", "왕이", "여왕", "감사", "축하", "그 후", "평화", "끝"]],
-};
-
-const EN_BEAT_RULES = {
-  alpha: [[0.0, 0.16], ["once", "lived", "king", "queen", "princess", "prince", "poor", "village", "forest", "woodcutter", "daughter", "son", "brothers", "miller"]],
-  A_or_a: [[0.1, 0.35], ["witch", "wolf", "giant", "dragon", "stole", "stolen", "curse", "wicked", "evil", "vanished", "wept", "sorrow", "died", "lost", "hungry", "famine"]],
-  B_C_up: [[0.2, 0.48], ["set out", "journey", "road", "travel", "wandered", "wood", "mountain", "river", "sea", "search", "find", "quest", "walked", "far"]],
-  D_E: [[0.32, 0.62], ["old woman", "old man", "asked", "begged", "bread", "water", "kind", "helped", "shared", "answer", "riddle", "promised", "met"]],
-  F: [[0.42, 0.72], ["gave", "gift", "magic", "golden", "ring", "sword", "cloak", "wand", "flute", "mirror", "bird", "horse", "fox", "secret", "power", "treasure"]],
-  H: [[0.55, 0.85], ["fought", "battle", "struck", "cried", "fire", "dark", "sword", "ran", "fled", "danger", "dragon", "witch", "castle", "tower", "gate", "storm"]],
-  I_K: [[0.68, 0.93], ["killed", "defeated", "broken", "spell", "freed", "saved", "awoke", "found", "joy", "rejoiced", "at last", "victory", "vanished"]],
-  down_W: [[0.82, 1.0], ["returned", "home", "wedding", "married", "feast", "happily", "ever after", "lived", "king", "queen", "reigned", "peace", "glad"]],
-};
-
-const KO_TONE_WORDS = {
-  classic: ["왕", "공주", "왕자", "마을", "임금", "은혜", "착한", "행복", "황금", "결혼", "성"],
-  whimsical: ["요술", "마법", "노래", "춤", "웃", "새", "토끼", "고양이", "개구리", "구름", "별", "신기", "날개", "꿈"],
-  dark: ["어둠", "마녀", "피", "죽", "늑대", "저주", "무서", "울", "불", "칼", "괴물", "호랑이", "밤", "그림자", "비명"],
-};
-
-const EN_TONE_WORDS = {
-  classic: ["king", "queen", "princess", "prince", "golden", "palace", "kingdom", "married", "noble", "feast"],
-  whimsical: ["magic", "dance", "song", "laugh", "frog", "cat", "bird", "feather", "moon", "star", "wonder", "dream", "silver"],
-  dark: ["dark", "witch", "blood", "death", "wolf", "curse", "shadow", "night", "fire", "bone", "cry", "fear", "storm", "wicked"],
-};
-
-const KO_JOSA_LIST = ["에서는", "으로는", "에게는", "한테서", "까지는", "부터는", "에서", "으로", "에게", "한테", "까지", "부터", "처럼", "보다", "마저", "조차", "은", "는", "이", "가", "을", "를", "의", "에", "로", "와", "과", "도", "만"];
 const JOSA_PREFIX = "\u001f";
 const EN_NO_SPACE = new Set([".", ",", "!", "?", ";", ":"]);
 const WORD_RE = /[가-힣A-Za-z0-9']+/g;
@@ -67,9 +26,7 @@ function mulberry32(seed) {
 function hasBatchim(word) {
   for (let i = word.length - 1; i >= 0; i--) {
     const code = word.charCodeAt(i);
-    if (code >= 0xac00 && code <= 0xd7a3) {
-      return (code - 0xac00) % 28 !== 0;
-    }
+    if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 !== 0;
   }
   return false;
 }
@@ -77,9 +34,7 @@ function hasBatchim(word) {
 function hasRieul(word) {
   for (let i = word.length - 1; i >= 0; i--) {
     const code = word.charCodeAt(i);
-    if (code >= 0xac00 && code <= 0xd7a3) {
-      return (code - 0xac00) % 28 === 8;
-    }
+    if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 === 8;
   }
   return false;
 }
@@ -97,7 +52,6 @@ function adjustJosa(stem, josa) {
 function tokenizeKo(sent, mode) {
   const words = sent.split(/\s+/).filter(Boolean);
   if (mode === "eojeol") return words;
-  // Particle-splitting mode: detach Korean particles for flexible recombination
   const out = [];
   for (const w of words) {
     const m = w.match(/^([가-힣]+)([.,!?;:"'”’)]*)$/);
@@ -177,9 +131,7 @@ function splitEnSentences(paragraphs) {
     clean = clean.replace(/\b(Mr|Mrs|Ms|Dr|St|Prof|Sr|Jr)\./gi, "$1<DOT>");
     for (let s of clean.split(/(?<=[.!?])\s+/)) {
       s = s.replace(/<DOT>/g, ".").replace(/"/g, "").trim();
-      if (s.length >= 20 && s.length <= 280 && /[A-Za-z]/.test(s)) {
-        out.push(s);
-      }
+      if (s.length >= 20 && s.length <= 280 && /[A-Za-z]/.test(s)) out.push(s);
     }
   }
   return out;
@@ -228,32 +180,18 @@ class MarkovChain {
     }
   }
 
-  pick(map, rng, toneWords) {
+  pick(map, rng) {
     let total = 0;
-    const entries = [];
-    for (const [tok, cnt] of map.entries()) {
-      let w = cnt;
-      if (tok !== EOS && toneWords && toneWords.length) {
-        const low = tok.toLowerCase();
-        for (const kw of toneWords) {
-          if (low.includes(kw)) {
-            w *= 2.4;
-            break;
-          }
-        }
-      }
-      entries.push([tok, w]);
-      total += w;
-    }
+    for (const cnt of map.values()) total += cnt;
     let r = rng() * total;
-    for (const [tok, w] of entries) {
-      r -= w;
+    for (const [tok, cnt] of map.entries()) {
+      r -= cnt;
       if (r <= 0) return tok;
     }
-    return entries[entries.length - 1][0];
+    return map.keys().next().value;
   }
 
-  sampleSentence(rng, toneWords = null, maxTokens = 40) {
+  sampleSentence(rng, maxTokens = 40) {
     let lastOut = [];
     for (let attempt = 0; attempt < 12; attempt++) {
       const history = Array(this.order).fill(BOS);
@@ -270,7 +208,7 @@ class MarkovChain {
           }
         }
         if (!map) break;
-        const nxt = this.pick(map, rng, toneWords);
+        const nxt = this.pick(map, rng);
         if (nxt === EOS) {
           finished = true;
           break;
@@ -288,49 +226,19 @@ class MarkovChain {
 class CorpusStore {
   constructor(lang, tales) {
     this.lang = lang;
-    this.tales = tales; // [{t: title, p: paragraphs}]
+    this.tales = tales;
     this.titles = tales.map((x) => x.t);
     this.taleMap = new Map();
     tales.forEach((x) => {
       if (!this.taleMap.has(x.t)) this.taleMap.set(x.t, x);
     });
 
-    // Build sentence pool & Propp 8-stage buckets
     this.allSents = [];
-    this.beatSents = Object.fromEntries(PROPP_BEATS.map((b) => [b.code, []]));
-    const rules = lang === "ko" ? KO_BEAT_RULES : EN_BEAT_RULES;
-
     for (const tale of tales) {
       const sents = lang === "ko" ? splitKoSentences(tale.p) : splitEnSentences(tale.p);
-      const total = sents.length;
-      for (let idx = 0; idx < total; idx++) {
-        const sent = sents[idx];
-        this.allSents.push(sent);
-        if (total < 4) continue;
-        const pos = idx / Math.max(1, total - 1);
-        const low = lang === "ko" ? sent : sent.toLowerCase();
-        let bestCode = null;
-        let bestScore = 0;
-        for (const beat of PROPP_BEATS) {
-          const [[lo, hi], kws] = rules[beat.code];
-          let score = 0;
-          if (pos >= lo && pos <= hi) score += 1.5;
-          else if (Math.abs(pos - (lo + hi) / 2) <= 0.19) score += 0.4;
-          for (const kw of kws) {
-            if (low.includes(kw)) score += 1.4;
-          }
-          if (score > bestScore) {
-            bestScore = score;
-            bestCode = beat.code;
-          }
-        }
-        if (bestCode && bestScore >= 1.5) {
-          this.beatSents[bestCode].push(sent);
-        }
-      }
+      for (const s of sents) this.allSents.push(s);
     }
 
-    // Build title Markov map
     this.titleMap = new Map();
     for (const title of this.titles) {
       const words = title.trim().split(/\s+/).filter(Boolean);
@@ -346,7 +254,6 @@ class CorpusStore {
       }
     }
 
-    // Provenance bigram & unigram inverted index
     this.bigramTales = new Map();
     this.unigramTales = new Map();
     for (let idx = 0; idx < tales.length; idx++) {
@@ -374,24 +281,12 @@ class CorpusStore {
     this.chainCache = new Map();
   }
 
-  getFlatChain(order, mode) {
-    const key = `flat:${order}:${mode}`;
+  getChain(order, mode) {
+    const key = `${order}:${mode}`;
     if (!this.chainCache.has(key)) {
       const tokSents = this.lang === "ko"
         ? this.allSents.map((s) => tokenizeKo(s, mode))
         : this.allSents.map(tokenizeEn);
-      this.chainCache.set(key, new MarkovChain(tokSents, order));
-    }
-    return this.chainCache.get(key);
-  }
-
-  getStageChain(beatCode, order, mode) {
-    const key = `stage:${beatCode}:${order}:${mode}`;
-    if (!this.chainCache.has(key)) {
-      const sents = this.beatSents[beatCode];
-      const tokSents = this.lang === "ko"
-        ? sents.map((s) => tokenizeKo(s, mode))
-        : sents.map(tokenizeEn);
       this.chainCache.set(key, new MarkovChain(tokSents, order));
     }
     return this.chainCache.get(key);
@@ -525,7 +420,7 @@ class CorpusStore {
 
     const used_tales = Array.from(weights.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
+      .slice(0, 18)
       .map((x) => x[0]);
 
     return { paragraphs, used_tales };
@@ -535,14 +430,14 @@ class CorpusStore {
 const rawCache = new Map();
 const storeCache = new Map();
 
-export async function loadStore(lang, scope = "all") {
+export async function loadStore(lang, dataBaseUrl, scope = "all") {
   const effectiveScope = lang === "ko" && scope === "korean" ? "korean" : "all";
   const key = `${lang}:${effectiveScope}`;
   if (storeCache.has(key)) return storeCache.get(key);
   let tales = rawCache.get(lang);
   if (!tales) {
-    const res = await fetch(`./data/${lang}.json`);
-    if (!res.ok) throw new Error(`코퍼스 로드 실패 (${res.status})`);
+    const res = await fetch(`${dataBaseUrl}/${lang}.json`);
+    if (!res.ok) throw new Error(`Failed to load corpus (${res.status})`);
     tales = await res.json();
     rawCache.set(lang, tales);
   }
@@ -552,56 +447,25 @@ export async function loadStore(lang, scope = "all") {
   return store;
 }
 
-export async function generateStory({ track, seed, order, sentences, mode, tone, scope = "all" }) {
-  const lang = track.startsWith("ko") ? "ko" : "en";
-  const effectiveScope = lang === "ko" && scope === "korean" ? "korean" : "all";
-  const store = await loadStore(lang, effectiveScope);
+export async function generateMarkovStory({ lang, dataBaseUrl, seed, order, sentences, mode = "eojeol", scope = "all" }) {
+  const store = await loadStore(lang, dataBaseUrl, scope);
   const rng = mulberry32(seed);
+  const chain = store.getChain(order, mode);
   const detok = (toks) => (lang === "ko" ? detokenizeKo(toks, mode) : detokenizeEn(toks));
 
-  let text = "";
-  let beats = null;
-
-  if (track.endsWith("_markov")) {
-    const chain = store.getFlatChain(order, mode);
-    const sents = [];
-    for (let i = 0; i < sentences; i++) {
-      const s = detok(chain.sampleSentence(rng));
-      if (s) sents.push(s);
-    }
-    const perPara = Math.max(2, Math.ceil(sents.length / 3));
-    const paras = [];
-    for (let i = 0; i < sents.length; i += perPara) {
-      paras.push(sents.slice(i, i + perPara).join(" "));
-    }
-    text = paras.join("\n\n");
-  } else {
-    const toneWords = lang === "ko" ? KO_TONE_WORDS[tone] : EN_TONE_WORDS[tone];
-    const paras = [];
-    for (const beat of PROPP_BEATS) {
-      const chain = store.getStageChain(beat.code, order, mode);
-      const sents = [];
-      for (let i = 0; i < 2; i++) {
-        const s = detok(chain.sampleSentence(rng, toneWords));
-        if (s) sents.push(s);
-      }
-      paras.push(sents.join(" "));
-    }
-    text = paras.join("\n\n");
-    beats = PROPP_BEATS;
+  const sents = [];
+  for (let i = 0; i < sentences; i++) {
+    const s = detok(chain.sampleSentence(rng));
+    if (s) sents.push(s);
   }
-
+  const perPara = Math.max(2, Math.ceil(sents.length / 3));
+  const paras = [];
+  for (let i = 0; i < sents.length; i += perPara) {
+    paras.push(sents.slice(i, i + perPara).join(" "));
+  }
+  const text = paras.join("\n\n");
   const title = store.generateTitle(rng);
   const provenance = store.annotate(text);
 
-  return {
-    track,
-    lang,
-    scope: effectiveScope,
-    seed,
-    title,
-    text,
-    beats,
-    provenance,
-  };
+  return { lang, seed, title, text, provenance };
 }
