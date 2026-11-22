@@ -509,6 +509,14 @@
         <span class="num-val" id="sent-val">8</span>
       </label>
 
+      <label class="ctrl" id="ctrl-scope">
+        <span class="term" data-tip="한국 전래·창작 동화 21편만 학습할지, 그림 형제 등 세계 동화 한국어 번역본 220편을 함께 섞을지 선택합니다.">범위</span>
+        <select id="scope-select">
+          <option value="korean">한국 동화만</option>
+          <option value="all" selected>세계 동화 포함</option>
+        </select>
+      </label>
+
       <label class="ctrl" id="ctrl-mode">
         <span class="term" data-tip="한국어 문장을 쪼개는 기준입니다. 조사 분리는 조사를 떼어내 조합을 유연하게 만들고 받침에 맞춰 다시 붙이며, 어절은 띄어쓰기 단위로 묶습니다.">단위</span>
         <select id="mode-select">
@@ -636,9 +644,11 @@
 
     function updateControls() {
       const showSentences = currentTrack === "ko_markov" || currentTrack === "en_markov";
+      const showScope = currentTrack === "ko_markov" || currentTrack === "ko_propp";
       const showMode = currentTrack === "ko_markov" || currentTrack === "ko_propp";
       const showTone = currentTrack === "ko_propp" || currentTrack === "en_propp";
       $("#ctrl-sentences").classList.toggle("hidden", !showSentences);
+      $("#ctrl-scope").classList.toggle("hidden", !showScope);
       $("#ctrl-mode").classList.toggle("hidden", !showMode);
       $("#ctrl-tone").classList.toggle("hidden", !showTone);
     }
@@ -794,7 +804,7 @@
       loadAndRenderTale(lang, titles[0], needle);
     }
 
-    function attachTalesPanel(card, lang) {
+    function attachTalesPanel(card, lang, scope = "all") {
       const panel = card.querySelector(".tales-panel");
       const grid = panel.querySelector(".tales-grid");
       const input = panel.querySelector(".tales-filter");
@@ -817,7 +827,7 @@
       panel.addEventListener("toggle", async () => {
         if (!panel.open || loaded) return;
         loaded = true;
-        const store = await loadStore(lang);
+        const store = await loadStore(lang, scope);
         allTitles = store.titles;
         summaryCount.textContent = `(${allTitles.length}편)`;
         renderList();
@@ -944,7 +954,7 @@
         } catch {}
       });
 
-      attachTalesPanel(card, s.lang);
+      attachTalesPanel(card, s.lang, s.scope || "all");
       bindProvenanceEvents(card);
       return card;
     }
@@ -963,6 +973,7 @@
           sentences: parseInt($("#sent-range").value, 10) || 8,
           mode: $("#mode-select").value,
           tone: $("#tone-select").value,
+          scope: $("#scope-select").value,
         });
         out.innerHTML = "";
         out.appendChild(buildCard(story));
@@ -986,6 +997,7 @@
     $("#order-range").addEventListener("change", generate);
     $("#sent-range").addEventListener("input", (e) => { $("#sent-val").textContent = e.target.value; });
     $("#sent-range").addEventListener("change", generate);
+    $("#scope-select").addEventListener("change", generate);
     $("#mode-select").addEventListener("change", generate);
     $("#tone-select").addEventListener("change", generate);
     $("#random-seed-btn").addEventListener("click", () => {

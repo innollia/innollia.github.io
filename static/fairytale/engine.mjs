@@ -532,21 +532,30 @@ class CorpusStore {
   }
 }
 
+const rawCache = new Map();
 const storeCache = new Map();
 
-export async function loadStore(lang) {
-  if (storeCache.has(lang)) return storeCache.get(lang);
-  const res = await fetch(`./data/${lang}.json`);
-  if (!res.ok) throw new Error(`코퍼스 로드 실패 (${res.status})`);
-  const tales = await res.json();
-  const store = new CorpusStore(lang, tales);
-  storeCache.set(lang, store);
+export async function loadStore(lang, scope = "all") {
+  const effectiveScope = lang === "ko" && scope === "korean" ? "korean" : "all";
+  const key = `${lang}:${effectiveScope}`;
+  if (storeCache.has(key)) return storeCache.get(key);
+  let tales = rawCache.get(lang);
+  if (!tales) {
+    const res = await fetch(`./data/${lang}.json`);
+    if (!res.ok) throw new Error(`코퍼스 로드 실패 (${res.status})`);
+    tales = await res.json();
+    rawCache.set(lang, tales);
+  }
+  const filtered = effectiveScope === "korean" ? tales.filter((x) => x.o === "korean") : tales;
+  const store = new CorpusStore(lang, filtered);
+  storeCache.set(key, store);
   return store;
 }
 
-export async function generateStory({ track, seed, order, sentences, mode, tone }) {
+export async function generateStory({ track, seed, order, sentences, mode, tone, scope = "all" }) {
   const lang = track.startsWith("ko") ? "ko" : "en";
-  const store = await loadStore(lang);
+  const effectiveScope = lang === "ko" && scope === "korean" ? "korean" : "all";
+  const store = await loadStore(lang, effectiveScope);
   const rng = mulberry32(seed);
   const detok = (toks) => (lang === "ko" ? detokenizeKo(toks, mode) : detokenizeEn(toks));
 
@@ -588,6 +597,7 @@ export async function generateStory({ track, seed, order, sentences, mode, tone 
   return {
     track,
     lang,
+    scope: effectiveScope,
     seed,
     title,
     text,
