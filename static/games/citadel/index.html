@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f5f2">
+<title>CITADEL — 원 위에 쌓는 성</title>
+<style>
+:root{font-family:Arial,"Malgun Gothic",sans-serif;color:#343734;background:#f5f5f2;--accent:#343734;-webkit-tap-highlight-color:transparent;font-synthesis:none}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{position:relative;max-width:720px;margin:auto}button,input,select{font:inherit}button{display:grid;place-items:center;min-width:52px;min-height:52px;padding:0;border:0;border-radius:50%;background:transparent;color:inherit;font-size:26px;cursor:pointer;touch-action:manipulation}button:hover{background:#e7e8e2}button:active{background:#dcded5;transform:scale(.95)}button:disabled{opacity:.22;cursor:default}button:focus-visible,input:focus-visible{outline:2px solid #777d72;outline-offset:4px}button[aria-pressed=true]{background:#dfe2d8}[hidden]{display:none!important}main,.stage{position:absolute;inset:0}#scene{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.view-tools{position:absolute;z-index:2;bottom:calc(116px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:6px}.view-tools button{font-size:23px;color:#7c8378;min-width:46px;min-height:46px}.view-tools button:hover{color:#343734}.controls{position:absolute;z-index:3;bottom:calc(34px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px}.controls button{width:56px;height:56px;background:#e8eae2}.controls .drop{background:#343734;color:#f5f5f2;width:66px;height:66px;font-size:30px}body[data-state=setup] .controls{display:none}body[data-state=setup] .view-tools{bottom:calc(240px + env(safe-area-inset-bottom))}body[data-state=setup] #map-toggle{display:none}
+#setup{position:absolute;z-index:3;left:50%;transform:translateX(-50%);bottom:calc(46px + env(safe-area-inset-bottom));width:204px}.field label{display:flex;align-items:center;justify-content:space-between;color:#7c8378;font-size:23px}.count{font-size:20px;color:#343734;font-variant-numeric:tabular-nums}input[type=range]{width:100%;height:44px;margin:4px 0 14px;accent-color:#60695b;cursor:pointer}.start{width:72px;height:72px;margin:0 auto;background:#343734;color:#f5f5f2;font-size:28px}.start:hover{background:#555d50}.start svg{margin-left:4px}
+#playing{position:absolute;inset:0;pointer-events:none}.stats{position:absolute;top:calc(28px + env(safe-area-inset-top));left:28px;display:flex;gap:26px}.stat{display:flex;align-items:center;gap:9px;font-size:18px;color:#92988d}.metric{color:#343734;font-variant-numeric:tabular-nums;font-size:20px}.game-buttons{position:absolute;top:calc(16px + env(safe-area-inset-top));right:20px;display:flex;pointer-events:auto;gap:4px}.game-buttons button{font-size:23px}.next{position:absolute;top:calc(88px + env(safe-area-inset-top));right:24px;opacity:.6}#next{width:100px;height:70px}.toast{position:absolute;z-index:5;top:100px;left:50%;transform:translateX(-50%);font-size:13px;color:#60695b;opacity:0;pointer-events:none;white-space:nowrap}.toast.show{opacity:1}.map-area{position:absolute;z-index:4;bottom:calc(183px + env(safe-area-inset-bottom));left:20px;right:20px;padding:12px;background:rgba(245,245,242,.96);border-radius:8px}#map{display:block;width:100%;height:114px;touch-action:none;cursor:pointer}.end-message{position:absolute;z-index:2;left:20px;right:20px;top:100px;text-align:center;font-size:14px;color:#7c8378;pointer-events:none}body:not([data-state=over]) .end-message{display:none}
+@media(min-width:600px){.controls{gap:20px;bottom:calc(48px + env(safe-area-inset-bottom))}.controls button{width:64px;height:64px}.controls .drop{width:76px;height:76px}.view-tools{bottom:calc(144px + env(safe-area-inset-bottom));gap:14px}.view-tools button{width:52px;height:52px}#setup{bottom:calc(64px + env(safe-area-inset-bottom));width:240px}.start{width:84px;height:84px}body[data-state=setup] .view-tools{bottom:calc(284px + env(safe-area-inset-bottom))}.map-area{bottom:calc(210px + env(safe-area-inset-bottom))}}
+@media(max-height:600px){#setup{bottom:20px;width:180px}body[data-state=setup] .view-tools{bottom:190px}.view-tools{bottom:88px}.controls{bottom:14px}.controls button{width:48px;height:48px}.controls .drop{width:56px;height:56px}.map-area{bottom:145px}}
+@media(prefers-reduced-motion:reduce){button:active{transform:none}}
+</style>
+</head>
+<body data-state="setup">
+<main><section class="stage" aria-label="원형 성벽 게임">
+<canvas id="scene" aria-label="손가락으로 드래그하여 성을 회전하고 두 손가락으로 확대할 수 있습니다"></canvas>
+<div class="view-tools" aria-label="화면 조작">
+<button id="view-left" aria-label="화면 왼쪽 회전" title="화면 왼쪽 회전">↶</button><button id="view-right" aria-label="화면 오른쪽 회전" title="화면 오른쪽 회전">↷</button><button id="follow" aria-label="블록 앞으로 시점 맞춤" title="시점 맞춤">⊙</button><button id="xray" aria-label="성벽 투시" title="투시" aria-pressed="false">◇</button><button id="map-toggle" aria-label="펼친 성벽 지도" aria-pressed="false" title="지도">▦</button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="map-area" id="map-area" hidden><canvas id="map" aria-label="펼친 성벽. 터치한 위치로 블록을 옮깁니다"></canvas></div>
+<div class="controls" aria-label="블록 조작"><button data-action="left" aria-label="블록 왼쪽 이동">←</button><button data-action="rotate" aria-label="블록 회전">↻</button><button data-action="right" aria-label="블록 오른쪽 이동">→</button><button data-action="down" aria-label="블록 한 칸 내리기">↓</button><button data-action="drop" class="drop" aria-label="블록 즉시 놓기">⤓</button></div>
+</section>
+<div id="setup"><div class="field"><label for="segments"><span aria-hidden="true">◎</span><span class="count"><output id="segment-value">20</output></span></label><input id="segments" type="range" aria-label="원 둘레 타일 수" min="8" max="40" step="1" value="20"></div><button id="start" class="start" aria-label="게임 시작"><svg aria-hidden="true" width="25" height="28" viewBox="0 0 25 28"><path d="M3 2L23 14 3 26Z" fill="currentColor"/></svg></button></div>
+<div id="playing" hidden><div class="stats"><div class="stat" aria-label="점수"><span aria-hidden="true">·</span><span class="metric" id="score">0</span></div><div class="stat" aria-label="완성한 층"><span aria-hidden="true">▱</span><span class="metric" id="rings">0</span></div></div><div class="next"><canvas id="next" aria-label="다음 블록"></canvas></div><div class="game-buttons"><button id="pause" aria-label="일시정지">Ⅱ</button><button id="reset" aria-label="새 게임">↺</button></div><div class="end-message" id="status" role="status" aria-live="polite"></div></div>
+<div hidden><select id="mode"><option value="build">축성</option><option value="classic">클래식</option></select><select id="speed"><option value="850">보통</option></select><span id="circumference"></span><span id="level"></span><span id="mode-label"></span><span id="play-title"></span><span id="mode-help"></span><span id="scene-caption"></span></div>
+</main>
+<script>
+'use strict';
+// Native canvas renders the 3D wedge geometry; no network or dependencies.
+const $=id=>document.getElementById(id), TAU=Math.PI*2, HEIGHT=14;
+const SHAPES=[[[0,0],[1,0],[2,0],[3,0]],[[0,0],[1,0],[0,1],[1,1]],[[0,0],[1,0],[2,0],[1,1]],[[0,0],[0,1],[1,0],[2,0]],[[0,0],[1,0],[2,0],[2,1]],[[0,0],[1,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]]];
+let n=20,board=[],base=0,score=0,rings=0,level=1,active=null,next=null,bag=[],state='setup',mode='build',interval=850,elapsed=0,last=0;
+let yaw=.5,targetYaw=.5,elevation=.52,zoom=1,autoFollow=true,xray=false,drag=null,toastUntil=0;
+const scene=$('scene'),ctx=scene.getContext('2d'),map=$('map'),mc=map.getContext('2d');
+let sw=0,sh=0,mw=0,mh=0;
+const wrap=x=>(x%n+n)%n;
+const emptyRow=()=>Array(n).fill(0);
+function fit(canvas){const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);if(canvas.width!==Math.round(r.width*d)||canvas.height!==Math.round(r.height*d)){canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);}canvas.getContext('2d').setTransform(d,0,0,d,0,0);return[r.width,r.height];}
+function refill(){bag=[0,1,2,3,4,5,6];for(let i=6;i>0;i--){let j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}}
+function take(){if(!bag.length)refill();let id=bag.pop();return{id,cells:SHAPES[id].map(c=>c.slice())};}
+function valid(p,x=p.x,y=p.y,cells=p.cells){return cells.every(([cx,cy])=>y+cy>=0&&y+cy<HEIGHT&&!board[y+cy][wrap(x+cx)]);}
+function landing(){let y=active.y;while(valid(active,active.x,y-1))y--;return y;}
+function focusPiece(){if(active){targetYaw=Math.PI/2-((active.x+1)/n)*TAU;autoFollow=true;}}
+function spawn(){active={...next,x:0,y:HEIGHT-1-Math.max(...next.cells.map(c=>c[1]))};next=take();if(!valid(active)){active=null;state='over';$('play-title').textContent='이번 성의 기록';$('status').textContent='성벽이 꼭대기에 닿았어요. 새 성을 지어보세요.';$('pause').disabled=true;}else if(autoFollow)focusPiece();elapsed=0;update();drawNext();}
+function clearRows(){const full=board.filter(row=>row.every(Boolean)).length;if(full){board=board.filter(row=>!row.every(Boolean));while(board.length<HEIGHT)board.push(emptyRow());rings+=full;if(mode==='build')base+=full;score+=[0,100,300,500,800][full]*level;level=1+Math.floor(rings/5);notify(mode==='build'?`성벽 ${full}층 완성`:`${full}층 클리어`);}return full;}
+function lock(){for(const [cx,cy]of active.cells)board[active.y+cy][wrap(active.x+cx)]=1+active.id;score+=10;clearRows();spawn();}
+function move(dx){if(valid(active,active.x+dx)){active.x=wrap(active.x+dx);if(autoFollow)focusPiece();}}
+function rotate(){if(active.id===1)return;let cells=active.cells.map(([x,y])=>[y,-x]);const minX=Math.min(...cells.map(c=>c[0])),minY=Math.min(...cells.map(c=>c[1]));cells=cells.map(([x,y])=>[x-minX,y-minY]);for(const dy of [0,1,2,-1,-2])for(const dx of [0,-1,1,-2,2])if(valid(active,active.x+dx,active.y+dy,cells)){active.cells=cells;active.x=wrap(active.x+dx);active.y+=dy;if(autoFollow)focusPiece();return;}}
+function action(name){if(state!=='playing'||!active)return;if(name==='left')move(-1);if(name==='right')move(1);if(name==='rotate')rotate();if(name==='down'){if(valid(active,active.x,active.y-1)){active.y--;score++;}else lock();elapsed=0;}if(name==='drop'){score+=2*(active.y-landing());active.y=landing();lock();elapsed=0;}update();}
+function update(){document.body.dataset.state=state;$('score').textContent=score.toLocaleString();$('rings').textContent=rings;$('level').textContent=level;$('circumference').textContent=n;document.querySelectorAll('[data-action]').forEach(b=>b.disabled=state!=='playing');}
+function notify(message){$('toast').textContent=message;$('toast').classList.add('show');toastUntil=performance.now()+2000;}
+function start(){n=Number($('segments').value);mode=$('mode').value;interval=Number($('speed').value);board=Array.from({length:HEIGHT},emptyRow);base=score=rings=0;level=1;bag=[];next=take();state='playing';autoFollow=true;zoom=1;$('setup').hidden=true;$('playing').hidden=false;$('pause').disabled=false;$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','일시정지');$('play-title').textContent='성을 쌓는 중';$('status').textContent='빈틈없이 한 바퀴를 채워보세요.';$('mode-label').textContent=mode==='build'?'BUILD / 축성 모드':'CLASSIC / 클래식 모드';$('mode-help').textContent=mode==='build'?'완성한 층은 성의 기단으로 남습니다. 그 위에 계속 쌓아보세요.':'완성한 층이 사라지고 위의 블록이 내려옵니다.';$('scene-caption').textContent='한 조각씩, 당신만의 성벽을 만드세요.';spawn();$('start').blur();}
+function pause(){if(state!=='playing'&&state!=='paused')return;state=state==='playing'?'paused':'playing';elapsed=0;$('pause').textContent=state==='paused'?'▷':'Ⅱ';$('pause').setAttribute('aria-label',state==='paused'?'계속하기':'일시정지');$('play-title').textContent=state==='paused'?'잠시 쉬어가기':'성을 쌓는 중';$('status').textContent=state==='paused'?'P 또는 계속 쌓기를 누르면 이어집니다.':'빈틈없이 한 바퀴를 채워보세요.';update();}
+function reset(){state='setup';active=null;base=0;toastUntil=0;$('toast').classList.remove('show');n=Number($('segments').value);$('setup').hidden=false;$('playing').hidden=true;$('scene-caption').textContent='당신의 성은 하나의 원에서 시작됩니다.';demo();update();$('start').focus();}
+function demo(){board=Array.from({length:HEIGHT},emptyRow);for(let x=0;x<n;x++){const h=1+((Math.floor(x*8/n)%3===0)?2:0);for(let y=0;y<h;y++)board[y][x]=1;}targetYaw=.5;}
+function drawNext(){const c=$('next'),cx=c.getContext('2d');fit(c);cx.clearRect(0,0,100,70);if(!next)return;let w=1+Math.max(...next.cells.map(c=>c[0])),h=1+Math.max(...next.cells.map(c=>c[1]));cx.fillStyle='#454f3e';for(let [x,y]of next.cells)cx.fillRect((100-w*17)/2+x*17,(70-h*17)/2+(h-1-y)*17,14,14);}
+function render3D(){[sw,sh]=fit(scene);ctx.clearRect(0,0,sw,sh);const radius=Math.max(3.6,n/TAU*.93),visibleBase=Math.min(base,4),hiddenBase=base-visibleBase;
+ const total=radius*2+4,scale=Math.min(sw*.86/total,sh/(radius*1.2+HEIGHT*.78+5)*(state==='setup'?1.15:1))*zoom;
+ const centerX=sw*.5,centerY=sh*(state==='setup'?.43:.62),co=Math.cos(yaw),si=Math.sin(yaw),ce=Math.cos(elevation),se=Math.sin(elevation);
+ function project(v){let [x,y,z]=v;let xx=x*co-z*si,d=x*si+z*co;return[centerX+xx*scale,centerY+(d*se-y*ce)*scale];}
+ let faces=[];
+ function face(points,color,alpha=1,edge=null){let depth=0;for(let [x,y,z]of points)depth+=(x*si+z*co)*ce+y*se;faces.push({points,color,alpha,edge,depth:depth/points.length});}
+ function block(tile,y,kind){const gap=.022,a=tile/n*TAU+gap,b=(tile+1)/n*TAU-gap,ri=radius-.72,ro=radius+.35,lo=y*.64,hi=lo+.61;
+ let v=[[ri*Math.cos(a),lo,ri*Math.sin(a)],[ro*Math.cos(a),lo,ro*Math.sin(a)],[ro*Math.cos(b),lo,ro*Math.sin(b)],[ri*Math.cos(b),lo,ri*Math.sin(b)],[ri*Math.cos(a),hi,ri*Math.sin(a)],[ro*Math.cos(a),hi,ro*Math.sin(a)],[ro*Math.cos(b),hi,ro*Math.sin(b)],[ri*Math.cos(b),hi,ri*Math.sin(b)]];
+ let ghost=kind==='ghost',current=kind==='active',foundation=kind==='base';let colors=current?['#666f61','#353d32','#485141','#505b47','#30392b']:foundation?['#929d8e','#707f70','#81907e','#7b8978','#657461']:['#b4b8ad','#78816f','#949d89','#87917c','#737e68'];let alpha=ghost?.16:(xray&&!current?.23:1),edge=ghost?'#454f3e':null;
+ [[4,5,6,7],[1,2,6,5],[0,4,7,3],[0,1,5,4],[3,7,6,2]].forEach((indices,i)=>face(indices.map(j=>v[j]),ghost?'#454f3e':colors[i],alpha,edge));
+ }
+ // A faceted limestone disk anchors the circular grid.
+ const diskTop=[],diskBottom=[];for(let i=0;i<Math.max(64,n);i++){let a=i/Math.max(64,n)*TAU;diskTop.push([(radius+1.05)*Math.cos(a),-.12,(radius+1.05)*Math.sin(a)]);diskBottom.push([(radius+1.05)*Math.cos(a),-.43,(radius+1.05)*Math.sin(a)]);}
+ for(let i=0;i<diskTop.length;i++){let j=(i+1)%diskTop.length;face([diskBottom[i],diskBottom[j],diskTop[j],diskTop[i]],'#c9cdbf');}face(diskTop,'#e2e4db');
+ function paintFaces(){faces.sort((a,b)=>a.depth-b.depth);for(let f of faces){ctx.globalAlpha=f.alpha;ctx.beginPath();f.points.forEach((v,i)=>{let p=project(v);i?ctx.lineTo(...p):ctx.moveTo(...p);});ctx.closePath();ctx.fillStyle=f.color;ctx.fill();if(f.edge){ctx.strokeStyle=f.edge;ctx.lineWidth=1;ctx.stroke();}}ctx.globalAlpha=1;faces=[];}
+ paintFaces(); // The entire courtyard lies below the wall, including rear tiles.
+ for(let y=0;y<visibleBase;y++)for(let x=0;x<n;x++)block(x,y,'base');
+ for(let y=0;y<HEIGHT;y++)for(let x=0;x<n;x++)if(board[y]&&board[y][x])block(x,y+visibleBase,'stone');
+ if(active){const land=landing();for(let [x,y]of active.cells)block(wrap(active.x+x),land+y+visibleBase,'ghost');for(let [x,y]of active.cells)block(wrap(active.x+x),active.y+y+visibleBase,'active');}
+ paintFaces();
+ // Fine ground markers, drawn on the visible edge of the courtyard.
+ for(let i=0;i<n;i++){let a=(i+.5)/n*TAU,d=Math.cos(a)*si+Math.sin(a)*co;if(d<0)continue;let p=project([(radius+1.34)*Math.cos(a),-.1,(radius+1.34)*Math.sin(a)]);ctx.fillStyle='#8e9789';ctx.beginPath();ctx.arc(...p,1.2,0,TAU);ctx.fill();}
+ if(hiddenBase>0){ctx.font='10px sans-serif';ctx.fillStyle='#777f76';ctx.textAlign='center';ctx.fillText(`기단 아래 ${hiddenBase}층 더 쌓임`,sw/2,sh-24);}
+ if(state==='paused'){ctx.fillStyle='rgba(238,237,231,.58)';ctx.fillRect(0,100,sw,sh-100);ctx.fillStyle='#303c39';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('잠시 쉬어가기',sw/2,sh/2);}
+}
+function renderMap(){if($('map-area').hidden)return;[mw,mh]=fit(map);mc.clearRect(0,0,mw,mh);const cw=mw/n,ch=(mh-16)/HEIGHT;for(let y=0;y<HEIGHT;y++)for(let x=0;x<n;x++){mc.fillStyle=board[y]&&board[y][x]?'#949d89':'#e0e3d9';mc.fillRect(x*cw+1,(HEIGHT-1-y)*ch,cw-2,Math.max(2,ch-1));}if(active){let land=landing();for(let [cx,cy]of active.cells){let x=wrap(active.x+cx);mc.fillStyle='#a8c4b5';mc.fillRect(x*cw+1,(HEIGHT-1-land-cy)*ch,cw-2,Math.max(2,ch-1));mc.fillStyle='#454f3e';mc.fillRect(x*cw+1,(HEIGHT-1-active.y-cy)*ch,cw-2,Math.max(2,ch-1));}}mc.font='9px monospace';mc.fillStyle='#777f76';mc.textAlign='center';for(let x=0;x<n;x++)if(n<=24||x%2===0)mc.fillText(x+1,(x+.5)*cw,mh-1);}
+function frame(time){const dt=Math.min(time-(last||time),100);last=time;if(state==='playing'){elapsed+=dt;const speed=Math.max(140,interval*Math.pow(.88,level-1));if(elapsed>=speed){elapsed=0;if(valid(active,active.x,active.y-1))active.y--;else lock();}}
+ const delta=Math.atan2(Math.sin(targetYaw-yaw),Math.cos(targetYaw-yaw));yaw+=delta*.18;render3D();renderMap();if(toastUntil&&time>toastUntil){$('toast').classList.remove('show');toastUntil=0;}requestAnimationFrame(frame);}
+$('segments').addEventListener('input',()=>{n=Number($('segments').value);$('segment-value').value=n;demo();});
+$('start').addEventListener('click',start);$('pause').addEventListener('click',pause);$('reset').addEventListener('click',reset);$('follow').addEventListener('click',()=>{if(active)focusPiece();else targetYaw=.5;elevation=.52;zoom=1;});$('xray').addEventListener('click',()=>{xray=!xray;$('xray').setAttribute('aria-pressed',String(xray));});
+$('view-left').addEventListener('click',()=>{autoFollow=false;targetYaw-=Math.PI/6;});$('view-right').addEventListener('click',()=>{autoFollow=false;targetYaw+=Math.PI/6;});
+document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.action)));
+window.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;const controls={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'rotate',KeyX:'rotate',ArrowDown:'down',Space:'drop'};if(e.code==='KeyP'||e.code==='Escape'){if(state==='playing'||state==='paused'){e.preventDefault();if(!e.repeat)pause();}return;}if(controls[e.code]&&state==='playing'){if(e.code==='Space'&&e.target.tagName==='BUTTON')return;e.preventDefault();if(e.code==='Space'&&e.repeat)return;action(controls[e.code]);}});
+const touches=new Map();let pinchDistance=0;
+function touchDistance(){const p=[...touches.values()];return Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);}
+scene.addEventListener('pointerdown',e=>{touches.set(e.pointerId,{x:e.clientX,y:e.clientY});drag={x:e.clientX,y:e.clientY};if(touches.size===2){pinchDistance=touchDistance();drag=null;}scene.setPointerCapture(e.pointerId);});
+scene.addEventListener('pointermove',e=>{if(!touches.has(e.pointerId))return;touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size>=2){const distance=touchDistance();if(pinchDistance>0)zoom=Math.max(.65,Math.min(1.5,zoom*distance/pinchDistance));pinchDistance=distance;return;}if(!drag)return;autoFollow=false;targetYaw+=(e.clientX-drag.x)*.009;elevation=Math.max(.22,Math.min(1,(e.clientY-drag.y)*.004+elevation));drag={x:e.clientX,y:e.clientY};});
+function releasePointer(e){touches.delete(e.pointerId);pinchDistance=0;drag=touches.size===1?[...touches.values()][0]:null;}
+scene.addEventListener('pointerup',releasePointer);scene.addEventListener('pointercancel',releasePointer);scene.addEventListener('lostpointercapture',releasePointer);scene.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.65,Math.min(1.5,zoom-e.deltaY*.001));},{passive:false});
+map.addEventListener('pointerdown',e=>{if(state!=='playing')return;const r=map.getBoundingClientRect(),x=Math.min(n-1,Math.floor((e.clientX-r.left)/r.width*n));if(valid(active,x)){active.x=x;if(autoFollow)focusPiece();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause();});
+$('map-toggle').addEventListener('click',()=>{const open=$('map-area').hidden;$('map-area').hidden=!open;$('map-toggle').setAttribute('aria-pressed',String(open));});
+demo();update();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

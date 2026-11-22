@@ -6,8 +6,8 @@
   <div class="game-list">
     {{- range . }}
     {{- $dir := printf "/games/%s/" .slug }}
-    <a class="game-card" href="{{ $dir }}">
-      {{- with .thumb }}<img src="{{ $dir }}{{ . }}" alt="" loading="lazy">{{ end }}
+    <a class="game-card" href="{{ .url | default $dir }}">
+      {{- with .thumb }}<img src="{{ if hasPrefix . "/" }}{{ . }}{{ else }}{{ $dir }}{{ . }}{{ end }}" alt="" loading="lazy">{{ end }}
       <strong>{{ .title }}</strong>
       {{- with .desc }}<span>{{ . }}</span>{{ end }}
     </a>

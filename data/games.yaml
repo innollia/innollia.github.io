@@ -2,7 +2,8 @@
 # - slug: 주소 이름(/games/<slug>/)
 #   title: 이름
 #   desc: 한 줄 소개
-#   thumb: 목록 그림(static/games/<slug>/ 안 파일 이름, 없으면 빼기)
+#   thumb: 목록 그림(static/games/<slug>/ 안 파일 이름, 또는 /로 시작하는 주소. 없으면 빼기)
+#   url: 다른 곳에 이미 공개된 게임이면 그 주소(카드가 그리로 간다. 없으면 /games/<slug>/)
 #   hidden: true  잔인하거나 선정적인 게임. 목록에 안 나오고 주소를 아는 사람만 들어온다.
 #                 게임 index.html의 <head>에도 <meta name="robots" content="noindex, nofollow">를 넣는다
 - slug: still-raining
@@ -12,6 +13,49 @@
 - slug: binder
   title: 100장 — 투명 포켓 바인더
   desc: 학습지 100장을 책상 위 링바인더에 하나씩 끼워 정리한다. 종이에 이름도 적을 수 있다.
+- slug: speed-tofu
+  title: SPEED 두부 — 미니게임 모음
+  desc: 상자만으로 만든 속도 미니게임 수십 개를 메뉴에서 골라 한다. 아래 폴더에는 폐기작도 들어 있다. 폰 세로 화면용.
+  url: https://innollia.github.io/pai-games/games/speed_tofu/web/
+  thumb: /games/thumbs/speed-tofu.webp
+- slug: off-screen
+  title: 화면 밖 경주 Off the Screen!
+  desc: 1등이 되면 화면이 앞으로 쏠려 앞의 벽과 구덩이가 안 보인 채 닥친다. 잼 제출작.
+  url: https://innollia.github.io/pai-games/games/off_screen/web/
+  thumb: /games/thumbs/off-screen.webp
+- slug: shrine-stone
+  title: Rock and Stone
+  desc: 신전석을 굴려 코스를 내려간다. 무언가를 깔수록 무거워지고, 멈추거나 떨어지면 끝. 잼 제출작.
+  url: https://innollia.github.io/pai-games/games/shrine_stone/web/
+  thumb: /games/thumbs/shrine-stone.webp
+- slug: tiny-planet
+  title: 어린 배달부 The Little Courier
+  desc: 작은 행성을 돌며 편지를 배달한다. 잼 제출작.
+  url: https://innollia.github.io/pai-games/games/tiny_planet/web/
+  thumb: /games/thumbs/tiny-planet.webp
+- slug: blade-path
+  title: 일격의 길
+  desc: 밀어서 칼 방향을 정하고 막고 벤다. 검객이 점점 빨라지고 속임수를 섞는다.
+  url: https://innollia.github.io/pai-games/games/blade_path/web/
+  thumb: /games/thumbs/blade-path.webp
+- slug: one-more-meal
+  title: One More Meal
+  desc: 소매치기와 기다리는 아들, 한 끼 더. 2D 생존 이야기.
+  url: https://innollia.github.io/pai-games/games/robberfather/
+  thumb: /games/thumbs/one-more-meal.webp
+- slug: citadel
+  title: CITADEL — 원 위에 쌓는 성
+  desc: 둥근 땅 위에 블록을 돌려 쌓아 성을 올린다.
+  thumb: /games/thumbs/citadel.webp
+- slug: tofu
+  title: 두부게임
+  desc: 사각형만으로 만든 코어 루프 시험판. 3줄 달리기, 분류, 타이밍, 점프 같은 짧은 판을 폰으로 한 판씩.
+  url: https://innollia.github.io/pai-games/games/tofu/
+  thumb: /games/thumbs/tofu.webp
+- slug: jam-proto
+  title: 잼 프로토 모음
+  desc: AI 게임잼에서 만든 시험판 11개(덩굴 다리, 산울타리 미로, 검열 켜고 끄기 등). 메뉴에서 골라 한다.
+  thumb: /games/thumbs/jam-proto.webp
 - slug: jijeok
   title: 지적 하나 더
   desc: 고어 블랙코미디 미니게임. 도구를 골라 지적을 하나씩 처리한다. 피가 나옵니다.
