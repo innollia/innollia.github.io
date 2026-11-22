@@ -37,6 +37,10 @@ class Images(unittest.TestCase):
         self.assertEqual((last['im'], last['bd']), ([PIC], ''))
         self.assertEqual(got['stats']['imgs'], 8)
 
+    def test_cut_image_title_falls_back(self):
+        got = build(record(title='![image0.png](', text='(그림)'), images=lambda r: [PIC])['entries'][-1]
+        self.assertEqual(got['ti'], '(그림)')
+
     def test_placeholder_is_dropped_from_text(self):
         got = build(record(text='말\n(그림)'), images=lambda r: [PIC])['entries'][-1]
         self.assertEqual(got['bd'], '말')

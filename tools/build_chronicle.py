@@ -30,7 +30,7 @@ DEFAULT_FROM = '2026-11-05T00:00'
 KST = timezone(timedelta(hours=9))
 TOPIC = {'공부': '공부·지식', '입시': '공부·지식', '자기이해': '생각', '질문': '생각', '아이디어': '생각', '생활': '일상'}
 # 서명이 든 주소는 공개 페이지에 남기지 않는다
-IMAGE = re.compile(r'!\[[^\]]*\]\([^)]*\)')
+IMAGE = re.compile(r'!\[[^\]]*\]\([^)]*(?:\)|$)', re.M)
 # 그림만 올린 메시지의 자리표시. 그림이 따로 붙으므로 글에서는 뺀다
 PLACEHOLDER = re.compile(r'^\((?:그림|파일)\)$', re.M)
 SIGNED = re.compile(r'https?://(?:cdn\.discordapp\.com|media\.discordapp\.net|[\w.-]*amazonaws\.com|file\.notion\.so)/\S*')
