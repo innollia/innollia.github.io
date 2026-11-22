@@ -3,17 +3,20 @@
 사용법: CHRONICLE_NOTION_TOKEN=... python tools/build_chronicle.py
 입력: static/chronicle/data.json (2026-09-27에 굳힌 739편)
 결과: 같은 파일에 새 메모를 더해 덮어쓴다. 노션은 읽기만 한다.
+공개 메모 본문의 그림 블록은 static/chronicle/img/dc/에 webp로 받아 붙인다(노션 주소는 곧 만료된다).
 
 기본은 공개다. 노션의 `블로그` 칸이 봉인/비공개면 그대로 따른다.
 DEFAULT_FROM 앞의 글은 칸에 표시한 것만 들어간다.
 규칙과 이유는 docs/chronicle-notion.md에 있다.
 """
-import hashlib, json, os, re, sys, time, urllib.error, urllib.request
+import hashlib, io, json, os, re, sys, time, urllib.error, urllib.request
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 DATA = Path('static/chronicle/data.json')
+IMG_DIR = Path('static/chronicle/img/dc')
+IMG_SIDE = 1000
 LEDGER_ID = '71a71dc7-ed3b-4ea0-a8a9-baac564af728'
 RECORD_ID = '014d0ac7-ed2c-4aff-8e55-2991b58af391'
 API = 'https://api.notion.com/v1'
@@ -28,6 +31,8 @@ KST = timezone(timedelta(hours=9))
 TOPIC = {'공부': '공부·지식', '입시': '공부·지식', '자기이해': '생각', '질문': '생각', '아이디어': '생각', '생활': '일상'}
 # 서명이 든 주소는 공개 페이지에 남기지 않는다
 IMAGE = re.compile(r'!\[[^\]]*\]\([^)]*\)')
+# 그림만 올린 메시지의 자리표시. 그림이 따로 붙으므로 글에서는 뺀다
+PLACEHOLDER = re.compile(r'^\((?:그림|파일)\)$', re.M)
 SIGNED = re.compile(r'https?://(?:cdn\.discordapp\.com|media\.discordapp\.net|[\w.-]*amazonaws\.com|file\.notion\.so)/\S*')
 
 
@@ -41,7 +46,7 @@ def to_kst(value):
 
 
 def clean(text):
-    text = SIGNED.sub('', IMAGE.sub('', text or ''))
+    text = PLACEHOLDER.sub('', SIGNED.sub('', IMAGE.sub('', text or '')))
     return re.sub(r'\n{3,}', '\n\n', text).strip()
 
 
@@ -69,7 +74,7 @@ def visibility(record, ledgers):
     return PUBLIC if to_kst(record['when']) >= DEFAULT_FROM else PRIVATE
 
 
-def entry_for(record, ledgers, text):
+def entry_for(record, ledgers, text, images=()):
     when = to_kst(record['when'])
     item = {
         'id': hashlib.sha1(record['id'].encode()).hexdigest()[:10],
@@ -80,7 +85,9 @@ def entry_for(record, ledgers, text):
         item['z'] = '1'
         return item
     board = next((ledgers[i] for i in record['ledgers'] if i in ledgers), None)
-    item.update(ti=clean(record['title']) or text.split('\n')[0][:60], tp=TOPIC.get(record['type'], '기타'), bd=text)
+    item.update(ti=clean(record['title']) or text.split('\n')[0][:60] or '(그림)', tp=TOPIC.get(record['type'], '기타'), bd=text)
+    if images:
+        item['im'] = list(images)
     item['p'] = '쇠판 / ' + board['title'] if board else '쇠판'
     if board:
         item['st'] = board['title']
@@ -94,16 +101,19 @@ def wanted(record, ledgers):
             and to_kst(record['when']) >= CUTOFF)
 
 
-def merge(base, records, ledgers, read_body):
-    """스냅샷에 새 메모를 더한 새 data.json. read_body(record)는 공개할 메모의 본문만 불린다"""
+def merge(base, records, ledgers, read_body, read_images=lambda r: []):
+    """스냅샷에 새 메모를 더한 새 data.json. read_body·read_images(record)는 공개할 메모에만 불린다"""
     fresh = []
     for record in records:
-        if wanted(record, ledgers):
-            text = clean(combine(record['text'], read_body(record)))
-            if text:
-                fresh.append(entry_for(record, ledgers, text))
+        if not wanted(record, ledgers):
+            continue
+        text = clean(combine(record['text'], read_body(record)))
+        # 봉인은 크기만 실으니 그림을 받지 않는다
+        images = [] if visibility(record, ledgers) == SEALED else read_images(record)
+        if text or images:
+            fresh.append(entry_for(record, ledgers, text, images))
     entries = sorted(base['entries'] + fresh, key=lambda e: e['t'])
-    stats = dict(base['stats'], n=len(entries), sealed=sum('z' in e for e in entries),
+    stats = dict(base['stats'], n=len(entries), imgs=base['stats'].get('imgs', 0) + sum(len(e.get('im', [])) for e in fresh), sealed=sum('z' in e for e in entries),
                  src=dict(Counter(e['s'] for e in entries)), chars=sum(e['n'] for e in entries),
                  first=entries[0]['t'], last=entries[-1]['t'])
     return dict(base, gen=datetime.now(KST).strftime('%Y-%m-%dT%H:%M'), stats=stats, entries=entries,
@@ -148,6 +158,54 @@ def request(token, method, path, body=None):
             time.sleep(float(err.headers.get('Retry-After') or 2 ** attempt))
 
 
+def children(token, block):
+    blocks, cursor = [], None
+    while True:
+        got = request(token, 'GET', f'/blocks/{block}/children?page_size=100' + (f'&start_cursor={cursor}' if cursor else ''))
+        blocks += got['results']
+        cursor = got.get('next_cursor')
+        if not got.get('has_more'):
+            return blocks
+
+
+def image_urls(blocks):
+    """노션에 올린 그림 블록의 (블록 id, 받을 주소). 외부 링크 그림은 만료되는 서명 주소라 쓰지 않는다"""
+    out = []
+    for block in blocks:
+        image = block.get('image') if block.get('type') == 'image' else None
+        url = ((image or {}).get('file') or {}).get('url')
+        if url:
+            out.append((block['id'], url))
+    return out
+
+
+def save_image(block_id, data):
+    """그림을 긴 변 IMG_SIDE 이하 webp로 저장하고 [경로, 폭, 높이]를 돌려준다"""
+    from PIL import Image
+    name = hashlib.sha1(block_id.encode()).hexdigest()[:10] + '.webp'
+    image = Image.open(io.BytesIO(data))
+    image.load()
+    if image.mode not in ('RGB', 'RGBA'):
+        image = image.convert('RGBA' if 'A' in image.getbands() or 'transparency' in image.info else 'RGB')
+    image.thumbnail((IMG_SIDE, IMG_SIDE))
+    IMG_DIR.mkdir(parents=True, exist_ok=True)
+    image.save(IMG_DIR / name, 'WEBP', quality=80)
+    return [f'img/dc/{name}', image.width, image.height]
+
+
+def read_images(token, record):
+    saved = []
+    for block_id, url in image_urls(children(token, record['id'])):
+        try:
+            # 노션 파일 주소는 한 시간 남짓이면 만료되므로 읽은 즉시 받는다
+            with urllib.request.urlopen(url, timeout=60) as res:
+                saved.append(save_image(block_id, res.read()))
+        except (OSError, ValueError) as err:
+            # 그림 하나가 안 돼도 글은 싣는다
+            print(f'::warning::그림 못 받음({block_id[:8]}): {type(err).__name__}')
+    return saved
+
+
 def query_all(token, source):
     pages, cursor = [], None
     while True:
@@ -169,7 +227,7 @@ def main():
         ledgers = {p['id']: read_ledger(p) for p in query_all(token, LEDGER_ID)}
         records = [read_record(p) for p in query_all(token, RECORD_ID)]
         body = lambda r: request(token, 'GET', f"/pages/{r['id']}/markdown").get('markdown', '')
-        merged = merge(base, records, ledgers, body)
+        merged = merge(base, records, ledgers, body, lambda r: read_images(token, r))
     except (urllib.error.URLError, KeyError, ValueError) as err:
         # 노션이 안 돼도 사이트 배포는 막지 않는다. 연대기만 스냅샷으로 나간다
         print(f'::warning::연대기 갱신 실패, 스냅샷 그대로 배포: {err}')

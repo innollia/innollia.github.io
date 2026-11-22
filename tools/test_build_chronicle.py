@@ -1,10 +1,11 @@
 """python -m unittest tools/test_build_chronicle.py"""
-import io, json, sys, unittest, urllib.error
+import io, json, sys, tempfile, unittest, urllib.error
 from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent))
-from build_chronicle import PRIVATE, PUBLIC, RETRIES, SEALED, clean, combine, merge, read_record, request, to_kst
+from build_chronicle import (PRIVATE, PUBLIC, RETRIES, SEALED, clean, combine, image_urls, merge, read_record, request,
+                             save_image, to_kst)
 
 
 def base():
@@ -22,8 +23,48 @@ def record(**over):
 LEDGERS = {'L': {'title': '260925', 'blog': '', 'tags': ['메모']}}
 
 
-def build(*records, ledgers=LEDGERS, body=lambda r: ''):
-    return merge(base(), list(records), ledgers, body)
+def build(*records, ledgers=LEDGERS, body=lambda r: '', images=lambda r: []):
+    return merge(base(), list(records), ledgers, body, images)
+
+
+PIC = ['img/dc/abc.webp', 10, 20]
+
+
+class Images(unittest.TestCase):
+    def test_image_only_memo_comes_in_with_picture(self):
+        got = build(record(title='a.png', text='(그림)'), images=lambda r: [PIC])
+        last = got['entries'][-1]
+        self.assertEqual((last['im'], last['bd']), ([PIC], ''))
+        self.assertEqual(got['stats']['imgs'], 8)
+
+    def test_placeholder_is_dropped_from_text(self):
+        got = build(record(text='말\n(그림)'), images=lambda r: [PIC])['entries'][-1]
+        self.assertEqual(got['bd'], '말')
+
+    def test_sealed_and_private_pictures_are_never_read(self):
+        def images(r):
+            raise AssertionError('읽으면 안 된다')
+        got = build(record(blog=SEALED), record(id='p2', blog=PRIVATE), images=images)
+        self.assertNotIn('im', got['entries'][-1])
+
+    def test_only_uploaded_image_blocks_are_taken(self):
+        blocks = [
+            {'id': 'b1', 'type': 'image', 'image': {'type': 'file', 'file': {'url': 'https://prod-files-secure/x'}}},
+            {'id': 'b2', 'type': 'image', 'image': {'type': 'external', 'external': {'url': 'https://cdn.discordapp.com/y'}}},
+            {'id': 'b3', 'type': 'file', 'file': {'type': 'file', 'file': {'url': 'https://prod-files-secure/z'}}},
+            {'id': 'b4', 'type': 'paragraph', 'paragraph': {}},
+        ]
+        self.assertEqual(image_urls(blocks), [('b1', 'https://prod-files-secure/x')])
+
+    def test_saved_as_small_webp(self):
+        from PIL import Image
+        raw = io.BytesIO()
+        Image.new('P', (3000, 1500)).save(raw, 'PNG')
+        with tempfile.TemporaryDirectory() as tmp, mock.patch('build_chronicle.IMG_DIR', Path(tmp)):
+            path, w, h = save_image('block-1', raw.getvalue())
+            self.assertEqual((w, h), (1000, 500))
+            self.assertTrue((Path(tmp) / Path(path).name).exists())
+            self.assertTrue(path.startswith('img/dc/') and path.endswith('.webp'))
 
 
 class Gate(unittest.TestCase):

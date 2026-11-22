@@ -32,3 +32,6 @@ Thumbs.db
 # 우리말샘에서 뽑은 큰 사전 파일은 parse_dictionary.py로 다시 만든다(CC BY-SA, 12MB)
 문장생성기/common_*.json
 문장생성기/AllNouns.js
+
+# 연대기: 배포 때 노션 그림을 받아 둔다(tools/build_chronicle.py)
+/static/chronicle/img/dc/

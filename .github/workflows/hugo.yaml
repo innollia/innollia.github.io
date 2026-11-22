@@ -119,7 +119,9 @@ jobs:
       - name: Add new memos to chronicle
         env:
           CHRONICLE_NOTION_TOKEN: ${{ secrets.CHRONICLE_NOTION_TOKEN }}
-        run: python3 tools/build_chronicle.py
+        run: |
+          pip install --quiet pillow
+          python3 tools/build_chronicle.py
 
       - name: Cache restore
         id: cache-restore
