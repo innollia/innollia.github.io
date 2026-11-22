@@ -27,6 +27,16 @@ def build(*records, ledgers=LEDGERS, body=lambda r: ''):
 
 
 class Gate(unittest.TestCase):
+    def test_image_title_drops_signed_link(self):
+        img = '![a.png](https://cdn.discordapp.com/attachments/1/2/a.png?ex=1&hm=2)'
+        got = build(record(title=img[:80], text=img + '\n밑에 쓴 말'))['entries'][-1]
+        self.assertEqual(got['ti'], '밑에 쓴 말')
+        self.assertNotIn('discordapp', json.dumps(got, ensure_ascii=False))
+
+    def test_image_only_memo_is_left_out(self):
+        img = '![a.png](https://cdn.discordapp.com/attachments/1/2/a.png?ex=1&hm=2)'
+        self.assertEqual(len(build(record(title=img[:80], text=img))['entries']), 1)
+
     def test_blank_before_default_stays_private(self):
         self.assertEqual(len(build(record(blog=''))['entries']), 1)
 

@@ -80,7 +80,7 @@ def entry_for(record, ledgers, text):
         item['z'] = '1'
         return item
     board = next((ledgers[i] for i in record['ledgers'] if i in ledgers), None)
-    item.update(ti=record['title'] or text.split('\n')[0][:60], tp=TOPIC.get(record['type'], '기타'), bd=text)
+    item.update(ti=clean(record['title']) or text.split('\n')[0][:60], tp=TOPIC.get(record['type'], '기타'), bd=text)
     item['p'] = '쇠판 / ' + board['title'] if board else '쇠판'
     if board:
         item['st'] = board['title']
