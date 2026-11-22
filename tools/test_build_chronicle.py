@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent))
-from build_chronicle import (PRIVATE, PUBLIC, RETRIES, SEALED, clean, combine, image_urls, merge, read_record, request,
+from build_chronicle import (PRIVATE, PUBLIC, RETRIES, SEALED, clean, combine, image_urls, merge, read_images, read_record, request,
                              save_image, to_kst)
 
 
@@ -40,6 +40,12 @@ class Images(unittest.TestCase):
     def test_cut_image_title_falls_back(self):
         got = build(record(title='![image0.png](', text='(그림)'), images=lambda r: [PIC])['entries'][-1]
         self.assertEqual(got['ti'], '(그림)')
+
+    def test_unapproved_image_is_held(self):
+        blocks = [{'id': 'b1', 'type': 'image', 'image': {'type': 'file', 'file': {'url': 'https://x/y'}}}]
+        with mock.patch('build_chronicle.children', return_value=blocks), \
+                mock.patch('urllib.request.urlopen', side_effect=AssertionError('받으면 안 된다')):
+            self.assertEqual(read_images('t', record(), ok=set()), [])
 
     def test_placeholder_is_dropped_from_text(self):
         got = build(record(text='말\n(그림)'), images=lambda r: [PIC])['entries'][-1]
@@ -81,6 +87,14 @@ class Gate(unittest.TestCase):
     def test_image_only_memo_is_left_out(self):
         img = '![a.png](https://cdn.discordapp.com/attachments/1/2/a.png?ex=1&hm=2)'
         self.assertEqual(len(build(record(title=img[:80], text=img))['entries']), 1)
+
+    def test_secret_looking_memo_is_left_out(self):
+        for text in ('컴퓨터 비번 2514', 'id abc\npassword xyz', '결제비밀번호', 'recovery key 12 words'):
+            self.assertEqual(len(build(record(blog='', when='2026-11-10T01:00:00.000Z', text=text))['entries']), 1, text)
+        self.assertEqual(len(build(record(title='비번 메모', text='x'))['entries']), 1)
+
+    def test_secret_word_in_body_is_caught(self):
+        self.assertEqual(len(build(record(text='평범'), body=lambda r: 'API_KEY=1')['entries']), 1)
 
     def test_blank_before_default_stays_private(self):
         self.assertEqual(len(build(record(blog=''))['entries']), 1)

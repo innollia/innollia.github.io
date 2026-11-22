@@ -16,6 +16,8 @@ from pathlib import Path
 
 DATA = Path('static/chronicle/data.json')
 IMG_DIR = Path('static/chronicle/img/dc')
+# 그림은 사람이 보고 통과시킨 것만 싣는다(복구 키 화면이 나간 일 뒤로, 2026-11-22). 한 줄에 그림 이름 하나
+IMG_OK = Path('data/chronicle_images_ok.txt')
 IMG_SIDE = 1000
 LEDGER_ID = '71a71dc7-ed3b-4ea0-a8a9-baac564af728'
 RECORD_ID = '014d0ac7-ed2c-4aff-8e55-2991b58af391'
@@ -31,6 +33,8 @@ KST = timezone(timedelta(hours=9))
 TOPIC = {'공부': '공부·지식', '입시': '공부·지식', '자기이해': '생각', '질문': '생각', '아이디어': '생각', '생활': '일상'}
 # 서명이 든 주소는 공개 페이지에 남기지 않는다
 IMAGE = re.compile(r'!\[[^\]]*\]\([^)]*(?:\)|$)', re.M)
+# 비밀번호·키로 보이는 메모는 표시가 공개여도 싣지 않는다(기본 공개로 비밀번호가 나간 일 뒤로, 2026-11-22)
+SECRET = re.compile(r'비번|비밀\s*번호|패스워드|password|passwd|\bpw\b|복구\s*키|recovery\s*key|인증\s*번호|\botp\b|시드\s*문구|seed\s*phrase|api[_ -]?key|secret|토큰|token', re.I)
 # 그림만 올린 메시지의 자리표시. 그림이 따로 붙으므로 글에서는 뺀다
 PLACEHOLDER = re.compile(r'^\((?:그림|파일)\)$', re.M)
 SIGNED = re.compile(r'https?://(?:cdn\.discordapp\.com|media\.discordapp\.net|[\w.-]*amazonaws\.com|file\.notion\.so)/\S*')
@@ -108,8 +112,12 @@ def merge(base, records, ledgers, read_body, read_images=lambda r: []):
         if not wanted(record, ledgers):
             continue
         text = clean(combine(record['text'], read_body(record)))
+        sealed = visibility(record, ledgers) == SEALED
+        if not sealed and SECRET.search(record['title'] + '\n' + text):
+            print('::warning::비밀로 보이는 말이 있어 뺀 메모 1편(노션 `블로그`를 봉인/비공개로 정하면 이 경고가 사라진다)')
+            continue
         # 봉인은 크기만 실으니 그림을 받지 않는다
-        images = [] if visibility(record, ledgers) == SEALED else read_images(record)
+        images = [] if sealed else read_images(record)
         if text or images:
             fresh.append(entry_for(record, ledgers, text, images))
     entries = sorted(base['entries'] + fresh, key=lambda e: e['t'])
@@ -179,10 +187,20 @@ def image_urls(blocks):
     return out
 
 
+def image_name(block_id):
+    return hashlib.sha1(block_id.encode()).hexdigest()[:10] + '.webp'
+
+
+def approved():
+    if not IMG_OK.exists():
+        return set()
+    return {line.split('#')[0].strip() for line in IMG_OK.read_text(encoding='utf-8').splitlines()} - {''}
+
+
 def save_image(block_id, data):
     """그림을 긴 변 IMG_SIDE 이하 webp로 저장하고 [경로, 폭, 높이]를 돌려준다"""
     from PIL import Image
-    name = hashlib.sha1(block_id.encode()).hexdigest()[:10] + '.webp'
+    name = image_name(block_id)
     image = Image.open(io.BytesIO(data))
     image.load()
     if image.mode not in ('RGB', 'RGBA'):
@@ -193,9 +211,14 @@ def save_image(block_id, data):
     return [f'img/dc/{name}', image.width, image.height]
 
 
-def read_images(token, record):
+def read_images(token, record, ok=None):
+    ok = approved() if ok is None else ok
     saved = []
     for block_id, url in image_urls(children(token, record['id'])):
+        if image_name(block_id) not in ok:
+            # 이름만 남긴다. 블로그 세션이 노션에서 그림을 보고 통과시키면 IMG_OK에 넣는다
+            print(f'검토 대기 그림: {image_name(block_id)} (기록 {record["id"]})')
+            continue
         try:
             # 노션 파일 주소는 한 시간 남짓이면 만료되므로 읽은 즉시 받는다
             with urllib.request.urlopen(url, timeout=60) as res:
@@ -227,7 +250,8 @@ def main():
         ledgers = {p['id']: read_ledger(p) for p in query_all(token, LEDGER_ID)}
         records = [read_record(p) for p in query_all(token, RECORD_ID)]
         body = lambda r: request(token, 'GET', f"/pages/{r['id']}/markdown").get('markdown', '')
-        merged = merge(base, records, ledgers, body, lambda r: read_images(token, r))
+        ok = approved()
+        merged = merge(base, records, ledgers, body, lambda r: read_images(token, r, ok))
     except (urllib.error.URLError, KeyError, ValueError) as err:
         # 노션이 안 돼도 사이트 배포는 막지 않는다. 연대기만 스냅샷으로 나간다
         print(f'::warning::연대기 갱신 실패, 스냅샷 그대로 배포: {err}')
