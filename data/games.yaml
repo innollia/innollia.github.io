@@ -13,6 +13,7 @@
 - slug: binder
   title: 100장 — 투명 포켓 바인더
   desc: 학습지 100장을 책상 위 링바인더에 하나씩 끼워 정리한다. 종이에 이름도 적을 수 있다.
+  thumb: /games/thumbs/binder.webp
 - slug: speed-tofu
   title: SPEED 두부 — 미니게임 모음
   desc: 상자만으로 만든 속도 미니게임 수십 개를 메뉴에서 골라 한다. 아래 폴더에는 폐기작도 들어 있다. 폰 세로 화면용.

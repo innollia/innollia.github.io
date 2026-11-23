@@ -123,6 +123,11 @@ jobs:
           pip install --quiet pillow
           python3 tools/build_chronicle.py
 
+      - name: Add share cards to game pages
+        run: |
+          pip install --quiet pyyaml
+          python3 tools/add_game_og.py
+
       - name: Cache restore
         id: cache-restore
         uses: actions/cache/restore@v5
