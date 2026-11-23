@@ -15,7 +15,7 @@ BLOCK = re.compile(re.escape(START) + r'.*?' + re.escape(END) + r'\n?', re.S)
 
 
 def card(game):
-    slug, thumb = game['slug'], game.get('thumb', '')
+    slug, thumb = game['slug'], game.get('share') or game.get('thumb', '')
     page = f'{SITE}/games/{slug}/'
     image = SITE + thumb if thumb.startswith('/') else page + thumb if thumb else ''
     tags = {

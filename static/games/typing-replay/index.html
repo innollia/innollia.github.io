@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typing Replay</title>
+<meta name="description" content="Write something. Then watch it being written again, keystroke by keystroke.">
+<style>
+:root{
+  --bg:#f6f3ec; --paper:#fffdf8; --ink:#1d1b17; --muted:#77716a; --line:#e2dccf;
+  --accent:#d9480f; --accent-ink:#fff; --sel:#ffd8a8; --flash:#c3fae8; --rec:#e03131;
+  --big-bg:#111; --big-ink:#f4f1ea;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#16150f; --paper:#1f1d17; --ink:#ece7dc; --muted:#9a9387; --line:#34302a;
+    --accent:#ff8a4c; --accent-ink:#1b0f08; --sel:#7a4a1e; --flash:#0b5d4c; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font)}
+body{min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.tag{color:var(--muted);margin:0 0 16px;font-size:15px}
+button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+button:hover,.btn:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+.lang{font-size:13px;padding:4px 9px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:0;overflow:hidden}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.bar.bottom{border-bottom:0;border-top:1px solid var(--line)}
+.grow{flex:1}
+.status{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:1px}
+.dot.live{background:var(--rec);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+textarea{display:block;width:100%;min-height:300px;resize:vertical;border:0;outline:0;padding:18px;
+  font:inherit;font-size:18px;line-height:1.6;background:transparent;color:var(--ink)}
+.screen{position:relative;height:340px;overflow:auto;padding:18px;font-size:18px;line-height:1.6}
+.text{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;margin:0;font:inherit}
+.caret{display:inline-block;width:2px;height:1.15em;margin-right:-2px;background:var(--accent);vertical-align:-.18em;animation:blink 1s steps(1) infinite}
+.playing .caret{animation:none}
+@keyframes blink{50%{opacity:0}}
+mark{background:var(--sel);color:inherit;border-radius:2px}
+.flash{background:var(--flash);border-radius:2px;transition:background .3s}
+.seek{width:100%;accent-color:var(--accent)}
+.stats{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats b{color:var(--ink);font-weight:600}
+.group{display:inline-flex;gap:0}
+.group button{border-radius:0;margin-left:-1px}
+.group button:first-child{border-radius:8px 0 0 8px;margin-left:0}
+.group button:last-child{border-radius:0 8px 8px 0}
+label.chk{font-size:14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.share{display:none;padding:10px 12px;border-top:1px solid var(--line);font-size:13px}
+.share.show{display:block}
+.share input{width:100%;font:inherit;font-size:12px;padding:7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.share p{margin:6px 0 0;color:var(--muted)}
+.hidden{display:none!important}
+.demos{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 0;font-size:14px;color:var(--muted)}
+.foot{margin-top:22px;font-size:13px;color:var(--muted);line-height:1.6}
+.banner{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* Big screen mode for screen recording */
+body.big{overflow:hidden}
+body.big .screen{position:fixed;inset:0;height:auto;z-index:10;background:var(--big-bg);color:var(--big-ink);
+  font-size:clamp(26px,4.2vw,64px);line-height:1.5;padding:7vh 8vw 12vh}
+body.big .screen mark{background:#8a5a2b}
+body.big .screen .flash{background:#0b5d4c}
+.bigui{display:none}
+body.big .bigui{display:block;position:fixed;left:0;right:0;bottom:0;z-index:11;pointer-events:none}
+.bigprog{height:5px;background:rgba(255,255,255,.12)}
+.bigprog i{display:block;height:100%;width:0;background:var(--accent)}
+.bighint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:12;background:rgba(255,255,255,.12);
+  color:#eee;font-size:14px;padding:8px 14px;border-radius:20px;transition:opacity .6s;pointer-events:none;white-space:nowrap}
+.bigmark{position:fixed;right:22px;bottom:18px;z-index:11;color:rgba(255,255,255,.35);font-size:15px;letter-spacing:.02em}
+body.big.noprog .bigprog,body.big.nomark .bigmark{display:none}
+@media (max-width:560px){ textarea,.screen{font-size:16px} .screen{height:280px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Typing <span>Replay</span></h1>
+    <button class="lang" id="langBtn">한국어</button>
+  </header>
+  <p class="tag" data-i18n="tag">Write something. Then watch it being written again, every keystroke, every backspace.</p>
+
+  <div class="banner hidden" id="sharedBanner">
+    <span id="bannerMsg" data-i18n="sharedMsg">Someone shared how they wrote this.</span>
+    <button class="primary" id="writeOwn" data-i18n="writeOwn">Write your own</button>
+  </div>
+
+  <!-- WRITE -->
+  <section id="writeView">
+    <div class="panel">
+      <div class="bar">
+        <span class="status"><span class="dot" id="recDot"></span><span id="recStatus">0:00 · 0</span></span>
+        <span class="grow"></span>
+        <button id="newBtn" data-i18n="new">New</button>
+        <button class="primary" id="replayBtn" data-i18n="replay">Replay ▶</button>
+      </div>
+      <textarea id="ed" spellcheck="false" autocomplete="off" data-i18n-ph="ph" placeholder="Start typing. Every keystroke is being recorded."></textarea>
+    </div>
+    <div class="demos">
+      <span data-i18n="orDemo">Or watch a demo:</span>
+      <button id="demoEn">English</button>
+      <button id="demoKo">한국어</button>
+      <span class="grow"></span>
+      <label class="btn" for="fileIn" data-i18n="load">Open file…</label>
+      <input type="file" id="fileIn" accept=".json,application/json" class="hidden">
+    </div>
+  </section>
+
+  <!-- REPLAY -->
+  <section id="replayView" class="hidden">
+    <div class="panel">
+      <div class="bar">
+        <button class="primary" id="playBtn" style="min-width:76px">▶</button>
+        <button id="restartBtn" title="Restart (R)">↺</button>
+        <span class="group" id="speeds">
+          <button data-s="1">1x</button><button data-s="4" class="on">4x</button><button data-s="16">16x</button>
+        </span>
+        <label class="chk"><input type="checkbox" id="trimChk" checked> <span data-i18n="trim">Skip pauses</span></label>
+        <span class="grow"></span>
+        <button id="bigBtn" data-i18n="big">Big screen ⛶</button>
+      </div>
+      <div class="screen" id="screen"><pre class="text" id="out"></pre></div>
+      <div class="bigui"><div class="bigprog"><i id="bigProg"></i></div></div>
+      <div class="bar bottom">
+        <input type="range" class="seek" id="seek" min="0" max="1000" value="0">
+      </div>
+      <div class="bar bottom">
+        <div class="stats" id="stats"></div>
+        <span class="grow"></span>
+        <button id="editBtn" data-i18n="edit">← Keep writing</button>
+        <button id="saveBtn" data-i18n="save">Save file</button>
+        <button class="primary" id="shareBtn" data-i18n="share">Copy link</button>
+      </div>
+      <div class="share" id="shareBox">
+        <input id="shareUrl" readonly>
+        <p id="shareNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot" data-i18n="foot">Nothing is uploaded. The recording lives in this page, in the link you copy, or in the file you save. Big screen: Space play/pause · ←/→ jump · 1/2/3 speed · R restart · P progress bar · Esc exit.</div>
+</div>
+<div class="bigmark" id="bigMark">Typing Replay</div>
+<div class="bighint hidden" id="bigHint"></div>
+
+<script>
+'use strict';
+/* ---------- i18n ---------- */
+const I18N={
+ en:{tag:'Write something. Then watch it being written again, every keystroke, every backspace.',
+  new:'New',replay:'Replay ▶',ph:'Start typing. Every keystroke is being recorded.',orDemo:'Or watch a demo:',
+  load:'Open file…',trim:'Skip pauses',big:'Big screen ⛶',edit:'← Keep writing',save:'Save file',share:'Copy link',
+  sharedMsg:'Someone shared how they wrote this.',demoMsg:'This is a demo recording.',writeOwn:'Write your own',
+  foot:'Nothing is uploaded. The recording lives in this page, in the link you copy, or in the file you save. Big screen: Space play/pause · ←/→ jump · 1/2/3 speed · R restart · P progress bar · Esc exit.',
+  confirmNew:'Throw away this recording and start over?',empty:'Type something first.',
+  copied:'Link copied.',copyFail:'Select the link above and copy it.',
+  local:'This page is open from your own computer, so this link only works on this computer. Once the page is online, the same link works for anyone.',
+  long:'The link is long ({n} characters). If an app cuts it, use "Save file" instead.',
+  badFile:'That file is not a Typing Replay recording.',badLink:'This link is broken or cut off.',
+  hint:'Space play · ←/→ jump · 1/2/3 speed · R restart · Esc exit',
+  sTime:'wrote for',sChars:'chars',sDel:'deletions',sPaste:'pasted',sEdit:'edits'},
+ ko:{tag:'글을 쓰세요. 그다음 그 글이 다시 쓰이는 걸 보세요. 키 하나, 지운 것 하나까지.',
+  new:'새로',replay:'재생 ▶',ph:'아무거나 써 보세요. 키 입력이 전부 기록됩니다.',orDemo:'예시 보기:',
+  load:'파일 열기…',trim:'멈춘 시간 건너뛰기',big:'큰 화면 ⛶',edit:'← 이어 쓰기',save:'파일로 저장',share:'링크 복사',
+  sharedMsg:'누군가 이 글을 쓴 과정을 보냈어요.',demoMsg:'예시 기록입니다.',writeOwn:'나도 써 보기',
+  foot:'아무것도 서버로 올라가지 않습니다. 기록은 이 페이지, 복사한 링크, 저장한 파일 안에만 있습니다. 큰 화면: 스페이스 재생/멈춤 · ←/→ 이동 · 1/2/3 속도 · R 처음부터 · P 진행 막대 · Esc 나가기.',
+  confirmNew:'이 기록을 버리고 새로 시작할까요?',empty:'먼저 뭔가 써 주세요.',
+  copied:'링크를 복사했어요.',copyFail:'위 링크를 선택해서 복사해 주세요.',
+  local:'지금은 이 컴퓨터에서 연 페이지라서 이 링크는 이 컴퓨터에서만 열립니다. 페이지를 인터넷에 올리면 같은 링크를 누구나 열 수 있습니다.',
+  long:'링크가 깁니다({n}자). 앱이 링크를 자르면 "파일로 저장"을 쓰세요.',
+  badFile:'Typing Replay 기록 파일이 아니에요.',badLink:'링크가 깨졌거나 잘렸어요.',
+  hint:'스페이스 재생 · ←/→ 이동 · 1/2/3 속도 · R 처음부터 · Esc 나가기',
+  sTime:'쓴 시간',sChars:'글자',sDel:'지운 횟수',sPaste:'붙여넣은 글자',sEdit:'입력'}
+};
+let lang=(navigator.language||'en').toLowerCase().startsWith('ko')?'ko':'en';
+try{const l=localStorage.getItem('tr-lang'); if(l==='ko'||l==='en') lang=l;}catch(e){}
+const T=k=>I18N[lang][k]||I18N.en[k]||k;
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=T(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>el.placeholder=T(el.dataset.i18nPh));
+  $('#langBtn').textContent= lang==='ko'?'English':'한국어';
+  renderStats();
+}
+const $=s=>document.querySelector(s);
+
+/* ---------- recording model ----------
+ op edit:   {t, p, d, i, k?}  at pos p delete d code units, insert string i (k=1 pasted/dropped)
+ op select: {t, s, e}        selection/caret moved
+ t = ms since recording started */
+const ed=$('#ed');
+let rec={ops:[]};
+let t0=null, prevVal='', lastSel=[0,0], composing=false, saveTimer=null, tickTimer=null;
+
+function clock(){ if(t0===null) t0=performance.now(); return Math.round(performance.now()-t0); }
+
+function plainDiff(a,b){
+  let p=0; const ml=Math.min(a.length,b.length);
+  while(p<ml && a.charCodeAt(p)===b.charCodeAt(p)) p++;
+  let s=0;
+  while(s<ml-p && a.charCodeAt(a.length-1-s)===b.charCodeAt(b.length-1-s)) s++;
+  return fixSurrogate(a,b,p,s);
+}
+function fixSurrogate(a,b,p,s){
+  // never split a surrogate pair (emoji)
+  if(p>0 && isHigh(b.charCodeAt(p-1))) p--;
+  if(s>0 && isLow(b.charCodeAt(b.length-s))) s--;
+  return {p, d:a.length-s-p, i:b.slice(p,b.length-s)};
+}
+const isHigh=c=>c>=0xD800&&c<=0xDBFF, isLow=c=>c>=0xDC00&&c<=0xDFFF;
+// Use the caret to place ambiguous edits correctly ("aa" -> "aaa" typed at the start).
+function diffAt(a,b,caret){
+  const sfx=b.length-caret;
+  if(caret>=0 && sfx>=0 && sfx<=a.length && a.slice(a.length-sfx)===b.slice(caret)){
+    const aEnd=a.length-sfx; let p=0; const ml=Math.min(aEnd,caret);
+    while(p<ml && a.charCodeAt(p)===b.charCodeAt(p)) p++;
+    return fixSurrogate(a,b,p,sfx);
+  }
+  return plainDiff(a,b);
+}
+
+ed.addEventListener('compositionstart',()=>composing=true);
+ed.addEventListener('compositionend',()=>{composing=false; setTimeout(checkSel,0);});
+ed.addEventListener('keydown',e=>{ if(!e.isComposing && e.keyCode!==229) composing=false; });
+ed.addEventListener('input',e=>{
+  composing=!!e.isComposing;
+  const v=ed.value;
+  if(v===prevVal) return;
+  const caret=ed.selectionStart===ed.selectionEnd?ed.selectionEnd:-1;
+  const d=diffAt(prevVal,v,caret);
+  const op={t:clock(),p:d.p,d:d.d,i:d.i};
+  if(e.inputType==='insertFromPaste'||e.inputType==='insertFromDrop'||e.inputType==='insertFromPasteAsQuotation') op.k=1;
+  rec.ops.push(op);
+  prevVal=v;
+  const exp=d.p+d.i.length;
+  lastSel=[exp,exp];
+  const s=[ed.selectionStart,ed.selectionEnd];
+  if(s[0]!==exp||s[1]!==exp){ rec.ops.push({t:op.t,s:s[0],e:s[1]}); lastSel=s; }
+  afterChange();
+});
+function checkSel(){
+  if(document.activeElement!==ed || composing) return;
+  if(ed.value!==prevVal) return;            // an input event is still on its way
+  if(rec.ops.length===0) return;            // nothing written yet
+  const s=[ed.selectionStart,ed.selectionEnd];
+  if(s[0]===lastSel[0]&&s[1]===lastSel[1]) return;
+  rec.ops.push({t:clock(),s:s[0],e:s[1]}); lastSel=s; afterChange();
+}
+document.addEventListener('selectionchange',checkSel);
+['select','keyup','mouseup','pointerup','focus'].forEach(ev=>ed.addEventListener(ev,()=>setTimeout(checkSel,0)));
+
+function afterChange(){
+  updateRecStatus();
+  clearTimeout(saveTimer); saveTimer=setTimeout(saveDraft,400);
+}
+function lastT(ops){ return ops.length?ops[ops.length-1].t:0; }
+function fmtTime(ms){ ms=Math.max(0,ms); const s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60);
+  return h?`${h}:${String(m%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`:`${m}:${String(s%60).padStart(2,'0')}`; }
+function updateRecStatus(){
+  const n=rec.ops.length; const live=n>0;
+  $('#recDot').classList.toggle('live',live);
+  $('#recStatus').textContent=`${fmtTime(live?clock():0)} · ${n} ${lang==='ko'?'기록':'events'}`;
+}
+tickTimer=setInterval(()=>{ if(!$('#writeView').classList.contains('hidden')) updateRecStatus(); },500);
+
+function saveDraft(){ try{ localStorage.setItem('tr-draft',JSON.stringify(pack(rec))); }catch(e){} }
+function loadDraft(){
+  try{ const s=localStorage.getItem('tr-draft'); if(!s) return false;
+    const r=unpack(JSON.parse(s)); if(!r.ops.length) return false; startEditingFrom(r); return true;
+  }catch(e){ return false; }
+}
+// Continue recording on top of an existing recording.
+function startEditingFrom(r){
+  rec={ops:r.ops.slice()};
+  const st=finalState(rec.ops);
+  ed.value=st.text; prevVal=st.text; lastSel=st.sel.slice();
+  t0=performance.now()-lastT(rec.ops)-1500;   // gap of 1.5s where the writer came back
+  updateRecStatus();
+}
+
+/* ---------- pack / unpack (compact, delta times) ---------- */
+function pack(r){
+  let prev=0;
+  const o=r.ops.map(op=>{ const dt=op.t-prev; prev=op.t;
+    return ('i' in op)?(op.k?[dt,op.p,op.d,op.i,1]:[dt,op.p,op.d,op.i]):[dt,op.s,op.e]; });
+  return {app:'typing-replay',v:1,o};
+}
+function unpack(j){
+  if(!j||!Array.isArray(j.o)) throw new Error('bad');
+  let t=0; const ops=[];
+  for(const a of j.o){
+    if(!Array.isArray(a)) throw new Error('bad');
+    t+=Math.max(0,+a[0]||0);
+    if(a.length>=4 && typeof a[3]==='string'){ const op={t,p:a[1]|0,d:a[2]|0,i:a[3]}; if(a[4]) op.k=1; ops.push(op); }
+    else if(a.length===3) ops.push({t,s:a[1]|0,e:a[2]|0});
+    else throw new Error('bad');
+  }
+  return {ops};
+}
+function b64u(bytes){ let s=''; for(let i=0;i<bytes.length;i+=0x8000) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function unb64u(str){ str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4) str+='=';
+  const s=atob(str); const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+async function encodeHash(r){
+  const json=JSON.stringify(pack(r));
+  if(typeof CompressionStream!=='undefined'){
+    const st=new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    return 'z'+b64u(new Uint8Array(await new Response(st).arrayBuffer()));
+  }
+  return 'j'+b64u(new TextEncoder().encode(json));
+}
+async function decodeHash(h){
+  const kind=h[0], bytes=unb64u(h.slice(1)); let json;
+  if(kind==='z'){ const st=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    json=await new Response(st).text(); }
+  else if(kind==='j') json=new TextDecoder().decode(bytes);
+  else throw new Error('bad');
+  return unpack(JSON.parse(json));
+}
+
+/* ---------- replay engine ---------- */
+function applyOp(st,op){
+  if('i' in op){
+    st.text=st.text.slice(0,op.p)+op.i+st.text.slice(op.p+op.d);
+    const c=op.p+op.i.length; st.sel=[c,c];
+    if(op.k){ st.paste+=op.i.length; st.flash=[op.p,c]; }
+    else st.flash=null;
+    if(op.d>0 && op.i==='') st.del++;
+    st.edits++;
+  } else { const L=st.text.length; st.sel=[Math.min(op.s,L),Math.min(op.e,L)]; }
+}
+const freshState=()=>({text:'',sel:[0,0],paste:0,del:0,edits:0,flash:null});
+const cloneState=s=>({text:s.text,sel:s.sel.slice(),paste:s.paste,del:s.del,edits:s.edits,flash:s.flash&&s.flash.slice()});
+function finalState(ops){ const st=freshState(); for(const op of ops) applyOp(st,op); return st; }
+
+const CK=200, PAUSE_CAP=1200, TAIL=900;
+const P={ops:[],pt:[],ck:[],st:freshState(),idx:0,vt:0,total:0,playing:false,speed:4,trim:true,shared:false,flashUntil:-1,last:0};
+
+function loadReplay(r){
+  P.ops=r.ops; P.ck=[];
+  const st=freshState();
+  for(let i=0;i<P.ops.length;i++){ if(i%CK===0) P.ck.push(cloneState(st)); applyOp(st,P.ops[i]); }
+  P.final=st; buildTimeline(); seek(0);
+}
+function buildTimeline(){
+  const pt=new Array(P.ops.length); let acc=0, prev=P.ops.length?P.ops[0].t:0;
+  for(let i=0;i<P.ops.length;i++){ let g=P.ops[i].t-prev; prev=P.ops[i].t;
+    if(P.trim && g>PAUSE_CAP) g=PAUSE_CAP; acc+=g; pt[i]=acc; }
+  P.pt=pt; P.total=(pt.length?pt[pt.length-1]:0)+TAIL;
+}
+// index of first op whose playback time > vt
+function idxAt(vt){ let lo=0,hi=P.pt.length; while(lo<hi){const m=(lo+hi)>>1; if(P.pt[m]<=vt) lo=m+1; else hi=m;} return lo; }
+function seek(vt){
+  P.vt=Math.max(-1000,Math.min(vt,P.total));
+  const target=idxAt(P.vt);
+  if(target<P.idx){ const c=Math.floor(target/CK); P.st=cloneState(P.ck[c]||freshState()); P.idx=c*CK; }
+  while(P.idx<target){ applyOp(P.st,P.ops[P.idx]); if(P.ops[P.idx].k) P.flashUntil=P.pt[P.idx]+700; P.idx++; }
+  render();
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function render(){
+  const {text,sel}=P.st; const [s,e]=[Math.min(sel[0],sel[1]),Math.max(sel[0],sel[1])];
+  const fl=(P.st.flash && P.vt<P.flashUntil)?P.st.flash:null;
+  let h;
+  if(s!==e) h=esc(text.slice(0,s))+'<mark>'+esc(text.slice(s,e))+'</mark><span class="caret" id="caret"></span>'+esc(text.slice(e));
+  else if(fl && fl[1]<=s && fl[0]<fl[1]) h=esc(text.slice(0,fl[0]))+'<span class="flash">'+esc(text.slice(fl[0],fl[1]))+'</span>'+esc(text.slice(fl[1],s))+'<span class="caret" id="caret"></span>'+esc(text.slice(s));
+  else h=esc(text.slice(0,s))+'<span class="caret" id="caret"></span>'+esc(text.slice(s));
+  $('#out').innerHTML=h+'​';
+  // keep caret in view
+  const box=$('#screen'), c=$('#caret');
+  if(c){ const y=c.offsetTop; if(y<box.scrollTop+20||y>box.scrollTop+box.clientHeight-80) box.scrollTop=y-box.clientHeight*0.45; }
+  const frac=P.total?Math.max(0,P.vt)/P.total:0;
+  if(!seeking) $('#seek').value=Math.round(frac*1000);
+  $('#bigProg').style.width=(frac*100).toFixed(2)+'%';
+  renderStats();
+}
+function renderStats(){
+  if(!P.ops||!P.ops.length){ $('#stats').innerHTML=''; return; }
+  const realT=P.idx>0?P.ops[P.idx-1].t:0;
+  const st=P.st;
+  $('#stats').innerHTML=`<span>${T('sTime')} <b>${fmtTime(realT)}</b> / ${fmtTime(lastT(P.ops))}</span>`+
+    `<span><b>${[...st.text].length}</b> ${T('sChars')}</span>`+
+    `<span><b>${st.del}</b> ${T('sDel')}</span>`+
+    (P.final.paste?`<span><b>${st.paste}</b> ${T('sPaste')}</span>`:'');
+}
+function frame(now){
+  if(!P.playing) return;
+  const dt=Math.min(100,now-P.last); P.last=now;
+  seek(P.vt+dt*P.speed);
+  if(P.vt>=P.total){ setPlaying(false); return; }
+  requestAnimationFrame(frame);
+}
+function setPlaying(on){
+  if(on && P.vt>=P.total) seek(document.body.classList.contains('big')?-700:0);
+  P.playing=on; $('#playBtn').textContent=on?'❚❚':'▶';
+  $('#screen').classList.toggle('playing',on);
+  if(on){ P.last=performance.now(); requestAnimationFrame(frame); }
+}
+function setSpeed(s){ P.speed=s; document.querySelectorAll('#speeds button').forEach(b=>b.classList.toggle('on',+b.dataset.s===s)); }
+function setTrim(on){
+  const curIdx=P.idx, curOpT=curIdx>0?P.pt[curIdx-1]:0, over=P.vt-curOpT;
+  P.trim=on; buildTimeline();
+  P.vt=(curIdx>0?P.pt[curIdx-1]:0)+Math.max(0,Math.min(over,PAUSE_CAP)); render();
+}
+
+/* ---------- views ---------- */
+function showWrite(){ setPlaying(false); exitBig(); $('#replayView').classList.add('hidden'); $('#writeView').classList.remove('hidden'); ed.focus(); }
+function showReplay(r,{autoplay=true,shared=false,demo=false}={}){
+  P.shared=shared;
+  const bm=$('#bannerMsg'); bm.dataset.i18n=demo?'demoMsg':'sharedMsg'; bm.textContent=T(bm.dataset.i18n);
+  $('#writeView').classList.add('hidden'); $('#replayView').classList.remove('hidden');
+  $('#sharedBanner').classList.toggle('hidden',!shared);
+  $('#editBtn').classList.toggle('hidden',shared);
+  $('#shareBox').classList.remove('show');
+  loadReplay(r); P.src=r;
+  if(autoplay) setPlaying(true);
+}
+
+$('#replayBtn').onclick=()=>{ if(!rec.ops.length){ alert(T('empty')); ed.focus(); return; } saveDraft(); showReplay({ops:rec.ops.slice()}); };
+$('#editBtn').onclick=showWrite;
+$('#newBtn').onclick=()=>{ if(rec.ops.length && !confirm(T('confirmNew'))) return;
+  rec={ops:[]}; t0=null; ed.value=''; prevVal=''; lastSel=[0,0]; try{localStorage.removeItem('tr-draft');}catch(e){}
+  updateRecStatus(); ed.focus(); };
+$('#writeOwn').onclick=()=>{ history.replaceState(null,'',location.pathname+location.search); $('#sharedBanner').classList.add('hidden'); $('#editBtn').classList.remove('hidden'); showWrite(); };
+$('#playBtn').onclick=()=>setPlaying(!P.playing);
+$('#restartBtn').onclick=()=>{ seek(0); setPlaying(true); };
+document.querySelectorAll('#speeds button').forEach(b=>b.onclick=()=>setSpeed(+b.dataset.s));
+$('#trimChk').onchange=e=>setTrim(e.target.checked);
+let seeking=false;
+$('#seek').addEventListener('input',e=>{ seeking=true; seek(e.target.value/1000*P.total); seeking=false; });
+$('#langBtn').onclick=()=>{ lang=lang==='ko'?'en':'ko'; try{localStorage.setItem('tr-lang',lang);}catch(e){} applyLang(); updateRecStatus(); };
+
+/* share & files */
+$('#shareBtn').onclick=async()=>{
+  const h=await encodeHash(P.src);
+  const url=location.href.split('#')[0]+'#r='+h;
+  const box=$('#shareBox'), inp=$('#shareUrl'); inp.value=url; box.classList.add('show');
+  const notes=[];
+  let ok=false; try{ await navigator.clipboard.writeText(url); ok=true; }catch(e){}
+  if(!ok){ inp.focus(); inp.select(); try{ ok=document.execCommand('copy'); }catch(e){} }
+  notes.push(ok?T('copied'):T('copyFail'));
+  if(location.protocol==='file:') notes.push(T('local'));
+  if(url.length>6000) notes.push(T('long').replace('{n}',url.length.toLocaleString()));
+  $('#shareNote').textContent=notes.join(' ');
+  history.replaceState(null,'','#r='+h);
+};
+$('#saveBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(pack(P.src))],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  const d=new Date(); a.download=`typing-replay-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$('#fileIn').onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{ const r=unpack(JSON.parse(await f.text())); showReplay(r,{shared:true}); }catch(err){ alert(T('badFile')); }
+};
+
+/* big screen */
+let hintTimer;
+function enterBig(){
+  document.body.classList.add('big');
+  try{ document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){}
+  const hnt=$('#bigHint'); hnt.textContent=T('hint'); hnt.classList.remove('hidden'); hnt.style.opacity=1;
+  clearTimeout(hintTimer); hintTimer=setTimeout(()=>hnt.style.opacity=0,2200);
+  setPlaying(false); seek(-700); setTimeout(()=>{ render(); setPlaying(true); },50);
+}
+function exitBig(){
+  if(!document.body.classList.contains('big')) return;
+  document.body.classList.remove('big'); $('#bigHint').classList.add('hidden');
+  try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  render();
+}
+$('#bigBtn').onclick=enterBig;
+document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && document.body.classList.contains('big')) exitBig(); });
+document.addEventListener('keydown',e=>{
+  if($('#replayView').classList.contains('hidden')) return;
+  if(e.target.tagName==='INPUT' && e.target.type!=='range' && e.target.type!=='checkbox') return;
+  const big=document.body.classList.contains('big');
+  switch(e.key){
+    case ' ': e.preventDefault(); setPlaying(!P.playing); break;
+    case 'ArrowLeft': if(big){ e.preventDefault(); seek(P.vt-5000*Math.max(1,P.speed/4)); } break;
+    case 'ArrowRight': if(big){ e.preventDefault(); seek(P.vt+5000*Math.max(1,P.speed/4)); } break;
+    case '1': setSpeed(1); break; case '2': setSpeed(4); break; case '3': setSpeed(16); break;
+    case 'r': case 'R': seek(big?-700:0); setPlaying(true); break;
+    case 'p': case 'P': document.body.classList.toggle('noprog'); break;
+    case 'Escape': exitBig(); break;
+  }
+});
+
+/* ---------- demos (synthesized, incl. Korean IME composition) ---------- */
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const JONG=['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const syl=(c,j,k)=>String.fromCharCode(0xAC00+(c*21+j)*28+k);
+const isHangul=ch=>{const c=ch.charCodeAt(0); return c>=0xAC00&&c<=0xD7A3;};
+const decomp=ch=>{const n=ch.charCodeAt(0)-0xAC00; return [Math.floor(n/588),Math.floor(n%588/28),n%28];};
+function rng(seed){ return ()=>{ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }; }
+function makeDemo(script,seed){
+  const R=rng(seed); let text='', caret=0, t=0; const ops=[];
+  const key=(lo=55,hi=170)=>{ t+=lo+R()*(hi-lo); if(R()<0.04) t+=250+R()*500; };
+  const put=(p,d,i,k)=>{ const op={t:Math.round(t),p,d,i}; if(k) op.k=1; ops.push(op); text=text.slice(0,p)+i+text.slice(p+d); caret=p+i.length; };
+  function typeChar(ch,next){
+    if(!isHangul(ch)){ key(); if(ch===' '||ch==='\n') t+=40+R()*120; put(caret,0,ch); return; }
+    const [c,j,k]=decomp(ch);
+    const prev=caret>0?text[caret-1]:'';
+    // Korean IME: a final consonant typed after an open syllable first sticks to it, then jumps when the vowel comes.
+    const asJong=JONG.indexOf(CHO[c]);
+    if(prev && isHangul(prev) && decomp(prev)[2]===0 && asJong>0 && lastWasHangul){
+      const [pc,pj]=decomp(prev);
+      key(); put(caret-1,1,syl(pc,pj,asJong));
+      key(); put(caret-1,1,prev+syl(c,j,0));
+    } else { key(); put(caret,0,CHO[c]); key(); put(caret-1,1,syl(c,j,0)); }
+    if(k){ key(); put(caret-1,1,ch); }
+  }
+  let lastWasHangul=false;
+  for(const [cmd,arg] of script){
+    if(cmd==='type'){ const chars=[...arg]; chars.forEach((ch,ix)=>{ typeChar(ch,chars[ix+1]); lastWasHangul=isHangul(ch); }); }
+    else if(cmd==='pause'){ t+=arg; }
+    else if(cmd==='back'){ for(let n=0;n<arg;n++){ t+=45+R()*60; put(caret-1,1,''); } lastWasHangul=false; t+=150; }
+    else if(cmd==='go'){ t+=500; const pos=arg<0?text.length+arg+1:arg; caret=Math.max(0,Math.min(pos,text.length)); ops.push({t:Math.round(t),s:caret,e:caret}); lastWasHangul=false; t+=300; }
+    else if(cmd==='find'){ t+=600; const pos=text.indexOf(arg)+arg.length; caret=pos; ops.push({t:Math.round(t),s:caret,e:caret}); lastWasHangul=false; t+=300; }
+    else if(cmd==='selectWord'){ t+=600; const s=text.indexOf(arg); ops.push({t:Math.round(t),s,e:s+arg.length}); t+=700; put(s,arg.length,''); lastWasHangul=false; }
+    else if(cmd==='paste'){ t+=500; put(caret,0,arg,1); lastWasHangul=false; t+=400; }
+    else if(cmd==='end'){ t+=500; caret=text.length; ops.push({t:Math.round(t),s:caret,e:caret}); lastWasHangul=false; t+=300; }
+  }
+  return {ops};
+}
+const DEMO_EN=[['type','I rewrote this tweet five tiems'],['back',4],['type','imes.'],['pause',1600],
+  ['selectWord','five'],['type','eleven'],['pause',1100],['end'],
+  ['type','\nYou only ever see the last version.'],['pause',2200],
+  ['type','\n\nHere are all the others.'],['pause',900],['back',24],['type','So here is every version, at once.']];
+const DEMO_KO=[['type','트윗 하나 쓰는 데 20분 걸렸다.'],['pause',1500],['back',8],['type','40분 걸렸다.'],['pause',1800],
+  ['type','\n여러분은 마지막 판만 본다.'],['pause',2000],['find','마지막'],['type',' 깔끔한'],['pause',900],['end'],
+  ['type','\n\n그래서 지운 것까지 다 보여 드림.']];
+$('#demoEn').onclick=()=>showReplay(makeDemo(DEMO_EN,7),{shared:true,demo:true});
+$('#demoKo').onclick=()=>showReplay(makeDemo(DEMO_KO,11),{shared:true,demo:true});
+
+/* ---------- boot ---------- */
+applyLang();
+(async function boot(){
+  const m=location.hash.match(/^#r=(.+)$/);
+  if(m){
+    try{ const r=await decodeHash(m[1]); showReplay(r,{shared:true}); return; }
+    catch(e){ alert(T('badLink')); }
+  }
+  loadDraft(); updateRecStatus(); ed.focus();
+})();
+window.__tr={get rec(){return rec;},P,pack,unpack,encodeHash,decodeHash,makeDemo,finalState};
+</script>
+</body>
+</html>

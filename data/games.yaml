@@ -6,6 +6,12 @@
 #   url: 다른 곳에 이미 공개된 게임이면 그 주소(카드가 그리로 간다. 없으면 /games/<slug>/)
 #   hidden: true  잔인하거나 선정적인 게임. 목록에 안 나오고 주소를 아는 사람만 들어온다.
 #                 게임 index.html의 <head>에도 <meta name="robots" content="noindex, nofollow">를 넣는다
+#   share: 공유 카드 그림(1200x630 권장, 없으면 thumb)
+- slug: typing-replay
+  title: 글쓰기 과정 재생기 Typing Replay
+  desc: 글을 쓰고 나면 그 글이 다시 쓰이는 과정을 영상처럼 돌려 본다. 키 하나, 지운 것 하나, 한글 조합까지. 기록은 링크 안에만 담기고 서버에 올라가지 않는다.
+  thumb: /games/thumbs/typing-replay.webp
+  share: share.webp
 - slug: still-raining
   title: still raining
   desc: 비가 그치지 않는 학교 복도에서 시작하는 1인칭 드림코어 걷기 게임. 웹 3D(PICO-8 16색 느낌). 화살표나 W/S로 걷고 화면을 누르면 마우스로 둘러본다. 폰은 왼손으로 끌어 걷고 오른손으로 끌어 둘러본다.
